@@ -17,13 +17,15 @@ import { Badge } from "@/shared/components/ui/badge";
 function determineStatus(latestRecord?: HealthRecordDto): ControlStatus {
   if (!latestRecord) return "Desconocido";
   
-  const hasDanger = (latestRecord.fastingGlucose && latestRecord.fastingGlucose > 130) ||
-                    (latestRecord.systolicBP && latestRecord.systolicBP >= 140) ||
-                    (latestRecord.diastolicBP && latestRecord.diastolicBP >= 90) ||
-                    (latestRecord.heartRate && latestRecord.heartRate > 100);
+  const fastingGlucose = latestRecord.glucosas_comidas.find(g => g.tipo === "ayuno")?.valor;
+  
+  const hasDanger = (fastingGlucose && fastingGlucose > 130) ||
+                    (latestRecord.presion_sistolica && latestRecord.presion_sistolica >= 140) ||
+                    (latestRecord.presion_diastolica && latestRecord.presion_diastolica >= 90) ||
+                    (latestRecord.frecuencia_cardiaca && latestRecord.frecuencia_cardiaca > 100);
                     
-  const hasCaution = (latestRecord.fastingGlucose && latestRecord.fastingGlucose > 100) ||
-                     (latestRecord.systolicBP && latestRecord.systolicBP >= 130);
+  const hasCaution = (fastingGlucose && fastingGlucose > 100) ||
+                     (latestRecord.presion_sistolica && latestRecord.presion_sistolica >= 130);
 
   if (hasDanger) return "Peligro";
   if (hasCaution) return "Precaución";
@@ -140,6 +142,7 @@ export default function DoctorDashboard() {
                 <TableRow>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Edad</TableHead>
+                  <TableHead>Sexo</TableHead>
                   <TableHead>Condición</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead>Último Registro</TableHead>
@@ -149,7 +152,7 @@ export default function DoctorDashboard() {
               <TableBody>
                 {assignedPatients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
                       No se encontraron pacientes.
                     </TableCell>
                   </TableRow>
@@ -160,6 +163,7 @@ export default function DoctorDashboard() {
                         {patient.firstName} {patient.lastName}
                       </TableCell>
                       <TableCell>{differenceInYears(new Date(), parseISO(patient.dateOfBirth))}</TableCell>
+                      <TableCell>{patient.gender}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{patient.diabetesType}</Badge>
                       </TableCell>

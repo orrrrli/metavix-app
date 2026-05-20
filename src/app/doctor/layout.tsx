@@ -3,14 +3,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Home, Users, BarChart3, Settings } from "lucide-react";
-import { DashboardLayout } from "@/shared/components/layout/DashboardLayout";
+import { DashboardLayout, NavGroup } from "@/shared/components/layout/DashboardLayout";
 import { useAuthStore } from "@/features/auth/store";
 
-const DOCTOR_NAV_ITEMS = [
-  { name: "Panel Clínico", href: "/doctor/dashboard", icon: <Home className="size-5" /> },
-  { name: "Registro de Pacientes", href: "/doctor/patients", icon: <Users className="size-5" /> },
-  { name: "Tendencias de Población", href: "/doctor/trends", icon: <BarChart3 className="size-5" /> },
-  { name: "Configuración de Clínica", href: "/doctor/settings", icon: <Settings className="size-5" /> },
+const DOCTOR_NAV_GROUPS: NavGroup[] = [
+  {
+    category: "Portal Médico",
+    items: [
+      { name: "Panel Clínico", href: "/doctor/dashboard", icon: <Home className="size-5" /> },
+      { name: "Registro de Pacientes", href: "/doctor/patients", icon: <Users className="size-5" /> },
+      { name: "Tendencias de Población", href: "/doctor/trends", icon: <BarChart3 className="size-5" /> },
+      { name: "Configuración de Clínica", href: "/doctor/settings", icon: <Settings className="size-5" /> },
+    ]
+  }
 ];
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +35,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
   }
 
   return (
-    <DashboardLayout navItems={DOCTOR_NAV_ITEMS} title="Portal Clínico">
+    <DashboardLayout navGroups={DOCTOR_NAV_GROUPS} title="Portal Clínico">
       {children}
     </DashboardLayout>
   );

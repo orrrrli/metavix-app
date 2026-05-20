@@ -26,8 +26,8 @@ export default function PatientHistoryPage() {
       
       if (search) {
         filtered = filtered.filter(r => 
-          (r.notes && r.notes.toLowerCase().includes(search.toLowerCase())) ||
-          (r.symptoms && r.symptoms.toLowerCase().includes(search.toLowerCase()))
+          (r.notas && r.notas.toLowerCase().includes(search.toLowerCase())) ||
+          r.glucosas_comidas.some(g => g.alimentos && g.alimentos.toLowerCase().includes(search.toLowerCase()))
         );
       }
       
@@ -55,7 +55,7 @@ export default function PatientHistoryPage() {
             <div className="relative">
               <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
               <Input 
-                placeholder="Buscar notas o síntomas..." 
+                placeholder="Buscar en notas o alimentos..." 
                 className="pl-8" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -70,10 +70,10 @@ export default function PatientHistoryPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha</TableHead>
-                  <TableHead>Glucosa (Ayunas)</TableHead>
+                  <TableHead>Glucosas Registradas</TableHead>
                   <TableHead>Presión Arterial</TableHead>
                   <TableHead>Frecuencia Cardíaca</TableHead>
-                  <TableHead>Síntomas / Notas</TableHead>
+                  <TableHead>Notas Adicionales</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -90,42 +90,44 @@ export default function PatientHistoryPage() {
                 ) : (
                   patientRecords.map((record) => (
                     <TableRow key={record.id}>
-                      <TableCell className="font-medium whitespace-nowrap">
+                      <TableCell className="font-medium whitespace-nowrap align-top pt-4">
                         {format(parseISO(record.timestamp), "MMM dd, yyyy")}
-                        <div className="text-xs text-muted-foreground">
+                        <div className="text-xs text-muted-foreground mt-1">
                           {format(parseISO(record.timestamp), "HH:mm")}
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {record.fastingGlucose ? (
-                          <div className="flex items-center gap-2">
-                            <span>{record.fastingGlucose}</span>
-                            {record.fastingGlucose > 130 ? (
-                              <Badge variant="destructive" className="text-[10px]">Alto</Badge>
-                            ) : record.fastingGlucose > 100 ? (
-                              <Badge variant="outline" className="text-[10px] text-warning border-warning">Elevado</Badge>
-                            ) : null}
+                      <TableCell className="align-top pt-4">
+                        <div className="space-y-2">
+                          {record.glucosas_comidas.map((g, idx) => (
+                            <div key={idx} className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground w-16 truncate" title={g.tipo}>
+                                {g.tipo.replace('_', ' ')}
+                              </span>
+                              <span className="font-medium">{g.valor}</span>
+                              {g.valor > 130 && g.tipo === 'ayuno' ? (
+                                <Badge variant="destructive" className="text-[10px] h-4">Alto</Badge>
+                              ) : g.valor > 180 ? (
+                                <Badge variant="destructive" className="text-[10px] h-4">Alto</Badge>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="align-top pt-4">
+                        {record.presion_sistolica && record.presion_diastolica ? (
+                          <div className="flex flex-col gap-1">
+                            <span>{record.presion_sistolica}/{record.presion_diastolica}</span>
+                            {(record.presion_sistolica >= 140 || record.presion_diastolica >= 90) && (
+                              <Badge variant="destructive" className="text-[10px] w-fit">Alto</Badge>
+                            )}
                           </div>
                         ) : "--"}
                       </TableCell>
-                      <TableCell>
-                        {record.systolicBP && record.diastolicBP ? (
-                          <div className="flex items-center gap-2">
-                            <span>{record.systolicBP}/{record.diastolicBP}</span>
-                            {record.systolicBP >= 140 || record.diastolicBP >= 90 ? (
-                              <Badge variant="destructive" className="text-[10px]">Alto</Badge>
-                            ) : null}
-                          </div>
-                        ) : "--"}
+                      <TableCell className="align-top pt-4">{record.frecuencia_cardiaca || "--"}</TableCell>
+                      <TableCell className="max-w-[200px] align-top pt-4 text-sm">
+                        <span className="text-muted-foreground line-clamp-3">{record.notas || "--"}</span>
                       </TableCell>
-                      <TableCell>{record.heartRate || "--"}</TableCell>
-                      <TableCell className="max-w-[200px] truncate text-sm">
-                        {record.symptoms && (
-                          <div className="text-destructive text-xs font-medium mb-1 truncate">{record.symptoms}</div>
-                        )}
-                        <span className="text-muted-foreground truncate">{record.notes || "--"}</span>
-                      </TableCell>
-                      <TableCell className="text-right whitespace-nowrap">
+                      <TableCell className="text-right whitespace-nowrap align-top pt-3">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                           <Edit className="size-4" />
                         </Button>

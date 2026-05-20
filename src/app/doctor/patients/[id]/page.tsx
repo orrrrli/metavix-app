@@ -13,6 +13,7 @@ import { PatientProfileDto, HealthRecordDto } from "@/features/patient/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { Badge } from "@/shared/components/ui/badge";
 
 export default function PatientDetailView({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -43,15 +44,20 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
 
   if (!patient) return null;
 
-  const chartData = patientRecords.map(record => ({
-    date: format(parseISO(record.timestamp), "MMM dd"),
-    fasting: record.fastingGlucose,
-    post1h: record.postprandial1hGlucose,
-    systolic: record.systolicBP,
-    diastolic: record.diastolicBP,
-    heartRate: record.heartRate,
-    hba1c: record.hba1c
-  }));
+  const chartData = patientRecords.map(record => {
+    const ayuno = record.glucosas_comidas.find(g => g.tipo === "ayuno")?.valor;
+    const postprandial = record.glucosas_comidas.find(g => g.tipo.includes("despues"))?.valor;
+
+    return {
+      date: format(parseISO(record.timestamp), "MMM dd"),
+      fasting: ayuno,
+      postprandial: postprandial,
+      systolic: record.presion_sistolica,
+      diastolic: record.presion_diastolica,
+      heartRate: record.frecuencia_cardiaca,
+      hba1c: record.hba1c
+    };
+  });
 
   const reversedRecords = [...patientRecords].reverse();
 
@@ -66,7 +72,7 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
             {patient.firstName} {patient.lastName}
           </h2>
           <p className="text-muted-foreground flex items-center gap-2 mt-1">
-            <span>{differenceInYears(new Date(), parseISO(patient.dateOfBirth))} años</span>
+            <span>{differenceInYears(new Date(), parseISO(patient.dateOfBirth))} años ({patient.gender})</span>
             <span>&bull;</span>
             <span>{patient.diabetesType}</span>
             {patient.pregnancyStatus && (
@@ -102,7 +108,7 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
                       <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
                       <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
                       <Line type="monotone" name="Ayunas" dataKey="fasting" stroke="#00BFA5" strokeWidth={3} dot={{ r: 4 }} connectNulls />
-                      <Line type="monotone" name="1h Posprandial" dataKey="post1h" stroke="#F59E0B" strokeWidth={3} dot={{ r: 4 }} connectNulls />
+                      <Line type="monotone" name="Posprandial" dataKey="postprandial" stroke="#F59E0B" strokeWidth={3} dot={{ r: 4 }} connectNulls />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -142,7 +148,7 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
           <Card>
             <CardHeader>
               <CardTitle>Línea de Tiempo Médica</CardTitle>
-              <CardDescription>Registro cronológico de todas las medidas y notas.</CardDescription>
+              <CardDescription>Registro cronológico detallado de todos los parámetros clínicos.</CardDescription>
             </CardHeader>
             <CardContent>
               {reversedRecords.length === 0 ? (
@@ -152,39 +158,62 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
                 </div>
               ) : (
                 <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                  {reversedRecords.map((record, idx) => (
-                    <div key={record.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                      <div className="flex items-center justify-center size-10 rounded-full border border-background bg-primary text-primary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                        <Activity className="size-4" />
-                      </div>
-                      <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-border bg-card shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-bold text-foreground">{format(parseISO(record.timestamp), "MMM dd, yyyy")}</span>
-                          <span className="text-xs text-muted-foreground">{format(parseISO(record.timestamp), "HH:mm")}</span>
+                  {reversedRecords.map((record, idx) => {
+                    const fasting = record.glucosas_comidas.find(g => g.tipo === "ayuno")?.valor;
+
+                    return (
+                      <div key={record.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                        <div className="flex items-center justify-center size-10 rounded-full border border-background bg-primary text-primary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
+                          <Activity className="size-4" />
                         </div>
-                        <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                          {record.fastingGlucose && (
-                            <div className="bg-muted/50 p-2 rounded">
-                              <span className="block text-xs text-muted-foreground">Glucosa Ayunas</span>
-                              <span className={`font-semibold ${record.fastingGlucose > 130 ? 'text-destructive' : ''}`}>{record.fastingGlucose} mg/dL</span>
-                            </div>
-                          )}
-                          {record.systolicBP && (
-                            <div className="bg-muted/50 p-2 rounded">
-                              <span className="block text-xs text-muted-foreground">Presión (BP)</span>
-                              <span className={`font-semibold ${record.systolicBP >= 140 ? 'text-destructive' : ''}`}>{record.systolicBP}/{record.diastolicBP}</span>
-                            </div>
-                          )}
-                        </div>
-                        {(record.symptoms || record.notes) && (
-                          <div className="mt-3 pt-3 border-t border-border/50 text-sm">
-                            {record.symptoms && <p className="text-destructive text-xs font-medium mb-1">Síntomas: {record.symptoms}</p>}
-                            {record.notes && <p className="text-muted-foreground italic">"{record.notes}"</p>}
+                        <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl border border-border bg-card shadow-sm">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-bold text-foreground">{format(parseISO(record.timestamp), "MMM dd, yyyy")}</span>
+                            <span className="text-xs text-muted-foreground">{format(parseISO(record.timestamp), "HH:mm")}</span>
                           </div>
-                        )}
+                          
+                          <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                            {fasting && (
+                              <div className="bg-muted/50 p-2 rounded">
+                                <span className="block text-xs text-muted-foreground">Glucosa Ayunas</span>
+                                <span className={`font-semibold ${fasting > 130 ? 'text-destructive' : ''}`}>{fasting} mg/dL</span>
+                              </div>
+                            )}
+                            {record.presion_sistolica && record.presion_diastolica && (
+                              <div className="bg-muted/50 p-2 rounded">
+                                <span className="block text-xs text-muted-foreground">Presión (BP)</span>
+                                <span className={`font-semibold ${record.presion_sistolica >= 140 ? 'text-destructive' : ''}`}>{record.presion_sistolica}/{record.presion_diastolica}</span>
+                              </div>
+                            )}
+                            {record.hba1c && (
+                              <div className="bg-muted/50 p-2 rounded">
+                                <span className="block text-xs text-muted-foreground">HbA1c</span>
+                                <span className="font-semibold">{record.hba1c}%</span>
+                              </div>
+                            )}
+                            {record.peso && (
+                              <div className="bg-muted/50 p-2 rounded">
+                                <span className="block text-xs text-muted-foreground">Peso</span>
+                                <span className="font-semibold">{record.peso} kg</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {record.glucosas_comidas.length > 1 && (
+                            <div className="mt-2 text-xs text-muted-foreground">
+                              {record.glucosas_comidas.length} mediciones de glucosa registradas.
+                            </div>
+                          )}
+
+                          {record.notas && (
+                            <div className="mt-3 pt-3 border-t border-border/50 text-sm">
+                              <p className="text-muted-foreground italic">"{record.notas}"</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

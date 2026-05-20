@@ -7,6 +7,7 @@ export interface PatientProfileDto {
   firstName: string;
   lastName: string;
   dateOfBirth: string; // ISO Date string
+  gender: 'F' | 'M' | 'O';
   diabetesType: DiabetesType;
   heightCm: number;
   weightKg: number;
@@ -14,33 +15,43 @@ export interface PatientProfileDto {
   assignedDoctorId: string;
 }
 
+export interface GlucoseReading {
+  tipo: string;
+  valor: number;
+  hora?: string | null;
+  alimentos?: string | null;
+}
+
 export interface HealthRecordDto {
   id: string;
   patientId: string;
   timestamp: string; // ISO Date string
   
-  // Glucose (mg/dL)
-  fastingGlucose: number | null;
-  postprandial1hGlucose: number | null;
-  postprandial2hGlucose: number | null;
+  // Glucose Array
+  glucosas_comidas: GlucoseReading[];
   
   // Blood Pressure (mmHg)
-  systolicBP: number | null;
-  diastolicBP: number | null;
+  presion_sistolica: number | null;
+  presion_diastolica: number | null;
+  frecuencia_cardiaca: number | null;
   
-  // Cardiovascular (bpm)
-  heartRate: number | null;
+  // Anthropometry
+  peso: number | null;
+  cintura: number | null;
   
   // Laboratory
   hba1c: number | null; // %
-  ldl: number | null; // mg/dL
-  triglycerides: number | null; // mg/dL
+  colesterol_total: number | null;
+  colesterol_ldl: number | null;
+  colesterol_hdl: number | null;
+  trigliceridos: number | null;
+  bun: number | null;
+  creatinina: number | null;
   
-  // Physical
-  weightKg: number | null;
+  // EGO
+  ego_proteinas: string | null;
+  ego_glucosa: string | null;
   
   // Additional
-  notes: string | null;
-  symptoms: string | null;
-  medicationComments: string | null;
+  notas: string | null;
 }
