@@ -1,6 +1,6 @@
-export type DiabetesType = 'Type 1' | 'Type 2' | 'Prediabetes' | 'None';
+export type DiabetesType = 'Tipo 1' | 'Tipo 2' | 'Prediabetes' | 'Ninguna';
 
-export type ControlStatus = 'Good Control' | 'Caution' | 'Danger' | 'Unknown';
+export type ControlStatus = 'Buen Control' | 'Precaución' | 'Peligro' | 'Desconocido';
 
 export interface PatientProfileDto {
   id: string;

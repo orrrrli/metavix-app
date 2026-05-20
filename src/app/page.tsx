@@ -45,7 +45,7 @@ export default function LandingPage() {
           Metavix
         </h1>
         <p className="text-lg text-muted-foreground max-w-lg mx-auto">
-          Enterprise-grade diabetes and cardiovascular monitoring platform. Please select your portal to continue.
+          Plataforma de nivel empresarial para monitoreo cardiovascular y de diabetes. Por favor, seleccione su portal para continuar.
         </p>
       </div>
 
@@ -56,22 +56,22 @@ export default function LandingPage() {
             <div className="mx-auto bg-blue-50 text-blue-600 p-4 rounded-2xl mb-4 group-hover:scale-105 transition-transform duration-300">
               <User className="size-10" />
             </div>
-            <CardTitle className="text-2xl font-display">Patient Portal</CardTitle>
+            <CardTitle className="text-2xl font-display">Portal del Paciente</CardTitle>
             <CardDescription className="text-base mt-2">
-              Monitor your vitals, view health history, and track your progress over time.
+              Monitoree sus signos vitales, vea su historial de salud y haga seguimiento de su progreso a lo largo del tiempo.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
             <div className="bg-muted w-full rounded-lg p-4 mb-6 text-sm text-center">
-              <p className="font-semibold mb-1">Simulated Account:</p>
-              <p className="text-muted-foreground">Sarah Jenkins (Type 2 Diabetes)</p>
+              <p className="font-semibold mb-1">Cuenta Simulada:</p>
+              <p className="text-muted-foreground">Sarah Jenkins (Diabetes Tipo 2)</p>
             </div>
             <Button 
               size="lg" 
               className="w-full text-base h-12 shadow-sm bg-blue-600 hover:bg-blue-700" 
               onClick={handlePatientLogin}
             >
-              Access Patient Dashboard
+              Acceder al Panel del Paciente
             </Button>
           </CardContent>
         </Card>
@@ -82,22 +82,22 @@ export default function LandingPage() {
             <div className="mx-auto bg-primary/10 text-primary p-4 rounded-2xl mb-4 group-hover:scale-105 transition-transform duration-300">
               <Stethoscope className="size-10" />
             </div>
-            <CardTitle className="text-2xl font-display">Doctor Portal</CardTitle>
+            <CardTitle className="text-2xl font-display">Portal Médico</CardTitle>
             <CardDescription className="text-base mt-2">
-              Supervise your patients, analyze clinical trends, and review cardiovascular alerts.
+              Supervise a sus pacientes, analice tendencias clínicas y revise alertas cardiovasculares.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center">
             <div className="bg-muted w-full rounded-lg p-4 mb-6 text-sm text-center">
-              <p className="font-semibold mb-1">Simulated Account:</p>
-              <p className="text-muted-foreground">Dr. Alexander Thorne (Cardiologist)</p>
+              <p className="font-semibold mb-1">Cuenta Simulada:</p>
+              <p className="text-muted-foreground">Dr. Alexander Thorne (Cardiólogo)</p>
             </div>
             <Button 
               size="lg" 
               className="w-full text-base h-12 shadow-sm bg-primary hover:bg-primary/90 text-primary-foreground" 
               onClick={handleDoctorLogin}
             >
-              Access Clinical Dashboard
+              Acceder al Panel Clínico
             </Button>
           </CardContent>
         </Card>

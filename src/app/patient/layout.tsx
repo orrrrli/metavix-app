@@ -7,10 +7,10 @@ import { DashboardLayout } from "@/shared/components/layout/DashboardLayout";
 import { useAuthStore } from "@/features/auth/store";
 
 const PATIENT_NAV_ITEMS = [
-  { name: "Dashboard", href: "/patient/dashboard", icon: <Home className="size-5" /> },
-  { name: "Health History", href: "/patient/history", icon: <FileText className="size-5" /> },
-  { name: "New Record", href: "/patient/new-record", icon: <PlusCircle className="size-5" /> },
-  { name: "Tools & Education", href: "/patient/tools", icon: <Settings className="size-5" /> },
+  { name: "Panel Principal", href: "/patient/dashboard", icon: <Home className="size-5" /> },
+  { name: "Historial de Salud", href: "/patient/history", icon: <FileText className="size-5" /> },
+  { name: "Nuevo Registro", href: "/patient/new-record", icon: <PlusCircle className="size-5" /> },
+  { name: "Herramientas y Educación", href: "/patient/tools", icon: <Settings className="size-5" /> },
 ];
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
@@ -26,11 +26,11 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
   }, [role, router]);
 
   if (!mounted || role !== 'PATIENT') {
-    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen bg-background flex items-center justify-center">Cargando...</div>;
   }
 
   return (
-    <DashboardLayout navItems={PATIENT_NAV_ITEMS} title="Patient Portal">
+    <DashboardLayout navItems={PATIENT_NAV_ITEMS} title="Portal del Paciente">
       {children}
     </DashboardLayout>
   );

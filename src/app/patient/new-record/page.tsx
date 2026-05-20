@@ -16,19 +16,19 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 
 const recordSchema = z.object({
-  fastingGlucose: z.coerce.number().min(20, "Value too low").max(600, "Value too high").nullable().optional(),
-  postprandial1hGlucose: z.coerce.number().min(20).max(600).nullable().optional(),
-  postprandial2hGlucose: z.coerce.number().min(20).max(600).nullable().optional(),
-  systolicBP: z.coerce.number().min(50).max(250).nullable().optional(),
-  diastolicBP: z.coerce.number().min(30).max(150).nullable().optional(),
-  heartRate: z.coerce.number().min(30).max(220).nullable().optional(),
-  weightKg: z.coerce.number().min(20).max(300).nullable().optional(),
+  fastingGlucose: z.coerce.number().min(20, "Valor muy bajo").max(600, "Valor muy alto").nullable().optional(),
+  postprandial1hGlucose: z.coerce.number().min(20, "Valor muy bajo").max(600, "Valor muy alto").nullable().optional(),
+  postprandial2hGlucose: z.coerce.number().min(20, "Valor muy bajo").max(600, "Valor muy alto").nullable().optional(),
+  systolicBP: z.coerce.number().min(50, "Valor muy bajo").max(250, "Valor muy alto").nullable().optional(),
+  diastolicBP: z.coerce.number().min(30, "Valor muy bajo").max(150, "Valor muy alto").nullable().optional(),
+  heartRate: z.coerce.number().min(30, "Valor muy bajo").max(220, "Valor muy alto").nullable().optional(),
+  weightKg: z.coerce.number().min(20, "Valor muy bajo").max(300, "Valor muy alto").nullable().optional(),
   notes: z.string().nullable().optional(),
   symptoms: z.string().nullable().optional(),
 }).refine(data => {
   return data.fastingGlucose || data.systolicBP || data.heartRate || data.weightKg;
 }, {
-  message: "Please enter at least one metric to save a record.",
+  message: "Por favor ingresa al menos una métrica para guardar el registro.",
   path: ["root"]
 });
 
@@ -82,15 +82,15 @@ export default function NewRecordPage() {
     });
 
     setIsSubmitting(false);
-    toast.success("Health record saved successfully!");
+    toast.success("¡Registro de salud guardado con éxito!");
     router.push("/patient/dashboard");
   };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold text-foreground">Log New Reading</h2>
-        <p className="text-muted-foreground mt-1">Enter your latest clinical metrics. Only fill out what you have measured today.</p>
+        <h2 className="text-3xl font-display font-bold text-foreground">Registrar Nueva Lectura</h2>
+        <p className="text-muted-foreground mt-1">Ingresa tus últimas métricas clínicas. Solo completa lo que hayas medido hoy.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -104,22 +104,24 @@ export default function NewRecordPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Glucose (mg/dL)</CardTitle>
-              <CardDescription>Blood sugar measurements</CardDescription>
+              <CardTitle>Glucosa (mg/dL)</CardTitle>
+              <CardDescription>Medidas de azúcar en sangre</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fastingGlucose">Fasting Glucose</Label>
-                <Input id="fastingGlucose" type="number" step="0.1" placeholder="e.g. 105" {...register("fastingGlucose")} />
+                <Label htmlFor="fastingGlucose">Glucosa en Ayunas</Label>
+                <Input id="fastingGlucose" type="number" step="0.1" placeholder="ej. 105" {...register("fastingGlucose")} />
                 {errors.fastingGlucose && <p className="text-sm text-destructive">{errors.fastingGlucose.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="postprandial1hGlucose">1-Hour Postprandial</Label>
-                <Input id="postprandial1hGlucose" type="number" step="0.1" placeholder="e.g. 140" {...register("postprandial1hGlucose")} />
+                <Label htmlFor="postprandial1hGlucose">Posprandial a 1 Hora</Label>
+                <Input id="postprandial1hGlucose" type="number" step="0.1" placeholder="ej. 140" {...register("postprandial1hGlucose")} />
+                {errors.postprandial1hGlucose && <p className="text-sm text-destructive">{errors.postprandial1hGlucose.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="postprandial2hGlucose">2-Hour Postprandial</Label>
-                <Input id="postprandial2hGlucose" type="number" step="0.1" placeholder="e.g. 120" {...register("postprandial2hGlucose")} />
+                <Label htmlFor="postprandial2hGlucose">Posprandial a 2 Horas</Label>
+                <Input id="postprandial2hGlucose" type="number" step="0.1" placeholder="ej. 120" {...register("postprandial2hGlucose")} />
+                {errors.postprandial2hGlucose && <p className="text-sm text-destructive">{errors.postprandial2hGlucose.message}</p>}
               </div>
             </CardContent>
           </Card>
@@ -127,28 +129,30 @@ export default function NewRecordPage() {
           <Card>
             <CardHeader>
               <CardTitle>Cardiovascular</CardTitle>
-              <CardDescription>Blood pressure and heart rate</CardDescription>
+              <CardDescription>Presión arterial y frecuencia cardíaca</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="systolicBP">Systolic (mmHg)</Label>
+                  <Label htmlFor="systolicBP">Sistólica (mmHg)</Label>
                   <Input id="systolicBP" type="number" placeholder="120" {...register("systolicBP")} />
                   {errors.systolicBP && <p className="text-sm text-destructive">{errors.systolicBP.message}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="diastolicBP">Diastolic (mmHg)</Label>
+                  <Label htmlFor="diastolicBP">Diastólica (mmHg)</Label>
                   <Input id="diastolicBP" type="number" placeholder="80" {...register("diastolicBP")} />
                   {errors.diastolicBP && <p className="text-sm text-destructive">{errors.diastolicBP.message}</p>}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="heartRate">Heart Rate (bpm)</Label>
-                <Input id="heartRate" type="number" placeholder="e.g. 72" {...register("heartRate")} />
+                <Label htmlFor="heartRate">Frecuencia Cardíaca (lpm)</Label>
+                <Input id="heartRate" type="number" placeholder="ej. 72" {...register("heartRate")} />
+                {errors.heartRate && <p className="text-sm text-destructive">{errors.heartRate.message}</p>}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="weightKg">Weight (kg)</Label>
-                <Input id="weightKg" type="number" step="0.1" placeholder="e.g. 75.5" {...register("weightKg")} />
+                <Label htmlFor="weightKg">Peso (kg)</Label>
+                <Input id="weightKg" type="number" step="0.1" placeholder="ej. 75.5" {...register("weightKg")} />
+                {errors.weightKg && <p className="text-sm text-destructive">{errors.weightKg.message}</p>}
               </div>
             </CardContent>
           </Card>
@@ -156,24 +160,24 @@ export default function NewRecordPage() {
 
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle>Clinical Notes</CardTitle>
+            <CardTitle>Notas Clínicas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="symptoms">Symptoms (comma separated)</Label>
-              <Input id="symptoms" placeholder="e.g. Dizziness, Thirsty, Headache" {...register("symptoms")} />
+              <Label htmlFor="symptoms">Síntomas (separados por coma)</Label>
+              <Input id="symptoms" placeholder="ej. Mareo, Sed, Dolor de cabeza" {...register("symptoms")} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">Additional Notes</Label>
-              <Input id="notes" placeholder="Any comments for your doctor?" {...register("notes")} />
+              <Label htmlFor="notes">Notas Adicionales</Label>
+              <Input id="notes" placeholder="¿Algún comentario para tu doctor?" {...register("notes")} />
             </div>
           </CardContent>
         </Card>
 
         <div className="mt-8 flex justify-end">
-          <Button type="button" variant="outline" className="mr-4" onClick={() => router.back()}>Cancel</Button>
+          <Button type="button" variant="outline" className="mr-4" onClick={() => router.back()}>Cancelar</Button>
           <Button type="submit" disabled={isSubmitting} size="lg">
-            {isSubmitting ? "Saving..." : "Save Record"}
+            {isSubmitting ? "Guardando..." : "Guardar Registro"}
             {!isSubmitting && <Save className="ml-2 size-4" />}
           </Button>
         </div>

@@ -60,7 +60,7 @@ export function DashboardLayout({ children, navItems, title }: DashboardLayoutPr
 
         <nav className="p-4 space-y-1 overflow-y-auto h-[calc(100vh-4rem)]">
           <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            {role === 'PATIENT' ? 'Patient Portal' : 'Clinical Portal'}
+            {role === 'PATIENT' ? 'Portal del Paciente' : 'Portal Clínico'}
           </div>
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -109,7 +109,7 @@ export function DashboardLayout({ children, navItems, title }: DashboardLayoutPr
                 {role === 'PATIENT' ? 'Sarah Jenkins' : 'Dr. Thorne'}
               </span>
               <span className="text-xs text-muted-foreground leading-none">
-                {role === 'PATIENT' ? 'Patient' : 'Cardiologist'}
+                {role === 'PATIENT' ? 'Paciente' : 'Cardiólogo'}
               </span>
             </div>
             <div className="size-9 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">
@@ -117,7 +117,7 @@ export function DashboardLayout({ children, navItems, title }: DashboardLayoutPr
             </div>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
               <LogOut className="size-4 mr-2" />
-              <span className="hidden sm:inline">Logout</span>
+              <span className="hidden sm:inline">Cerrar sesión</span>
             </Button>
           </div>
         </header>

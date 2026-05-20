@@ -9,7 +9,7 @@ export const initialPatients: PatientProfileDto[] = [
     firstName: "Sarah",
     lastName: "Jenkins",
     dateOfBirth: "1978-05-14T00:00:00Z",
-    diabetesType: "Type 2",
+    diabetesType: "Tipo 2",
     heightCm: 165,
     weightKg: 78.5,
     pregnancyStatus: false,
@@ -20,7 +20,7 @@ export const initialPatients: PatientProfileDto[] = [
     firstName: "Michael",
     lastName: "Chang",
     dateOfBirth: "1965-11-22T00:00:00Z",
-    diabetesType: "Type 1",
+    diabetesType: "Tipo 1",
     heightCm: 178,
     weightKg: 82.0,
     pregnancyStatus: false,
@@ -55,9 +55,9 @@ export const initialRecords: HealthRecordDto[] = [
     ldl: 130,
     triglycerides: 160,
     weightKg: 78.5,
-    notes: "Felt slightly dizzy in the morning.",
-    symptoms: "Dizziness, Fatigue",
-    medicationComments: "Took Metformin as prescribed."
+    notes: "Me sentí un poco mareada en la mañana.",
+    symptoms: "Mareo, Fatiga",
+    medicationComments: "Tomé Metformina según lo recetado."
   },
   {
     id: "rec-002",
@@ -73,7 +73,7 @@ export const initialRecords: HealthRecordDto[] = [
     ldl: null,
     triglycerides: null,
     weightKg: 78.8,
-    notes: "Normal day, mild exercise.",
+    notes: "Día normal, ejercicio leve.",
     symptoms: null,
     medicationComments: null
   },
@@ -91,9 +91,9 @@ export const initialRecords: HealthRecordDto[] = [
     ldl: null,
     triglycerides: null,
     weightKg: 79.1,
-    notes: "Missed morning walk.",
-    symptoms: "Headache",
-    medicationComments: "Forgot morning dose."
+    notes: "Falté a la caminata matutina.",
+    symptoms: "Dolor de cabeza",
+    medicationComments: "Olvidé la dosis de la mañana."
   },
   
   // Michael Chang (Type 1) - Good Control
@@ -111,8 +111,8 @@ export const initialRecords: HealthRecordDto[] = [
     ldl: 95,
     triglycerides: 110,
     weightKg: 82.0,
-    notes: "Insulin dosage adjusted correctly.",
-    symptoms: "None",
-    medicationComments: "Novolog 5 units"
+    notes: "Dosis de insulina ajustada correctamente.",
+    symptoms: "Ninguno",
+    medicationComments: "Novolog 5 unidades"
   }
 ];

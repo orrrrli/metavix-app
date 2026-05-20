@@ -13,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Metavix - SaaS Diabetes & Cardiovascular Monitoring",
-  description: "Enterprise-grade health-tech monitoring system for patients and physicians.",
+  title: "Metavix - Plataforma SaaS de Monitoreo Cardiovascular y de Diabetes",
+  description: "Sistema de monitoreo médico de nivel empresarial para pacientes y médicos.",
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="es"
       className={`${inter.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground font-sans">

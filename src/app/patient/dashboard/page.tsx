@@ -47,11 +47,11 @@ export default function PatientDashboard() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-display font-bold tracking-tight text-foreground">Welcome back, {patientProfile.firstName}</h2>
-          <p className="text-muted-foreground">Here is your clinical overview for today.</p>
+          <h2 className="text-3xl font-display font-bold tracking-tight text-foreground">Bienvenido(a), {patientProfile.firstName}</h2>
+          <p className="text-muted-foreground">Aquí está tu resumen clínico del día de hoy.</p>
         </div>
         <Link href="/patient/new-record">
-          <Button size="lg" className="shadow-sm">Log New Reading</Button>
+          <Button size="lg" className="shadow-sm">Registrar Nueva Lectura</Button>
         </Link>
       </div>
 
@@ -59,45 +59,45 @@ export default function PatientDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Latest Fasting Glucose</CardTitle>
+            <CardTitle className="text-sm font-medium">Glucosa en Ayunas</CardTitle>
             <Droplet className="size-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{latestRecord?.fastingGlucose || "--"} <span className="text-sm text-muted-foreground font-normal">mg/dL</span></div>
-            <p className="text-xs text-muted-foreground mt-1">Recorded {latestRecord ? format(parseISO(latestRecord.timestamp), "MMM dd, HH:mm") : ""}</p>
+            <p className="text-xs text-muted-foreground mt-1">Registrado {latestRecord ? format(parseISO(latestRecord.timestamp), "MMM dd, HH:mm") : ""}</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Blood Pressure</CardTitle>
+            <CardTitle className="text-sm font-medium">Presión Arterial</CardTitle>
             <HeartPulse className="size-4 text-rose-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{latestRecord?.systolicBP || "--"}/{latestRecord?.diastolicBP || "--"} <span className="text-sm text-muted-foreground font-normal">mmHg</span></div>
-            <p className="text-xs text-muted-foreground mt-1">Latest cardiovascular reading</p>
+            <p className="text-xs text-muted-foreground mt-1">Última lectura cardiovascular</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Resting Heart Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Frecuencia Cardíaca</CardTitle>
             <Activity className="size-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{latestRecord?.heartRate || "--"} <span className="text-sm text-muted-foreground font-normal">bpm</span></div>
-            <p className="text-xs text-muted-foreground mt-1">Within normal range</p>
+            <div className="text-2xl font-bold">{latestRecord?.heartRate || "--"} <span className="text-sm text-muted-foreground font-normal">lpm</span></div>
+            <p className="text-xs text-muted-foreground mt-1">Dentro del rango normal</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Body Weight</CardTitle>
+            <CardTitle className="text-sm font-medium">Peso Corporal</CardTitle>
             <Weight className="size-4 text-teal-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{latestRecord?.weightKg || patientProfile.weightKg} <span className="text-sm text-muted-foreground font-normal">kg</span></div>
-            <p className="text-xs text-muted-foreground mt-1">Current logged weight</p>
+            <p className="text-xs text-muted-foreground mt-1">Peso actual registrado</p>
           </CardContent>
         </Card>
       </div>
@@ -106,8 +106,8 @@ export default function PatientDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Glucose Trends</CardTitle>
-            <CardDescription>Fasting vs Postprandial (Last 10 entries)</CardDescription>
+            <CardTitle>Tendencias de Glucosa</CardTitle>
+            <CardDescription>Ayunas vs Posprandial (Últimas 10 lecturas)</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {chartData.length > 0 ? (
@@ -120,20 +120,20 @@ export default function PatientDashboard() {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Line type="monotone" name="Fasting (mg/dL)" dataKey="fasting" stroke="#00BFA5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} connectNulls />
-                  <Line type="monotone" name="Postprandial 1h (mg/dL)" dataKey="post1h" stroke="#F59E0B" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} connectNulls />
+                  <Line type="monotone" name="Ayunas (mg/dL)" dataKey="fasting" stroke="#00BFA5" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} connectNulls />
+                  <Line type="monotone" name="Posprandial 1h (mg/dL)" dataKey="post1h" stroke="#F59E0B" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6 }} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">No recent data</div>
+              <div className="h-full flex items-center justify-center text-muted-foreground">No hay datos recientes</div>
             )}
           </CardContent>
         </Card>
 
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Blood Pressure History</CardTitle>
-            <CardDescription>Systolic & Diastolic Tracking</CardDescription>
+            <CardTitle>Historial de Presión Arterial</CardTitle>
+            <CardDescription>Seguimiento Sistólico y Diastólico</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {chartData.length > 0 ? (
@@ -146,12 +146,12 @@ export default function PatientDashboard() {
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
                   <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
-                  <Line type="monotone" name="Systolic (mmHg)" dataKey="systolic" stroke="#EF4444" strokeWidth={3} dot={{ r: 4 }} connectNulls />
-                  <Line type="monotone" name="Diastolic (mmHg)" dataKey="diastolic" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4 }} connectNulls />
+                  <Line type="monotone" name="Sistólica (mmHg)" dataKey="systolic" stroke="#EF4444" strokeWidth={3} dot={{ r: 4 }} connectNulls />
+                  <Line type="monotone" name="Diastólica (mmHg)" dataKey="diastolic" stroke="#3B82F6" strokeWidth={3} dot={{ r: 4 }} connectNulls />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-muted-foreground">No recent data</div>
+              <div className="h-full flex items-center justify-center text-muted-foreground">No hay datos recientes</div>
             )}
           </CardContent>
         </Card>
