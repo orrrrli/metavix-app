@@ -1,0 +1,65 @@
+import { useState } from "react";
+import { Button } from "@/shared/components/ui/button";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Loader2 } from "lucide-react";
+
+interface FormularioIMCProps {
+  onCalcular: (peso: number, estatura: number) => Promise<void>;
+  loading: boolean;
+}
+
+export function FormularioIMC({ onCalcular, loading }: FormularioIMCProps) {
+  const [peso, setPeso] = useState("");
+  const [estatura, setEstatura] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onCalcular(Number(peso), Number(estatura));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="bg-card border rounded-xl p-6 shadow-sm space-y-6">
+      <div>
+        <h3 className="text-lg font-display font-semibold mb-1">Tus datos</h3>
+        <p className="text-sm text-muted-foreground">Ingresa tus valores actuales para calcular tu índice.</p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="peso">Peso (kg)</Label>
+          <Input 
+            id="peso" 
+            type="number" 
+            step="0.1" 
+            min="20" 
+            max="300"
+            required 
+            placeholder="Ej. 72.5"
+            value={peso} 
+            onChange={e => setPeso(e.target.value)} 
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="estatura">Estatura (cm)</Label>
+          <Input 
+            id="estatura" 
+            type="number" 
+            step="0.1" 
+            min="100" 
+            max="250"
+            required 
+            placeholder="Ej. 170"
+            value={estatura} 
+            onChange={e => setEstatura(e.target.value)} 
+          />
+        </div>
+      </div>
+
+      <Button type="submit" disabled={loading} className="w-full h-12 text-lg">
+        {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+        {loading ? "Calculando..." : "Calcular IMC"}
+      </Button>
+    </form>
+  );
+}

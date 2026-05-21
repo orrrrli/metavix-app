@@ -28,7 +28,7 @@ const PATIENT_NAV_GROUPS: NavGroup[] = [
       { name: "Mi dashboard", href: "/patient/dashboard", icon: <Home className="size-5" /> },
       { name: "Registrar hoy", href: "/patient/new-record", icon: <PlusCircle className="size-5" /> },
       { name: "Mi historial", href: "/patient/history", icon: <ClipboardList className="size-5" /> },
-      { name: "Mi resumen", href: "/patient/summary", icon: <FileText className="size-5" /> },
+      { name: "Mi resumen", href: "/patient/resumen", icon: <FileText className="size-5" /> },
     ]
   },
   {

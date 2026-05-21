@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# AI Engineering Stack & Obsidian Brain
+.agents/
+.claude/
+.opencode/
+.windsurf/
+docs/brain/
+docs/brain
