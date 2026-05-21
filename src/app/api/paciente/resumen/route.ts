@@ -8,27 +8,27 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     perfil: {
-      nombre: "Paciente Demo",
+      nombre: "Sarah Jenkins",
       tipoDiabetes: "tipo_2",
       embarazada: false,
       sexo: "F"
     },
     metricas: {
-      glucosaAyuno:       { valor: 118,  fecha: "2026-05-18" },
-      presionSistolica:   { valor: 128,  fecha: "2026-05-18" },
-      presionDiastolica:  { valor: 82,   fecha: "2026-05-18" },
-      frecuenciaCardiaca: { valor: 74,   fecha: "2026-05-18" },
-      peso:               { valor: 72.5, fecha: "2026-05-18" },
+      glucosaAyuno:       { valor: 135,  fecha: "2026-05-21" },
+      presionSistolica:   { valor: 140,  fecha: "2026-05-21" },
+      presionDiastolica:  { valor: 88,   fecha: "2026-05-21" },
+      frecuenciaCardiaca: { valor: 84,   fecha: "2026-05-21" },
+      peso:               { valor: 78.5, fecha: "2026-05-21" },
       estaturasCm:        { valor: 165,  fecha: null },
-      imc:                { valor: 26.6, fecha: "2026-05-18" },
-      cintura:            { valor: 88,   fecha: "2026-05-18" },
-      hba1c:              { valor: 7.1,  fecha: "2026-05-10" },
-      colesterolTotal:    { valor: 198,  fecha: "2026-05-10" },
-      colesterolLdl:      { valor: 112,  fecha: "2026-05-10" },
-      colesterolHdl:      { valor: 48,   fecha: "2026-05-10" },
-      trigliceridos:      { valor: 145,  fecha: "2026-05-10" },
-      creatinina:         { valor: 0.9,  fecha: "2026-05-10" },
-      bun:                { valor: 14,   fecha: "2026-05-10" }
+      imc:                { valor: 28.8, fecha: "2026-05-21" },
+      cintura:            { valor: 92,   fecha: "2026-05-21" },
+      hba1c:              { valor: 7.4,  fecha: "2026-05-18" },
+      colesterolTotal:    { valor: 205,  fecha: "2026-05-18" },
+      colesterolLdl:      { valor: 125,  fecha: "2026-05-18" },
+      colesterolHdl:      { valor: 44,   fecha: "2026-05-18" },
+      trigliceridos:      { valor: 170,  fecha: "2026-05-18" },
+      creatinina:         { valor: 1.0,  fecha: "2026-05-18" },
+      bun:                { valor: 16,   fecha: "2026-05-18" }
     }
   });
 }

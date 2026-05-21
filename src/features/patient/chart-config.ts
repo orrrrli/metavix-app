@@ -31,7 +31,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Glucosa en ayuno',
     unidad: 'mg/dL',
     campo: 'glucosa_ayuno', // special: extracted from glucosas_comidas
-    ruta: '/patient/charts/glucose-fasting',
+    ruta: '/paciente/graficas/glucosa-ayunas',
     color: '#00BFA5',
     limites: {
       superior: { tipo: 'dinamico', valores: { sin_diabetes: 100, con_diabetes: 130 } },
@@ -43,7 +43,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Presión arterial sistólica',
     unidad: 'mmHg',
     campo: 'presion_sistolica',
-    ruta: '/patient/charts/blood-pressure',
+    ruta: '/paciente/graficas/presion-arterial',
     color: '#EF4444',
     limites: {
       superior: { tipo: 'dinamico', valores: { sin_diabetes: 120, con_diabetes: 130 } },
@@ -54,7 +54,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Frecuencia cardiaca',
     unidad: 'lpm',
     campo: 'frecuencia_cardiaca',
-    ruta: '/patient/charts/heart-rate',
+    ruta: '/paciente/graficas/frecuencia-cardiaca',
     color: '#8B5CF6',
     limites: {
       superior: { tipo: 'fijo', valor: 100 },
@@ -66,7 +66,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Peso corporal',
     unidad: 'kg',
     campo: 'peso',
-    ruta: '/patient/charts/weight',
+    ruta: '/paciente/graficas/peso',
     color: '#14B8A6',
   },
   {
@@ -74,7 +74,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Cintura',
     unidad: 'cm',
     campo: 'cintura',
-    ruta: '/patient/charts/waist',
+    ruta: '/paciente/graficas/cintura',
     color: '#F97316',
   },
   {
@@ -82,7 +82,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'HbA1c',
     unidad: '%',
     campo: 'hba1c',
-    ruta: '/patient/charts/hba1c',
+    ruta: '/paciente/graficas/hba1c',
     color: '#EC4899',
     limites: {
       superior: { tipo: 'dinamico', valores: { sin_diabetes: 5.7, con_diabetes: 7.0 } },
@@ -93,7 +93,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Colesterol Total',
     unidad: 'mg/dL',
     campo: 'colesterol_total',
-    ruta: '/patient/charts/cholesterol-total',
+    ruta: '/paciente/graficas/colesterol-total',
     color: '#6366F1',
     limites: {
       superior: { tipo: 'fijo', valor: 200 },
@@ -104,7 +104,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Colesterol LDL',
     unidad: 'mg/dL',
     campo: 'colesterol_ldl',
-    ruta: '/patient/charts/cholesterol-ldl',
+    ruta: '/paciente/graficas/colesterol-ldl',
     color: '#F43F5E',
     limites: {
       superior: { tipo: 'dinamico', valores: { sin_diabetes: 130, con_diabetes: 100 } },
@@ -115,7 +115,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Colesterol HDL',
     unidad: 'mg/dL',
     campo: 'colesterol_hdl',
-    ruta: '/patient/charts/cholesterol-hdl',
+    ruta: '/paciente/graficas/colesterol-hdl',
     color: '#10B981',
     limites: {
       inferior: { tipo: 'fijo', valor: 40 },
@@ -126,7 +126,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Triglicéridos',
     unidad: 'mg/dL',
     campo: 'trigliceridos',
-    ruta: '/patient/charts/triglycerides',
+    ruta: '/paciente/graficas/trigliceridos',
     color: '#F59E0B',
     limites: {
       superior: { tipo: 'fijo', valor: 150 },
@@ -137,7 +137,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'Creatinina',
     unidad: 'mg/dL',
     campo: 'creatinina',
-    ruta: '/patient/charts/creatinine',
+    ruta: '/paciente/graficas/creatinina',
     color: '#0EA5E9',
     limites: {
       superior: { tipo: 'fijo', valor: 1.2 },
@@ -148,7 +148,7 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     titulo: 'BUN',
     unidad: 'mg/dL',
     campo: 'bun',
-    ruta: '/patient/charts/bun',
+    ruta: '/paciente/graficas/bun',
     color: '#A855F7',
     limites: {
       superior: { tipo: 'fijo', valor: 20 },

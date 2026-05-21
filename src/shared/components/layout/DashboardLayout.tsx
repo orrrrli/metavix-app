@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, LogOut, Activity } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store";
 import { Button } from "../ui/button";
+import { NavigationLoader } from "../ui/navigation-loader";
 
 export interface NavItem {
   name: string;
@@ -72,18 +73,21 @@ export function DashboardLayout({ children, navGroups, title }: DashboardLayoutP
               <div className="space-y-1">
                 {group.items.map((item) => {
                   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                  const isExternal = item.href.startsWith('http');
                   return (
                     <Link 
                       key={item.href} 
                       href={item.href}
                       onClick={() => setSidebarOpen(false)}
+                      target={isExternal ? "_blank" : undefined}
+                      rel={isExternal ? "noopener noreferrer" : undefined}
                       className={`flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                        isActive 
+                        isActive && !isExternal
                           ? "bg-primary/10 text-primary" 
                           : "text-foreground/70 hover:bg-muted hover:text-foreground"
                       }`}
                     >
-                      <div className={`mr-3 ${isActive ? "text-primary" : "text-muted-foreground"}`}>
+                      <div className={`mr-3 ${isActive && !isExternal ? "text-primary" : "text-muted-foreground"}`}>
                         {item.icon}
                       </div>
                       {item.name}
@@ -139,7 +143,7 @@ export function DashboardLayout({ children, navGroups, title }: DashboardLayoutP
             <h1 className="text-2xl font-display font-bold text-foreground mb-6 sm:hidden">
               {title}
             </h1>
-            {children}
+            <NavigationLoader>{children}</NavigationLoader>
           </div>
         </main>
       </div>

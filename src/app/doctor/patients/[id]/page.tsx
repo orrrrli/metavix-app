@@ -98,9 +98,9 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
                 <CardTitle className="flex items-center gap-2"><Droplet className="size-5 text-blue-500"/> Tendencias de Glucosa</CardTitle>
                 <CardDescription>Seguimiento Ayunas vs Posprandial</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px]">
+              <CardContent>
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8DFD4" />
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6A7B78" }} dy={10} />
@@ -122,9 +122,9 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
                 <CardTitle className="flex items-center gap-2"><HeartPulse className="size-5 text-rose-500"/> Cardiovascular</CardTitle>
                 <CardDescription>Sistólica, Diastólica y Frecuencia Cardíaca</CardDescription>
               </CardHeader>
-              <CardContent className="h-[300px]">
+              <CardContent>
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
+                  <ResponsiveContainer width="100%" height={300}>
                     <LineChart data={chartData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8DFD4" />
                       <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6A7B78" }} dy={10} />

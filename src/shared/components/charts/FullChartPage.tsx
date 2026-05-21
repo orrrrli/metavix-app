@@ -60,7 +60,7 @@ export function FullChartPage({ config, records, diabetesType }: FullChartPagePr
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/patient/dashboard">
+        <Link href="/paciente/dashboard">
           <Button variant="outline" size="icon" className="shrink-0">
             <ArrowLeft className="size-4" />
           </Button>
@@ -128,9 +128,9 @@ export function FullChartPage({ config, records, diabetesType }: FullChartPagePr
         <CardHeader>
           <CardTitle>{config.titulo} — Análisis Longitudinal</CardTitle>
         </CardHeader>
-        <CardContent className="h-[500px]">
+        <CardContent>
           {chartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height={500}>
               <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8DFD4" />
                 <XAxis
