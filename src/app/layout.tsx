@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Metavix - Plataforma SaaS de Monitoreo Cardiovascular y de Diabetes",
+  title: "Metavix",
   description: "Sistema de monitoreo médico de nivel empresarial para pacientes y médicos.",
 };
 
