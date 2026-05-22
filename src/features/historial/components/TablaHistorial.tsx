@@ -2,7 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import { FilaRegistro, Registro } from './FilaRegistro';
 import { TipoDiabetes } from '../utils/semaforo';
-import { Button } from '@/shared/components/ui/button';
+import { buttonVariants } from '@/shared/components/ui/button';
 
 interface TablaHistorialProps {
   registros: Registro[];
@@ -17,11 +17,9 @@ export function TablaHistorial({ registros, tipoDiabetes }: TablaHistorialProps)
         <p className="text-muted-foreground mb-6 max-w-sm">
           Comienza registrando tus mediciones del día para llevar un control de tu salud.
         </p>
-        <Button asChild>
-          <Link href="/paciente/nuevo-registro">
-            Registrar mediciones
-          </Link>
-        </Button>
+        <Link href="/paciente/nuevo-registro" className={buttonVariants()}>
+          Registrar mediciones
+        </Link>
       </div>
     );
   }
