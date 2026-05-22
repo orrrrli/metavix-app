@@ -6,6 +6,7 @@ import { format, parseISO, differenceInYears } from "date-fns";
 import { Search, Users, AlertTriangle, CheckCircle, HelpCircle } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store";
+import { useRouter } from "next/navigation";
 import { useMockDb } from "@/features/mock-db/store";
 import { PatientProfileDto, HealthRecordDto, ControlStatus } from "@/features/patient/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -33,6 +34,7 @@ function determineStatus(latestRecord?: HealthRecordDto): ControlStatus {
 }
 
 export default function DoctorDashboard() {
+  const router = useRouter();
   const { userId } = useAuthStore();
   const { records, patients } = useMockDb();
   
@@ -158,7 +160,7 @@ export default function DoctorDashboard() {
                   </TableRow>
                 ) : (
                   assignedPatients.map((patient) => (
-                    <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = `/doctor/patients/${patient.id}`}>
+                    <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/doctor/patients/${patient.id}`)}>
                       <TableCell className="font-medium">
                         {patient.firstName} {patient.lastName}
                       </TableCell>

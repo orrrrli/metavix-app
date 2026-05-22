@@ -14,15 +14,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Button } from "@/shared/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Badge } from "@/shared/components/ui/badge";
+import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 
 export default function PatientDetailView({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const { id } = use(params);
-  const { userId, role } = useAuthStore();
+  const { role } = useAuthStore();
   const { records, patients } = useMockDb();
-  
+
   const [patient, setPatient] = useState<PatientProfileDto | null>(null);
   const [patientRecords, setPatientRecords] = useState<HealthRecordDto[]>([]);
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     if (role !== "DOCTOR") {
@@ -30,19 +32,39 @@ export default function PatientDetailView({ params }: { params: Promise<{ id: st
       return;
     }
 
+    // Wait for the store to hydrate before redirecting
+    if (patients.length === 0) return;
+
     const foundPatient = patients.find(p => p.id === id);
     if (foundPatient) {
       setPatient(foundPatient);
-      const filtered = records.filter(r => r.patientId === id).sort((a, b) => 
-        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime() // Ascending for charts
+      const filtered = records.filter(r => r.patientId === id).sort((a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
       );
       setPatientRecords(filtered);
     } else {
-      router.push("/doctor/dashboard");
+      setNotFound(true);
     }
   }, [id, patients, records, role, router]);
 
-  if (!patient) return null;
+  if (notFound) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
+        <p className="text-muted-foreground">Paciente no encontrado.</p>
+        <Button variant="outline" onClick={() => router.push("/doctor/dashboard")}>
+          Volver al panel
+        </Button>
+      </div>
+    );
+  }
+
+  if (!patient) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <GooeyLoader />
+      </div>
+    );
+  }
 
   const chartData = patientRecords.map(record => {
     const ayuno = record.glucosas_comidas.find(g => g.tipo === "ayuno")?.valor;

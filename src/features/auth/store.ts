@@ -4,10 +4,12 @@ import { persist } from 'zustand/middleware';
 export type UserRole = 'PATIENT' | 'DOCTOR' | 'GUEST' | null;
 
 interface AuthState {
+  _hasHydrated: boolean;
   role: UserRole;
   userId: string | null;
   token: string | null;
 
+  setHasHydrated: (value: boolean) => void;
   loginAsPatient: (userId: string) => void;
   loginAsDoctor: (doctorId: string) => void;
   loginAsGuest: (guestId: string) => void;
@@ -17,9 +19,12 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
+      _hasHydrated: false,
       role: null,
       userId: null,
       token: null,
+
+      setHasHydrated: (value) => set({ _hasHydrated: value }),
 
       loginAsPatient: (userId) => set({
         role: 'PATIENT',
@@ -42,7 +47,10 @@ export const useAuthStore = create<AuthState>()(
       logout: () => set({ role: null, userId: null, token: null }),
     }),
     {
-      name: 'ram-med-auth'
+      name: 'ram-med-auth',
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
     }
   )
 );

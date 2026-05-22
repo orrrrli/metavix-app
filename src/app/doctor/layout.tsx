@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Home, Users, BarChart3, Settings } from "lucide-react";
 import { DashboardLayout, NavGroup } from "@/shared/components/layout/DashboardLayout";
@@ -19,18 +19,17 @@ const DOCTOR_NAV_GROUPS: NavGroup[] = [
 ];
 
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
-  const { role } = useAuthStore();
+  const { role, _hasHydrated } = useAuthStore();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    if (!_hasHydrated) return;
     if (role !== 'DOCTOR') {
       router.replace("/");
     }
-  }, [role, router]);
+  }, [_hasHydrated, role, router]);
 
-  if (!mounted || role !== 'DOCTOR') {
+  if (!_hasHydrated || role !== 'DOCTOR') {
     return <div className="min-h-screen bg-background flex items-center justify-center">Cargando...</div>;
   }
 

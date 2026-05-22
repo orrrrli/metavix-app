@@ -43,7 +43,7 @@ export const initialPatients: PatientProfileDto[] = [
 ];
 
 export const initialRecords: HealthRecordDto[] = [
-  // ── Sarah Jenkins (DM2) — 7 días: 2026-05-15 al 2026-05-21 ──────────────
+  // ── Sarah Jenkins (DM2) — 9 días: 2026-05-13 al 2026-05-21 ──────────────
   {
     id: "rec-s-007",
     patientId: MOCK_PATIENT_ID,
@@ -218,6 +218,61 @@ export const initialRecords: HealthRecordDto[] = [
     ego_proteinas: "trazas",
     ego_glucosa: "+1",
     notas: "Control de base. El Dr. ajustó la dosis de Metformina a 1000mg.",
+  },
+
+  {
+    id: "rec-s-009",
+    patientId: MOCK_PATIENT_ID,
+    timestamp: "2026-05-14T07:15:00.000Z",
+    glucosas_comidas: [
+      { tipo: "ayuno",            valor: 138, hora: "07:15", alimentos: null },
+      { tipo: "despues_desayuno", valor: 182, hora: "09:15", alimentos: "Chilaquiles con crema y frijoles" },
+      { tipo: "antes_comida",     valor: 115, hora: "13:00", alimentos: null },
+      { tipo: "despues_comida",   valor: 174, hora: "15:00", alimentos: "Carne asada, arroz y ensalada" },
+      { tipo: "despues_cena",     valor: 145, hora: "21:30", alimentos: "Tlayuda con frijoles y tasajo" },
+    ],
+    presion_sistolica: 138,
+    presion_diastolica: 86,
+    frecuencia_cardiaca: 82,
+    peso: 79.3,
+    cintura: null,
+    hba1c: null,
+    colesterol_total: null,
+    colesterol_ldl: null,
+    colesterol_hdl: null,
+    trigliceridos: null,
+    bun: null,
+    creatinina: null,
+    ego_proteinas: null,
+    ego_glucosa: null,
+    notas: "Fui a un evento familiar. Comí más de lo habitual.",
+  },
+  {
+    id: "rec-s-008",
+    patientId: MOCK_PATIENT_ID,
+    timestamp: "2026-05-13T08:00:00.000Z",
+    glucosas_comidas: [
+      { tipo: "ayuno",            valor: 120, hora: "08:00", alimentos: null },
+      { tipo: "despues_desayuno", valor: 160, hora: "10:00", alimentos: "Yogurt con granola y fruta" },
+      { tipo: "antes_comida",     valor: 108, hora: "13:30", alimentos: null },
+      { tipo: "despues_comida",   valor: 155, hora: "15:30", alimentos: "Sopa de lentejas, pollo y 1 tortilla" },
+      { tipo: "despues_cena",     valor: 138, hora: "21:00", alimentos: "Verduras salteadas con queso" },
+    ],
+    presion_sistolica: 126,
+    presion_diastolica: 80,
+    frecuencia_cardiaca: 74,
+    peso: 79.1,
+    cintura: null,
+    hba1c: null,
+    colesterol_total: null,
+    colesterol_ldl: null,
+    colesterol_hdl: null,
+    trigliceridos: null,
+    bun: null,
+    creatinina: null,
+    ego_proteinas: null,
+    ego_glucosa: null,
+    notas: "Buen día. Caminata de 20 minutos. Tomé todos los medicamentos.",
   },
 
   // ── Michael Chang (DM1) — Buen control ──────────────────────────────────

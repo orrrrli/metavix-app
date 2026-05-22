@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Home, 
@@ -54,18 +54,17 @@ const PATIENT_NAV_GROUPS: NavGroup[] = [
 ];
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
-  const { role } = useAuthStore();
+  const { role, _hasHydrated } = useAuthStore();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    if (!_hasHydrated) return;
     if (role !== 'PATIENT' && role !== 'GUEST') {
       router.replace("/");
     }
-  }, [role, router]);
+  }, [_hasHydrated, role, router]);
 
-  if (!mounted || (role !== 'PATIENT' && role !== 'GUEST')) {
+  if (!_hasHydrated || (role !== 'PATIENT' && role !== 'GUEST')) {
     return <div className="min-h-screen bg-background flex items-center justify-center">Cargando...</div>;
   }
 

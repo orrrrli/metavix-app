@@ -43,6 +43,7 @@ export const useMockDb = create<MockDbState>()(
     }),
     {
       name: 'ram-med-mock-db',
+      version: 1,
     }
   )
 );
