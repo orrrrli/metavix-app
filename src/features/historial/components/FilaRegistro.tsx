@@ -47,6 +47,16 @@ interface FilaRegistroProps {
 }
 
 const TIPO_COMIDA_ABBR: Record<string, string> = {
+  // API returns English enum values
+  Fasting: 'Ayuno',
+  PostBreakfast: 'Después Desayuno',
+  PreLunch: 'Antes Comida',
+  PostLunch: 'Después Comida',
+  PreDinner: 'Antes Cena',
+  PostDinner: 'Después Cena',
+  Snack: 'Colación',
+  Overnight: 'Madrugada',
+  // Spanish keys kept for future API alignment
   ayuno: 'Ayuno',
   antes_desayuno: 'Antes Desayuno',
   despues_desayuno: 'Después Desayuno',
