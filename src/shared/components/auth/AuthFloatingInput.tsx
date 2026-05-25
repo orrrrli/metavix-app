@@ -10,6 +10,7 @@ interface AuthFloatingInputProps {
   onBlur?: () => void;
   suffix?: React.ReactNode;
   hasError?: boolean;
+  errorText?: string;
   required?: boolean;
   readOnly?: boolean;
   accentColor?: string;
@@ -23,6 +24,7 @@ export default function AuthFloatingInput({
   onBlur,
   suffix,
   hasError = false,
+  errorText,
   required = false,
   readOnly = false,
   accentColor = '#00BFA5',
@@ -39,6 +41,7 @@ export default function AuthFloatingInput({
         : 'rgba(0,0,0,0.12)';
 
   return (
+    <div>
     <div
       style={{
         position: 'relative',
@@ -115,6 +118,17 @@ export default function AuthFloatingInput({
           {suffix}
         </div>
       )}
+    </div>
+    {errorText && (
+      <p style={{
+        margin: '4px 0 0 4px',
+        fontSize: '0.75rem',
+        color: '#d42020',
+        fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+      }}>
+        {errorText}
+      </p>
+    )}
     </div>
   );
 }
