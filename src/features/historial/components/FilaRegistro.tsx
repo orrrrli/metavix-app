@@ -48,14 +48,14 @@ interface FilaRegistroProps {
 
 const TIPO_COMIDA_ABBR: Record<string, string> = {
   ayuno: 'Ayuno',
-  antes_desayuno: 'Ant. Desay.',
-  despues_desayuno: 'Desp. Desay.',
-  antes_comida: 'Ant. Comida',
-  despues_comida: 'Desp. Comida',
-  antes_cena: 'Ant. Cena',
-  despues_cena: 'Desp. Cena',
-  antes_colacion: 'Ant. Col.',
-  despues_colacion: 'Desp. Col.',
+  antes_desayuno: 'Antes Desayuno',
+  despues_desayuno: 'Después Desayuno',
+  antes_comida: 'Antes Comida',
+  despues_comida: 'Después Comida',
+  antes_cena: 'Antes Cena',
+  despues_cena: 'Después Cena',
+  antes_colacion: 'Antes Colación',
+  despues_colacion: 'Después Colación',
   madrugada: 'Madrugada',
 };
 
