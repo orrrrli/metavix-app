@@ -1,0 +1,240 @@
+import { CreateDailyRecordRequest, DailyRecordResponse } from '@/types/daily-record';
+import { CreateLabRecordRequest, LabRecordResponse } from '@/types/lab-record';
+import { DoctorOption, LinkedDoctorResponse, SendLinkRequestBody, LinkRequestResponse } from '@/types/link-request';
+import { PatientResumenResponse } from '@/types/patient-resumen';
+import { UpsertInsulinProfileRequest, InsulinProfileResponse, CreateInsulinRecordRequest, InsulinRecordResponse } from '@/types/insulin-dm1';
+import { PatientProfileResponse, UpdatePatientProfileRequest } from '@/types/patient-profile';
+
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+
+// === Doctor Discovery ===
+
+export async function getAllDoctors(): Promise<DoctorOption[]> {
+  const res = await fetch(`${BASE}/api/patient/get-all-doctors`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getAllDoctors] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function getLinkedDoctors(patientId: string): Promise<LinkedDoctorResponse[]> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/get-linked-doctors`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getLinkedDoctors] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+// === Link Requests ===
+
+export async function sendLinkRequest(data: SendLinkRequestBody): Promise<LinkRequestResponse> {
+  const res = await fetch(`${BASE}/api/patient/requests-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`[sendLinkRequest] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function revokeLinkRequest(requestId: string): Promise<LinkRequestResponse> {
+  const res = await fetch(`${BASE}/api/patient/requests/${requestId}/revoke`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[revokeLinkRequest] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+// === Patient Resumen ===
+
+export async function getPatientResumen(patientId: string): Promise<PatientResumenResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/resumen`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getPatientResumen] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+// === Daily Records ===
+
+export async function getDailyRecords(patientId: string): Promise<DailyRecordResponse[]> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/get-all/records/daily`, {
+    credentials: 'include',
+  });
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`[getDailyRecords] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function getDailyRecordById(
+  patientId: string,
+  recordId: string
+): Promise<DailyRecordResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/record/daily/${recordId}`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getDailyRecordById] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function createDailyRecord(
+  patientId: string,
+  data: CreateDailyRecordRequest
+): Promise<DailyRecordResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/records/daily`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`[createDailyRecord] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+// === Lab Records ===
+
+export async function getLabRecords(patientId: string): Promise<LabRecordResponse[]> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/get-all/records/lab`, {
+    credentials: 'include',
+  });
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`[getLabRecords] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function getLabRecordById(
+  patientId: string,
+  recordId: string
+): Promise<LabRecordResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/records/lab/${recordId}`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getLabRecordById] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function createLabRecord(
+  patientId: string,
+  data: CreateLabRecordRequest
+): Promise<LabRecordResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/records/lab`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`[createLabRecord] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+// === Insulin DM1 ===
+
+export async function getInsulinProfile(patientId: string): Promise<InsulinProfileResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/profile`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getInsulinProfile] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function upsertInsulinProfile(
+  patientId: string,
+  data: UpsertInsulinProfileRequest
+): Promise<InsulinProfileResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/profile`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`[upsertInsulinProfile] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function getInsulinRecords(patientId: string): Promise<InsulinRecordResponse[]> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getInsulinRecords] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function getInsulinRecordById(
+  patientId: string,
+  recordId: string
+): Promise<InsulinRecordResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records/${recordId}`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getInsulinRecordById] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function createInsulinRecord(
+  patientId: string,
+  data: CreateInsulinRecordRequest
+): Promise<InsulinRecordResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`[createInsulinRecord] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function deleteInsulinRecord(
+  patientId: string,
+  recordId: string
+): Promise<void> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records/${recordId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[deleteInsulinRecord] ${res.status}`);
+}
+
+// === Patient Profile ===
+
+export async function getPatientProfile(patientId: string): Promise<PatientProfileResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/profile`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getPatientProfile] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function updatePatientProfile(
+  patientId: string,
+  data: UpdatePatientProfileRequest
+): Promise<PatientProfileResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/profile`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) throw new Error(`[updatePatientProfile] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}

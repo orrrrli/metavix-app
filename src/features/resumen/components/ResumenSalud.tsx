@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useRef, useState } from "react";
 import { useAuthStore } from "@/features/auth/store";
+import { usePatientResumen } from "@/features/patient/hooks/use-patient-resumen";
 import { EncabezadoResumen } from "./EncabezadoResumen";
 import { AvisoLegal, PieResumen } from "./AvisoLegal";
 import { SeccionMetrica } from "./SeccionMetrica";
@@ -9,75 +10,38 @@ import { calcularEstadoMetrica } from "../utils/interpretacionADA";
 import { Button } from "@/shared/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { PatientMetricasResponse } from "@/types/patient-resumen";
 
-interface MetricaEntry {
-  valor: number | null;
-  fecha: string | null;
-}
-
-interface ResumenData {
-  perfil: {
-    nombre: string;
-    tipoDiabetes: string;
-    embarazada: boolean;
-    sexo: "M" | "F";
-  };
-  metricas: Record<string, MetricaEntry>;
-}
+type MetricaKey = keyof PatientMetricasResponse;
 
 export function ResumenSalud() {
-  const { token } = useAuthStore();
-  const [data, setData] = useState<ResumenData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { patientId } = useAuthStore();
+  const { data, isLoading, isError } = usePatientResumen(patientId ?? '');
   const pdfRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
-
-  useEffect(() => {
-    async function fetchData() {
-      if (!token) return;
-      try {
-        const res = await fetch("/api/paciente/resumen", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) throw new Error("Fallo al obtener el resumen");
-        const json = await res.json();
-        setData(json);
-      } catch (e) {
-        setError("Ocurrió un error al cargar el resumen clínico.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [token]);
 
   const exportarPDF = async () => {
     if (!pdfRef.current || !data) return;
     setIsExporting(true);
-    
     try {
-      // Dynamic import to avoid SSR issues
       const html2pdf = (await import('html2pdf.js')).default;
-      
       const fechaStr = format(new Date(), "yyyy-MM-dd");
       const opt = {
         margin: [10, 10, 10, 10] as [number, number, number, number],
         filename: `resumen-salud-${fechaStr}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
       };
-
       await html2pdf().set(opt as any).from(pdfRef.current).save();
     } catch (e) {
-      console.error("Error al exportar PDF:", e);
+      console.error('[exportarPDF] Failed:', e);
     } finally {
       setIsExporting(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <Loader2 className="h-8 w-8 animate-spin mb-4" />
@@ -86,16 +50,19 @@ export function ResumenSalud() {
     );
   }
 
-  if (error || !data) {
+  if (isError || !data) {
     return (
       <div className="bg-red-50 text-red-700 p-6 rounded-lg text-center">
-        <p>{error || "No hay datos disponibles"}</p>
-        <Button onClick={() => window.location.reload()} className="mt-4" variant="outline">Reintentar</Button>
+        <p>Ocurrió un error al cargar el resumen clínico.</p>
+        <Button onClick={() => window.location.reload()} className="mt-4" variant="outline">
+          Reintentar
+        </Button>
       </div>
     );
   }
 
   const { perfil, metricas } = data;
+  const perfilNorm = { ...perfil, sexo: perfil.sexo as "M" | "F" };
 
   const todasNulas = Object.values(metricas).every((m) => m.valor === null);
 
@@ -108,11 +75,10 @@ export function ResumenSalud() {
     );
   }
 
-  // Renders a metric with ADA interpretation badge
-  const renderMetrica = (id: string, nombre: string, unidad: string) => {
+  const renderMetrica = (id: MetricaKey, nombre: string, unidad: string) => {
     const m = metricas[id];
     if (!m) return null;
-    const { estado, meta } = calcularEstadoMetrica(id, m.valor, perfil);
+    const { estado, meta } = calcularEstadoMetrica(id, m.valor, perfilNorm);
     return (
       <SeccionMetrica
         key={id}
@@ -126,8 +92,7 @@ export function ResumenSalud() {
     );
   };
 
-  // Renders a metric without ADA classification (no badge, no meta range)
-  const renderMetricaInfo = (id: string, nombre: string, unidad: string) => {
+  const renderMetricaInfo = (id: MetricaKey, nombre: string, unidad: string) => {
     const m = metricas[id];
     if (!m) return null;
     return (
@@ -151,9 +116,8 @@ export function ResumenSalud() {
       </div>
 
       <div className="bg-white text-black shadow-lg rounded-xl overflow-hidden border">
-        {/* El contenedor ref que será exportado a PDF */}
         <div ref={pdfRef} className="p-8 sm:p-12 max-w-4xl mx-auto bg-white" style={{ minHeight: '297mm' }}>
-          
+
           <EncabezadoResumen nombrePaciente={perfil.nombre} />
           <AvisoLegal />
 
@@ -201,13 +165,12 @@ export function ResumenSalud() {
                 {renderMetrica("bun", "Nitrógeno Ureico (BUN)", "mg/dL")}
               </div>
             </section>
-            
+
             <section className="bg-indigo-50/50 p-6 rounded-lg border border-indigo-100 mt-8">
               <h3 className="text-lg font-display font-bold text-indigo-900 border-b-2 border-indigo-200 pb-2 mb-4 uppercase tracking-wider flex items-center gap-2">
                 <span className="bg-indigo-200 text-indigo-800 p-1 rounded">IA</span>
                 Análisis Inteligente
               </h3>
-              {/* TODO: Análisis IA — pendiente de definición */}
               <div className="text-indigo-800/70 italic text-center py-8">
                 Aquí estará el análisis de IA
               </div>

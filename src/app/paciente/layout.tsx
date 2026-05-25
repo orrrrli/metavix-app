@@ -2,21 +2,22 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Home, 
-  PlusCircle, 
-  ClipboardList, 
-  FileText, 
-  TrendingUp, 
-  Syringe, 
-  Scale, 
-  FlaskConical, 
-  Stethoscope, 
-  HeartPulse, 
-  Footprints, 
-  Target, 
-  MessageCircle, 
-  Calendar 
+import {
+  Home,
+  PlusCircle,
+  ClipboardList,
+  FileText,
+  TrendingUp,
+  Syringe,
+  Scale,
+  FlaskConical,
+  Stethoscope,
+  HeartPulse,
+  Footprints,
+  Target,
+  MessageCircle,
+  Calendar,
+  UserRound,
 } from "lucide-react";
 import { DashboardLayout, NavGroup } from "@/shared/components/layout/DashboardLayout";
 import { useAuthStore } from "@/features/auth/store";
@@ -29,6 +30,7 @@ const PATIENT_NAV_GROUPS: NavGroup[] = [
       { name: "Registrar hoy", href: "/paciente/nuevo-registro", icon: <PlusCircle className="size-5" /> },
       { name: "Mi historial", href: "/paciente/historial", icon: <ClipboardList className="size-5" /> },
       { name: "Mi resumen", href: "/paciente/resumen", icon: <FileText className="size-5" /> },
+      { name: "Mis médicos", href: "/paciente/doctores", icon: <UserRound className="size-5" /> },
     ]
   },
   {
@@ -59,12 +61,12 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (!_hasHydrated) return;
-    if (role !== 'PATIENT' && role !== 'GUEST') {
+    if (role !== 'PATIENT') {
       router.replace("/");
     }
   }, [_hasHydrated, role, router]);
 
-  if (!_hasHydrated || (role !== 'PATIENT' && role !== 'GUEST')) {
+  if (!_hasHydrated || role !== 'PATIENT') {
     return <div className="min-h-screen bg-background flex items-center justify-center">Cargando...</div>;
   }
 

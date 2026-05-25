@@ -28,7 +28,17 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, navGroups, title }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const { logout, role } = useAuthStore();
+  const { logout, role, fullName } = useAuthStore();
+
+  const displayName = fullName ?? (role === 'PATIENT' ? 'Paciente' : 'Doctor');
+  const initials = displayName
+    .split(' ')
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+  const roleLabel = role === 'PATIENT' ? 'Paciente' : 'Médico';
+  const profileHref = role === 'PATIENT' ? '/paciente/perfil' : null;
 
   const handleLogout = () => {
     logout();
@@ -119,17 +129,28 @@ export function DashboardLayout({ children, navGroups, title }: DashboardLayoutP
           </div>
           
           <div className="flex items-center space-x-4">
-            <div className="hidden sm:flex flex-col items-end mr-2">
-              <span className="text-sm font-medium leading-none mb-1">
-                {role === 'PATIENT' ? 'Sarah Jenkins' : 'Dr. Thorne'}
-              </span>
-              <span className="text-xs text-muted-foreground leading-none">
-                {role === 'PATIENT' ? 'Paciente' : 'Cardiólogo'}
-              </span>
-            </div>
-            <div className="size-9 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">
-              {role === 'PATIENT' ? 'SJ' : 'AT'}
-            </div>
+            {profileHref ? (
+              <Link href={profileHref} className="hidden sm:flex flex-col items-end mr-2 group">
+                <span className="text-sm font-medium leading-none mb-1 group-hover:text-primary transition-colors">
+                  {displayName}
+                </span>
+                <span className="text-xs text-muted-foreground leading-none">{roleLabel}</span>
+              </Link>
+            ) : (
+              <div className="hidden sm:flex flex-col items-end mr-2">
+                <span className="text-sm font-medium leading-none mb-1">{displayName}</span>
+                <span className="text-xs text-muted-foreground leading-none">{roleLabel}</span>
+              </div>
+            )}
+            {profileHref ? (
+              <Link href={profileHref} className="size-9 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm hover:bg-primary/30 transition-colors">
+                {initials}
+              </Link>
+            ) : (
+              <div className="size-9 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-sm">
+                {initials}
+              </div>
+            )}
             <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-destructive">
               <LogOut className="size-4 mr-2" />
               <span className="hidden sm:inline">Cerrar sesión</span>

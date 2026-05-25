@@ -1,18 +1,31 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type UserRole = 'PATIENT' | 'DOCTOR' | 'GUEST' | null;
+export type UserRole = 'PATIENT' | 'DOCTOR' | 'ADMIN' | null;
+
+interface SessionData {
+  userId: string;
+  patientId: string | null;
+  doctorId: string | null;
+  role: UserRole;
+  fullName: string;
+  email: string;
+}
 
 interface AuthState {
   _hasHydrated: boolean;
   role: UserRole;
   userId: string | null;
+  patientId: string | null;
+  doctorId: string | null;
+  fullName: string | null;
+  email: string | null;
   token: string | null;
 
   setHasHydrated: (value: boolean) => void;
+  setSession: (session: SessionData) => void;
   loginAsPatient: (userId: string) => void;
   loginAsDoctor: (doctorId: string) => void;
-  loginAsGuest: (guestId: string) => void;
   logout: () => void;
 }
 
@@ -22,29 +35,24 @@ export const useAuthStore = create<AuthState>()(
       _hasHydrated: false,
       role: null,
       userId: null,
+      patientId: null,
+      doctorId: null,
+      fullName: null,
+      email: null,
       token: null,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
 
-      loginAsPatient: (userId) => set({
-        role: 'PATIENT',
-        userId,
-        token: `mock-jwt-patient-${userId}`
-      }),
+      setSession: ({ userId, patientId, doctorId, role, fullName, email }) =>
+        set({ role, userId, patientId, doctorId, fullName, email, token: role === 'PATIENT' ? `mock-jwt-patient-${userId}` : null }),
 
-      loginAsDoctor: (doctorId) => set({
-        role: 'DOCTOR',
-        userId: doctorId,
-        token: `mock-jwt-doctor-${doctorId}`
-      }),
+      loginAsPatient: (userId) =>
+        set({ role: 'PATIENT', userId, fullName: 'Demo Paciente', email: null, token: `mock-jwt-patient-${userId}` }),
 
-      loginAsGuest: (guestId) => set({
-        role: 'GUEST',
-        userId: guestId,
-        token: null,
-      }),
+      loginAsDoctor: (doctorId) =>
+        set({ role: 'DOCTOR', userId: doctorId, fullName: 'Demo Médico', email: null, token: null }),
 
-      logout: () => set({ role: null, userId: null, token: null }),
+      logout: () => set({ role: null, userId: null, patientId: null, doctorId: null, fullName: null, email: null, token: null }),
     }),
     {
       name: 'ram-med-auth',

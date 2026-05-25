@@ -1,22 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { HeartPulse, Stethoscope, User, UserRound, Lock } from "lucide-react";
+import { HeartPulse, Stethoscope, User } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Badge } from "@/shared/components/ui/badge";
-import { GuestOnboardingModal } from "@/shared/components/ui/guest-onboarding-modal";
 import { useAuthStore } from "@/features/auth/store";
 import { MOCK_PATIENT_ID, MOCK_DOCTOR_ID } from "@/features/mock-db/seed";
 
 export default function LandingPage() {
   const router = useRouter();
   const { role, loginAsPatient, loginAsDoctor } = useAuthStore();
-  const [guestModalOpen, setGuestModalOpen] = useState(false);
 
   useEffect(() => {
-    if (role === "PATIENT" || role === "GUEST") {
+    if (role === "PATIENT") {
       router.replace("/paciente/dashboard");
     } else if (role === "DOCTOR") {
       router.replace("/doctor/dashboard");
@@ -52,66 +49,28 @@ export default function LandingPage() {
         </p>
       </div>
 
-      {/* Auth actions — Login / Register (coming soon) */}
+      {/* Auth actions */}
       <div className="z-10 w-full max-w-sm mb-8">
         <div className="flex gap-3">
           <Button
             variant="default"
-            className="flex-1 relative"
-            disabled
+            className="flex-1"
+            onClick={() => router.push("/login")}
           >
-            <Lock className="size-4 mr-2 opacity-60" />
             Iniciar sesión
-            <Badge variant="secondary" className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0">
-              Próximamente
-            </Badge>
           </Button>
           <Button
             variant="outline"
-            className="flex-1 relative"
-            disabled
+            className="flex-1"
+            onClick={() => router.push("/register")}
           >
             Registrarse
-            <Badge variant="secondary" className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0">
-              Próximamente
-            </Badge>
           </Button>
         </div>
-        <p className="text-center text-xs text-muted-foreground mt-3">
-          ¿No tienes cuenta? Entra como invitado para explorar la plataforma.
-        </p>
       </div>
 
       {/* Options grid */}
-      <div className="z-10 grid grid-cols-1 md:grid-cols-3 gap-5 w-full max-w-5xl">
-        {/* Guest */}
-        <Card
-          className="border-border/60 shadow-lg hover:shadow-xl transition-all duration-300 group cursor-pointer md:col-span-1"
-          onClick={() => setGuestModalOpen(true)}
-        >
-          <CardHeader className="text-center pb-4">
-            <div className="mx-auto bg-emerald-50 text-emerald-600 p-4 rounded-2xl mb-4 group-hover:scale-105 transition-transform duration-300">
-              <UserRound className="size-10" />
-            </div>
-            <CardTitle className="text-xl font-display">Invitado</CardTitle>
-            <CardDescription className="text-sm mt-2">
-              Registra tus propios datos. Todo se guarda en tu dispositivo, sin crear cuenta.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center">
-            <Button
-              size="lg"
-              className="w-full text-base h-12 shadow-sm bg-emerald-600 hover:bg-emerald-700"
-              onClick={(e) => {
-                e.stopPropagation();
-                setGuestModalOpen(true);
-              }}
-            >
-              Entrar como invitado
-            </Button>
-          </CardContent>
-        </Card>
-
+      <div className="z-10 grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-3xl">
         {/* Demo Patient */}
         <Card className="border-border/60 shadow-lg hover:shadow-xl transition-all duration-300 group">
           <CardHeader className="text-center pb-4">
@@ -165,7 +124,6 @@ export default function LandingPage() {
         </Card>
       </div>
 
-      <GuestOnboardingModal open={guestModalOpen} onOpenChange={setGuestModalOpen} />
     </div>
   );
 }

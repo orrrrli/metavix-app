@@ -1,136 +1,155 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { format, parseISO, differenceInYears } from "date-fns";
-import { Search, Users, AlertTriangle, CheckCircle, HelpCircle } from "lucide-react";
+
+
+import { Search, Users, Bell, CheckCircle, XCircle, Clock } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/store";
-import { useRouter } from "next/navigation";
-import { useMockDb } from "@/features/mock-db/store";
-import { PatientProfileDto, HealthRecordDto, ControlStatus } from "@/features/patient/types";
+import { useLinkedPatients, usePendingLinkRequests, useAcceptLinkRequest, useRejectLinkRequest } from "@/features/doctor/hooks/use-doctor";
+import { LinkedPatientResponse } from "@/types/doctor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
+import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 
-function determineStatus(latestRecord?: HealthRecordDto): ControlStatus {
-  if (!latestRecord) return "Desconocido";
-  
-  const fastingGlucose = latestRecord.glucosas_comidas.find(g => g.tipo === "ayuno")?.valor;
-  
-  const hasDanger = (fastingGlucose && fastingGlucose > 130) ||
-                    (latestRecord.presion_sistolica && latestRecord.presion_sistolica >= 140) ||
-                    (latestRecord.presion_diastolica && latestRecord.presion_diastolica >= 90) ||
-                    (latestRecord.frecuencia_cardiaca && latestRecord.frecuencia_cardiaca > 100);
-                    
-  const hasCaution = (fastingGlucose && fastingGlucose > 100) ||
-                     (latestRecord.presion_sistolica && latestRecord.presion_sistolica >= 130);
-
-  if (hasDanger) return "Peligro";
-  if (hasCaution) return "Precaución";
-  return "Buen Control";
-}
-
-export default function DoctorDashboard() {
-  const router = useRouter();
-  const { userId } = useAuthStore();
-  const { records, patients } = useMockDb();
-  
-  const [assignedPatients, setAssignedPatients] = useState<(PatientProfileDto & { latestRecord?: HealthRecordDto, status: ControlStatus, recordCount: number })[]>([]);
+export default function DoctorDashboard(): React.ReactElement {
+  const { doctorId } = useAuthStore();
   const [search, setSearch] = useState("");
 
-  useEffect(() => {
-    if (userId) {
-      const myPatients = patients.filter(p => p.assignedDoctorId === userId);
-      
-      const enriched = myPatients.map(p => {
-        const pRecords = records.filter(r => r.patientId === p.id).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-        const latestRecord = pRecords[0];
-        return {
-          ...p,
-          latestRecord,
-          status: determineStatus(latestRecord),
-          recordCount: pRecords.length
-        };
-      });
-      
-      let filtered = enriched;
-      if (search) {
-        filtered = filtered.filter(p => 
-          `${p.firstName} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-          p.diabetesType.toLowerCase().includes(search.toLowerCase())
-        );
-      }
-      
-      setAssignedPatients(filtered);
-    }
-  }, [userId, records, patients, search]);
+  const { data: patients = [], isLoading: loadingPatients } = useLinkedPatients(doctorId ?? "");
+  const { data: pendingRequests = [], isLoading: loadingRequests } = usePendingLinkRequests(doctorId ?? "");
 
-  const StatusBadge = ({ status }: { status: ControlStatus }) => {
-    switch (status) {
-      case "Peligro": return <Badge variant="destructive" className="flex items-center gap-1 w-fit"><AlertTriangle className="size-3"/> Peligro</Badge>;
-      case "Precaución": return <Badge variant="outline" className="flex items-center gap-1 w-fit border-warning text-warning"><AlertTriangle className="size-3"/> Precaución</Badge>;
-      case "Buen Control": return <Badge variant="default" className="flex items-center gap-1 w-fit bg-success hover:bg-success/80 text-success-foreground"><CheckCircle className="size-3"/> Bien</Badge>;
-      default: return <Badge variant="secondary" className="flex items-center gap-1 w-fit"><HelpCircle className="size-3"/> Desconocido</Badge>;
-    }
-  };
+  const { mutate: accept, isPending: accepting } = useAcceptLinkRequest(doctorId ?? "");
+  const { mutate: reject, isPending: rejecting } = useRejectLinkRequest(doctorId ?? "");
 
-  const dangerCount = assignedPatients.filter(p => p.status === "Peligro").length;
-  const cautionCount = assignedPatients.filter(p => p.status === "Precaución").length;
+  const filteredPatients: LinkedPatientResponse[] = search
+    ? patients.filter(p =>
+        `${p.name} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+        p.medicalRecordNumber.toLowerCase().includes(search.toLowerCase())
+      )
+    : patients;
+
+  function handleAccept(requestId: string, patientName: string): void {
+    accept(requestId, {
+      onSuccess: () => toast.success(`Solicitud de ${patientName} aceptada`),
+      onError: () => toast.error("No se pudo aceptar la solicitud"),
+    });
+  }
+
+  function handleReject(requestId: string, patientName: string): void {
+    reject(requestId, {
+      onSuccess: () => toast.success(`Solicitud de ${patientName} rechazada`),
+      onError: () => toast.error("No se pudo rechazar la solicitud"),
+    });
+  }
+
+  if (loadingPatients || loadingRequests) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <GooeyLoader />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-display font-bold text-foreground">Panel Clínico</h2>
-          <p className="text-muted-foreground mt-1">Supervise a sus pacientes asignados e identifique alertas críticas.</p>
+          <p className="text-muted-foreground mt-1">Supervise a sus pacientes vinculados e identifique solicitudes pendientes.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-card">
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Pacientes</CardTitle>
+            <CardTitle className="text-sm font-medium">Pacientes Vinculados</CardTitle>
             <Users className="size-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{assignedPatients.length}</div>
+            <div className="text-2xl font-bold">{patients.length}</div>
           </CardContent>
         </Card>
-        <Card className={dangerCount > 0 ? "border-destructive/50 bg-destructive/5" : ""}>
+        <Card className={pendingRequests.length > 0 ? "border-primary/50 bg-primary/5" : ""}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Atención Crítica (Peligro)</CardTitle>
-            <AlertTriangle className={`size-4 ${dangerCount > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+            <CardTitle className="text-sm font-medium">Solicitudes Pendientes</CardTitle>
+            <Bell className={`size-4 ${pendingRequests.length > 0 ? "text-primary" : "text-muted-foreground"}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${dangerCount > 0 ? 'text-destructive' : ''}`}>{dangerCount}</div>
-          </CardContent>
-        </Card>
-        <Card className={cautionCount > 0 ? "border-warning/50 bg-warning/5" : ""}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Requiere Revisión (Precaución)</CardTitle>
-            <AlertTriangle className={`size-4 ${cautionCount > 0 ? 'text-warning' : 'text-muted-foreground'}`} />
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${cautionCount > 0 ? 'text-warning' : ''}`}>{cautionCount}</div>
+            <div className={`text-2xl font-bold ${pendingRequests.length > 0 ? "text-primary" : ""}`}>
+              {pendingRequests.length}
+            </div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Pending Requests */}
+      {pendingRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="size-5 text-primary" />
+              Solicitudes de Vinculación
+            </CardTitle>
+            <CardDescription>Pacientes que solicitan vincularse a su panel.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingRequests.map((req) => (
+                <div
+                  key={req.requestId}
+                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
+                >
+                  <div>
+                    <p className="font-medium text-foreground">{req.patientFirstName} {req.patientLastName}</p>
+                    <p className="text-sm text-muted-foreground">{req.patientEmail}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-destructive text-destructive hover:bg-destructive/10"
+                      disabled={rejecting}
+                      onClick={() => handleReject(req.requestId, `${req.patientFirstName} ${req.patientLastName}`)}
+                    >
+                      <XCircle className="size-4 mr-1" />
+                      Rechazar
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={accepting}
+                      onClick={() => handleAccept(req.requestId, `${req.patientFirstName} ${req.patientLastName}`)}
+                    >
+                      <CheckCircle className="size-4 mr-1" />
+                      Aceptar
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Patient List */}
       <Card>
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 space-y-4 sm:space-y-0">
           <div>
             <CardTitle>Registro de Pacientes</CardTitle>
-            <CardDescription>Seleccione un paciente para ver sus datos longitudinales detallados.</CardDescription>
+            <CardDescription>Seleccione un paciente para ver sus datos clínicos.</CardDescription>
           </div>
           <div className="w-full sm:w-72">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
-              <Input 
-                placeholder="Buscar nombre del paciente..." 
-                className="pl-8" 
+              <Input
+                placeholder="Buscar nombre o expediente..."
+                className="pl-8"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -143,40 +162,30 @@ export default function DoctorDashboard() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>Edad</TableHead>
-                  <TableHead>Sexo</TableHead>
-                  <TableHead>Condición</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Último Registro</TableHead>
+                  <TableHead>No. Expediente</TableHead>
                   <TableHead className="text-right">Acción</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {assignedPatients.length === 0 ? (
+                {filteredPatients.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-32 text-center text-muted-foreground">
-                      No se encontraron pacientes.
+                    <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
+                      {patients.length === 0
+                        ? "No tiene pacientes vinculados aún."
+                        : "No se encontraron pacientes."}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  assignedPatients.map((patient) => (
-                    <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50" onClick={() => router.push(`/doctor/patients/${patient.id}`)}>
+                  filteredPatients.map((patient) => (
+                    <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50">
                       <TableCell className="font-medium">
-                        {patient.firstName} {patient.lastName}
-                      </TableCell>
-                      <TableCell>{differenceInYears(new Date(), parseISO(patient.dateOfBirth))}</TableCell>
-                      <TableCell>{patient.gender}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{patient.diabetesType}</Badge>
+                        {patient.name} {patient.lastName}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={patient.status} />
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {patient.latestRecord ? format(parseISO(patient.latestRecord.timestamp), "MMM dd, yyyy") : "Sin registros"}
+                        <Badge variant="outline">{patient.medicalRecordNumber}</Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/doctor/patients/${patient.id}`}>
+                        <Link href={`/doctor/patients/${patient.medicalRecordNumber}`}>
                           <Button variant="ghost" size="sm">Ver Perfil</Button>
                         </Link>
                       </TableCell>

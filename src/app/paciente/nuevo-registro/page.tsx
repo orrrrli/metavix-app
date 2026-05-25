@@ -1,146 +1,176 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { Save, AlertCircle, Plus, Trash2 } from "lucide-react";
 
-import { usePatientData } from "@/features/patient/hooks/use-patient-data";
+import { useAuthStore } from "@/features/auth/store";
+import { usePatientProfile, useUpdatePatientProfile } from "@/features/patient/hooks/use-patient-profile";
+import { useCreateDailyRecord } from "@/features/patient/hooks/use-daily-records";
+import { useCreateLabRecord } from "@/features/patient/hooks/use-lab-records";
+import { GlucoseReadingType } from "@/types/daily-record";
+import { MealTimeSelector } from "@/shared/components/ui/meal-time-selector";
+import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 
-const optionalNum = (min: number, max: number, msg: string) => z.union([
-  z.coerce.number().min(min, msg).max(max, msg),
-  z.literal(""),
-  z.literal(null),
-  z.undefined()
-]).transform(val => val === "" ? null : Number(val));
+const optionalNum = (min: number, max: number, msg: string) =>
+  z.union([
+    z.coerce.number().min(min, msg).max(max, msg),
+    z.literal(""),
+    z.literal(null),
+    z.undefined(),
+  ]).transform(val => (val === "" || val == null) ? null : Number(val));
 
 const recordSchema = z.object({
   fecha: z.string().min(1, "La fecha es requerida"),
-  glucosas_comidas: z.array(z.object({
-    tipo: z.string().min(1, "El tipo de comida es requerido"),
-    valor: z.coerce.number().min(40, "Mínimo 40").max(600, "Máximo 600"),
-    hora: z.string().optional(),
-    alimentos: z.string().optional(),
+  glucoseReadings: z.array(z.object({
+    readingType: z.coerce.number().int(),
+    valueMgDl: z.coerce.number().min(40, "Mínimo 40").max(600, "Máximo 600"),
+    time: z.string().optional().transform(v => v === "" ? null : v ?? null),
+    foods: z.string().optional().transform(v => v === "" ? null : v ?? null),
   })),
-  presion_sistolica: optionalNum(60, 260, "Rango: 60-260"),
-  presion_diastolica: optionalNum(40, 160, "Rango: 40-160"),
+  presion_sistolica:   optionalNum(60, 260, "Rango: 60-260"),
+  presion_diastolica:  optionalNum(40, 160, "Rango: 40-160"),
   frecuencia_cardiaca: optionalNum(30, 250, "Rango: 30-250"),
-  peso: optionalNum(20, 300, "Rango: 20-300"),
-  cintura: optionalNum(40, 200, "Rango: 40-200"),
-  hba1c: optionalNum(3, 20, "Rango: 3-20"),
-  colesterol_total: optionalNum(50, 600, "Rango: 50-600"),
-  colesterol_ldl: optionalNum(20, 400, "Rango: 20-400"),
-  colesterol_hdl: optionalNum(10, 200, "Rango: 10-200"),
-  trigliceridos: optionalNum(20, 3000, "Rango: 20-3000"),
-  bun: optionalNum(1, 200, "Rango: 1-200"),
-  creatinina: optionalNum(0.1, 30, "Rango: 0.1-30"),
-  ego_proteinas: z.string().optional().transform(v => v === "" ? null : v),
-  ego_glucosa: z.string().optional().transform(v => v === "" ? null : v),
-  notas: z.string().optional().transform(v => v === "" ? null : v),
-  embarazada: z.boolean().optional(),
+  peso:                optionalNum(20, 300, "Rango: 20-300"),
+  cintura:             optionalNum(40, 200, "Rango: 40-200"),
+  hba1c:               optionalNum(3, 20,   "Rango: 3-20"),
+  colesterol_total:    optionalNum(50, 600,  "Rango: 50-600"),
+  colesterol_ldl:      optionalNum(20, 400,  "Rango: 20-400"),
+  colesterol_hdl:      optionalNum(10, 200,  "Rango: 10-200"),
+  trigliceridos:       optionalNum(20, 3000, "Rango: 20-3000"),
+  bun:                 optionalNum(1, 200,   "Rango: 1-200"),
+  creatinina:          optionalNum(0.1, 30,  "Rango: 0.1-30"),
+  ego_proteinas: z.string().optional().transform(v => v === "" ? null : v ?? null),
+  ego_glucosa:   z.string().optional().transform(v => v === "" ? null : v ?? null),
+  notas:         z.string().optional().transform(v => v === "" ? null : v ?? null),
+  embarazada:    z.boolean().optional(),
 });
 
 type RecordFormValues = z.infer<typeof recordSchema>;
 
 export default function NewRecordPage() {
   const router = useRouter();
-  const { profile: patientProfile, addRecord, updateProfile } = usePatientData();
+  const { patientId } = useAuthStore();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: profile, isLoading: loadingProfile } = usePatientProfile(patientId ?? '');
+  const { mutateAsync: submitDailyRecord } = useCreateDailyRecord(patientId ?? '');
+  const { mutateAsync: submitLabRecord }   = useCreateLabRecord(patientId ?? '');
+  const { mutateAsync: submitProfilePatch } = useUpdatePatientProfile(patientId ?? '');
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<RecordFormValues>({
+  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<RecordFormValues>({
     resolver: zodResolver(recordSchema) as any,
     defaultValues: {
-      fecha: new Date().toISOString().split('T')[0],
-      glucosas_comidas: [{ tipo: "ayuno", valor: undefined as any, hora: "", alimentos: "" }],
-      presion_sistolica: undefined,
-      presion_diastolica: undefined,
+      fecha:               new Date().toISOString().split('T')[0],
+      glucoseReadings:     [],
+      presion_sistolica:   undefined,
+      presion_diastolica:  undefined,
       frecuencia_cardiaca: undefined,
-      peso: undefined,
-      cintura: undefined,
-      hba1c: undefined,
-      colesterol_total: undefined,
-      colesterol_ldl: undefined,
-      colesterol_hdl: undefined,
-      trigliceridos: undefined,
-      bun: undefined,
-      creatinina: undefined,
-      ego_proteinas: "",
-      ego_glucosa: "",
-      notas: "",
-      embarazada: false,
-    }
+      peso:                undefined,
+      cintura:             undefined,
+      hba1c:               undefined,
+      colesterol_total:    undefined,
+      colesterol_ldl:      undefined,
+      colesterol_hdl:      undefined,
+      trigliceridos:       undefined,
+      bun:                 undefined,
+      creatinina:          undefined,
+      ego_proteinas:       "",
+      ego_glucosa:         "",
+      notas:               "",
+      embarazada:          profile?.isPregnant ?? false,
+    },
   });
 
-  // Sync pregnancy status from profile once loaded
-  useEffect(() => {
-    if (patientProfile && patientProfile.pregnancyStatus) {
-      control._defaultValues.embarazada = patientProfile.pregnancyStatus;
-      control._reset(control._defaultValues);
-    }
-  }, [patientProfile, control]);
-
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: "glucosas_comidas"
-  });
+  const { fields, append, remove } = useFieldArray({ control, name: "glucoseReadings" });
 
   const onSubmit = async (data: RecordFormValues) => {
-    if (!patientProfile) return;
-    setIsSubmitting(true);
+    const hasDaily = [
+      data.presion_sistolica, data.presion_diastolica,
+      data.frecuencia_cardiaca, data.peso, data.cintura,
+    ].some(v => v !== null && v !== undefined);
 
-    if (patientProfile.gender === 'F' && data.embarazada !== undefined) {
-      updateProfile({ pregnancyStatus: data.embarazada });
+    const hasGlucose = data.glucoseReadings.length > 0;
+
+    const hasLab = [
+      data.hba1c, data.colesterol_total, data.colesterol_ldl,
+      data.colesterol_hdl, data.trigliceridos, data.bun, data.creatinina,
+    ].some(v => v !== null && v !== undefined)
+      || data.ego_proteinas !== null
+      || data.ego_glucosa !== null;
+
+    if (!hasDaily && !hasGlucose && !hasLab) {
+      toast.error("Completa al menos un campo antes de guardar.");
+      return;
     }
 
-    await new Promise(resolve => setTimeout(resolve, 600));
+    try {
+      const submitting: Promise<unknown>[] = [];
 
-    addRecord({
-      id: `rec-${Date.now()}`,
-      patientId: patientProfile.id,
-      // Create an ISO timestamp from the selected date and current time
-      timestamp: new Date(`${data.fecha}T${new Date().toISOString().split('T')[1]}`).toISOString(),
-      
-      glucosas_comidas: data.glucosas_comidas.map(g => ({
-        tipo: g.tipo,
-        valor: g.valor,
-        hora: g.hora || null,
-        alimentos: g.alimentos || null
-      })),
-      
-      presion_sistolica: data.presion_sistolica as number | null,
-      presion_diastolica: data.presion_diastolica as number | null,
-      frecuencia_cardiaca: data.frecuencia_cardiaca as number | null,
-      peso: data.peso as number | null,
-      cintura: data.cintura as number | null,
-      
-      hba1c: data.hba1c as number | null,
-      colesterol_total: data.colesterol_total as number | null,
-      colesterol_ldl: data.colesterol_ldl as number | null,
-      colesterol_hdl: data.colesterol_hdl as number | null,
-      trigliceridos: data.trigliceridos as number | null,
-      bun: data.bun as number | null,
-      creatinina: data.creatinina as number | null,
-      
-      ego_proteinas: data.ego_proteinas as string | null,
-      ego_glucosa: data.ego_glucosa as string | null,
-      
-      notas: data.notas as string | null,
-    });
+      if (hasDaily || hasGlucose) {
+        submitting.push(submitDailyRecord({
+          recordDate:        data.fecha,
+          recordTime:        null,
+          systolicPressure:  data.presion_sistolica as number | null,
+          diastolicPressure: data.presion_diastolica as number | null,
+          heartRate:         data.frecuencia_cardiaca as number | null,
+          weightKg:          data.peso as number | null,
+          waistCm:           data.cintura as number | null,
+          notes:             data.notas as string | null,
+          glucoseReadings:   hasGlucose
+            ? data.glucoseReadings.map(g => ({
+                readingType: g.readingType as GlucoseReadingType,
+                valueMgDl:   g.valueMgDl,
+                time:        g.time ?? null,
+                foods:       g.foods ?? null,
+              }))
+            : null,
+        }));
+      }
 
-    setIsSubmitting(false);
-    toast.success("¡Registro médico guardado exitosamente!");
-    router.push("/paciente/dashboard");
+      if (hasLab) {
+        submitting.push(submitLabRecord({
+          sampleDate:      data.fecha,
+          hba1c:           data.hba1c as number | null,
+          totalCholesterol: data.colesterol_total as number | null,
+          ldl:             data.colesterol_ldl as number | null,
+          hdl:             data.colesterol_hdl as number | null,
+          triglycerides:   data.trigliceridos as number | null,
+          bun:             data.bun as number | null,
+          creatinine:      data.creatinina as number | null,
+          egoProteins:     data.ego_proteinas as string | null,
+          egoGlucose:      data.ego_glucosa as string | null,
+          notes:           (!hasDaily && !hasGlucose) ? (data.notas as string | null) : null,
+        }));
+      }
+
+      if (data.embarazada !== undefined && data.embarazada !== profile?.isPregnant) {
+        submitting.push(submitProfilePatch({ isPregnant: data.embarazada }));
+      }
+
+      await Promise.all(submitting);
+      toast.success("¡Registro médico guardado exitosamente!");
+      router.push("/paciente/dashboard");
+    } catch {
+      toast.error("Error al guardar el registro. Intenta de nuevo.");
+    }
   };
 
-  if (!patientProfile) return null;
+  if (loadingProfile) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center">
+        <GooeyLoader />
+      </div>
+    );
+  }
+
+  const isFemale = profile?.gender === 'Female';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-12">
@@ -168,7 +198,7 @@ export default function NewRecordPage() {
           </CardContent>
         </Card>
 
-        {/* 2. Glucosas (Dinámico) */}
+        {/* 2. Glucosa */}
         <Card className="border-blue-200">
           <CardHeader className="bg-blue-50/50 pb-4">
             <CardTitle className="text-blue-700">Monitoreo de glucosa</CardTitle>
@@ -179,63 +209,60 @@ export default function NewRecordPage() {
               <div key={field.id} className="p-4 border rounded-lg bg-muted/20 relative">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-medium text-sm text-muted-foreground">Medición #{index + 1}</h4>
-                  {fields.length > 1 && (
-                    <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)} className="text-destructive hover:text-destructive h-8">
-                      <Trash2 className="size-4 mr-1" /> Eliminar
-                    </Button>
-                  )}
+                  <Button type="button" variant="ghost" size="sm" onClick={() => remove(index)} className="text-destructive hover:text-destructive h-8">
+                    <Trash2 className="size-4 mr-1" /> Eliminar
+                  </Button>
                 </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+                <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Tiempo de comida <span className="text-destructive">*</span></Label>
-                    <select 
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      {...register(`glucosas_comidas.${index}.tipo`)}
-                    >
-                      <option value="ayuno">🌑 En ayuno</option>
-                      <option value="antes_desayuno">🌅 Antes de desayunar</option>
-                      <option value="despues_desayuno">🍳 Después de desayunar</option>
-                      <option value="antes_comida">☀️ Antes de comer</option>
-                      <option value="despues_comida">🍽️ Después de comer</option>
-                      <option value="antes_cena">🌆 Antes de cenar</option>
-                      <option value="despues_cena">🌙 Después de cenar</option>
-                      <option value="antes_colacion">🍎 Antes de colación</option>
-                      <option value="despues_colacion">✅ Después de colación</option>
-                      <option value="madrugada">🌚 Madrugada</option>
-                    </select>
+                    <Controller
+                      control={control}
+                      name={`glucoseReadings.${index}.readingType`}
+                      render={({ field }) => (
+                        <MealTimeSelector
+                          value={field.value}
+                          onChange={field.onChange}
+                        />
+                      )}
+                    />
                   </div>
-                  
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Glucosa (mg/dL) <span className="text-destructive">*</span></Label>
+                      <Input type="number" step="1" placeholder="ej: 120" {...register(`glucoseReadings.${index}.valueMgDl`)} />
+                      {errors.glucoseReadings?.[index]?.valueMgDl && (
+                        <p className="text-xs text-destructive">{errors.glucoseReadings[index]?.valueMgDl?.message}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Hora</Label>
+                      <Input type="time" {...register(`glucoseReadings.${index}.time`)} />
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
-                    <Label>Glucosa (mg/dL) <span className="text-destructive">*</span></Label>
-                    <Input type="number" step="1" placeholder="ej: 120" {...register(`glucosas_comidas.${index}.valor`)} />
-                    {errors.glucosas_comidas?.[index]?.valor && <p className="text-xs text-destructive">{errors.glucosas_comidas[index]?.valor?.message}</p>}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label>Hora</Label>
-                    <Input type="time" {...register(`glucosas_comidas.${index}.hora`)} />
-                  </div>
-                  
-                  <div className="md:col-span-3 space-y-2">
                     <Label>Alimentos consumidos</Label>
-                    <textarea 
-                      className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    <textarea
+                      className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       placeholder="Ej: 2 tortillas con frijoles, 1 vaso de leche..."
-                      {...register(`glucosas_comidas.${index}.alimentos`)}
+                      {...register(`glucoseReadings.${index}.foods`)}
                     />
                   </div>
                 </div>
               </div>
             ))}
-            
-            <Button 
-              type="button" 
-              variant="outline" 
+
+            <Button
+              type="button"
+              variant="outline"
               className="w-full border-dashed"
-              onClick={() => append({ tipo: "ayuno", valor: undefined as any, hora: "", alimentos: "" })}
+              onClick={() => append({ readingType: GlucoseReadingType.Fasting, valueMgDl: undefined as any, time: "", foods: "" })}
             >
-              <Plus className="size-4 mr-2" /> Añadir otra medición
+              <Plus className="size-4 mr-2" /> Añadir medición de glucosa
             </Button>
           </CardContent>
         </Card>
@@ -243,9 +270,7 @@ export default function NewRecordPage() {
         {/* 3. Presión y Antropometría */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Presión arterial</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Presión arterial</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -267,9 +292,7 @@ export default function NewRecordPage() {
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Antropometría</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Antropometría</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Peso (kg)</Label>
@@ -324,17 +347,15 @@ export default function NewRecordPage() {
           </CardContent>
         </Card>
 
-        {/* 5. EGO & Otros */}
+        {/* 5. EGO & Notas */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card>
-            <CardHeader>
-              <CardTitle>EGO — Examen General de Orina</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>EGO — Examen General de Orina</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Proteínas en orina</Label>
-                <select 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   {...register("ego_proteinas")}
                 >
                   <option value="">Seleccione...</option>
@@ -348,8 +369,8 @@ export default function NewRecordPage() {
               </div>
               <div className="space-y-2">
                 <Label>Glucosa en orina</Label>
-                <select 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                <select
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                   {...register("ego_glucosa")}
                 >
                   <option value="">Seleccione...</option>
@@ -364,11 +385,9 @@ export default function NewRecordPage() {
 
           <div className="space-y-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Notas</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Notas</CardTitle></CardHeader>
               <CardContent>
-                <textarea 
+                <textarea
                   className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   placeholder="Síntomas, actividad física, qué comió, ajustes de medicamento..."
                   {...register("notas")}
@@ -376,17 +395,24 @@ export default function NewRecordPage() {
               </CardContent>
             </Card>
 
-            {patientProfile.gender === 'F' && (
+            {isFemale && (
               <Card className="border-rose-200">
                 <CardHeader className="bg-rose-50/50 pb-4">
                   <CardTitle className="text-rose-700">Flags clínicos</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="embarazada" className="size-4 rounded border-gray-300 text-rose-600 focus:ring-rose-600" {...register("embarazada")} />
+                    <input
+                      type="checkbox"
+                      id="embarazada"
+                      className="size-4 rounded border-gray-300 text-rose-600 focus:ring-rose-600"
+                      {...register("embarazada")}
+                    />
                     <Label htmlFor="embarazada" className="font-medium cursor-pointer">Paciente embarazada</Label>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Ajusta metas glucémicas a guías ADA 2026 para embarazo. Este ajuste se guardará en tu perfil.</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Ajusta metas glucémicas a guías ADA 2026 para embarazo. Este ajuste se guardará en tu perfil.
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -396,7 +422,7 @@ export default function NewRecordPage() {
         <div className="sticky bottom-0 bg-background/80 backdrop-blur-md p-4 border-t border-border flex justify-end mt-8 z-10 -mx-4 sm:mx-0 sm:rounded-b-lg">
           <Button type="button" variant="outline" className="mr-4" onClick={() => router.back()}>Cancelar</Button>
           <Button type="submit" disabled={isSubmitting} size="lg">
-            {isSubmitting ? "Guardando..." : "Guardar Registro Diario"}
+            {isSubmitting ? "Guardando..." : "Guardar Registro"}
             {!isSubmitting && <Save className="ml-2 size-4" />}
           </Button>
         </div>

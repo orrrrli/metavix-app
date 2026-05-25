@@ -1,4 +1,4 @@
-import { format, parseISO } from "date-fns";
+import { format, parse } from "date-fns";
 import { es } from "date-fns/locale";
 import { BadgeEstado } from "./BadgeEstado";
 import { EstadoMetrica } from "../utils/interpretacionADA";
@@ -19,7 +19,7 @@ export function SeccionMetrica({ nombre, valor, unidad, fecha, estado, meta }: S
         <h4 className="font-semibold text-foreground text-sm sm:text-base">{nombre}</h4>
         {fecha ? (
           <p className="text-xs text-muted-foreground mt-0.5">
-            Registrado: {format(parseISO(fecha), "dd MMM yyyy", { locale: es })}
+            Registrado: {format(parse(fecha, 'dd/MM/yyyy', new Date()), "dd MMM yyyy", { locale: es })}
           </p>
         ) : (
           <p className="text-xs text-muted-foreground mt-0.5">Sin registro reciente</p>

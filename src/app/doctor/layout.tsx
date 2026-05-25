@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Home, Users, BarChart3, Settings } from "lucide-react";
+import { Home } from "lucide-react";
 import { DashboardLayout, NavGroup } from "@/shared/components/layout/DashboardLayout";
 import { useAuthStore } from "@/features/auth/store";
 
@@ -11,9 +11,6 @@ const DOCTOR_NAV_GROUPS: NavGroup[] = [
     category: "Portal Médico",
     items: [
       { name: "Panel Clínico", href: "/doctor/dashboard", icon: <Home className="size-5" /> },
-      { name: "Registro de Pacientes", href: "/doctor/patients", icon: <Users className="size-5" /> },
-      { name: "Tendencias de Población", href: "/doctor/trends", icon: <BarChart3 className="size-5" /> },
-      { name: "Configuración de Clínica", href: "/doctor/settings", icon: <Settings className="size-5" /> },
     ]
   }
 ];
