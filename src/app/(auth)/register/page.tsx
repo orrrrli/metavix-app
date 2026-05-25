@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { registerDoctor, registerPatient } from "@/lib/api/auth";
+import { loginUser, registerDoctor, registerPatient } from "@/lib/api/auth";
 import { useAuthStore } from "@/features/auth/store";
 import type { UserRole } from "@/features/auth/store";
 import AuthSignUp from "@/shared/components/auth/AuthSignUp";
@@ -36,21 +36,22 @@ export default function RegisterPage() {
         password: data.password,
       };
 
-      // Se usa la función correspondiente dependiendo del rol elegido
-      const response =
-        data.role === "patient"
-          ? await registerPatient(payload)
-          : await registerDoctor(payload);
+      await (data.role === "patient"
+        ? registerPatient(payload)
+        : registerDoctor(payload));
 
-      const role = mapRole(response.role);
+      // Register sets cookies but doesn't return patientId/doctorId.
+      // Login immediately after to get the full session.
+      const session = await loginUser({ email: data.email, password: data.password });
+      const role = mapRole(session.role);
 
       setSession({
-        userId: response.userId,
-        patientId: data.role === "patient" ? response.patientId : null,
-        doctorId: data.role === "doctor" ? response.doctorId : null,
+        userId: session.userId,
+        patientId: session.patientId,
+        doctorId: session.doctorId,
         role,
         fullName: `${data.firstName} ${data.lastName}`,
-        email: response.email,
+        email: session.email,
       });
 
       // Redirect manually after a short delay since AuthSignUp shows a success state natively
