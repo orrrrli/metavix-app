@@ -1,15 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Activity, Stethoscope, Phone, Syringe, Target, Info } from "lucide-react";
+import { InsulinProfileResponse } from "@/types/insulin-dm1";
 
 interface TarjetaPerfilProps {
-  perfil: {
-    nombre_insulina: string;
-    ric: number;
-    factor_sensibilidad: number;
-    glucosa_meta: number;
-    nombre_medico: string;
-    telefono_medico: string;
-  } | null;
+  perfil: InsulinProfileResponse | null;
 }
 
 export function TarjetaPerfil({ perfil }: TarjetaPerfilProps) {
@@ -42,7 +36,7 @@ export function TarjetaPerfil({ perfil }: TarjetaPerfilProps) {
               </div>
               <div>
                 <p className="text-xs text-blue-200 uppercase tracking-wider font-semibold">Tipo de Insulina</p>
-                <p className="font-medium text-lg">{perfil.nombre_insulina || 'No especificada'}</p>
+                <p className="font-medium text-lg">{perfil.insulinName || 'No especificada'}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -51,33 +45,33 @@ export function TarjetaPerfil({ perfil }: TarjetaPerfilProps) {
               </div>
               <div>
                 <p className="text-xs text-blue-200 uppercase tracking-wider font-semibold">Glucosa Meta</p>
-                <p className="font-medium text-lg">{perfil.glucosa_meta} <span className="text-sm font-normal text-blue-100">mg/dL</span></p>
+                <p className="font-medium text-lg">{perfil.targetGlucose ?? '—'} <span className="text-sm font-normal text-blue-100">mg/dL</span></p>
               </div>
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-white/5 p-3 rounded-lg border border-white/10">
                 <p className="text-xs text-blue-200 uppercase tracking-wider font-semibold mb-1">RIC</p>
-                <p className="font-bold text-2xl">{perfil.ric}</p>
+                <p className="font-bold text-2xl">{perfil.ric ?? '—'}</p>
                 <p className="text-xs text-blue-100 mt-1">g/Unidad</p>
               </div>
               <div className="bg-white/5 p-3 rounded-lg border border-white/10">
                 <p className="text-xs text-blue-200 uppercase tracking-wider font-semibold mb-1">Factor S.</p>
-                <p className="font-bold text-2xl">{perfil.factor_sensibilidad}</p>
+                <p className="font-bold text-2xl">{perfil.sensitivityFactor ?? '—'}</p>
                 <p className="text-xs text-blue-100 mt-1">mg/dL</p>
               </div>
             </div>
-            
+
             <div className="pt-2 flex items-center gap-4 text-sm text-blue-100 border-t border-white/10">
               <div className="flex items-center gap-1.5">
                 <Stethoscope className="h-4 w-4 opacity-70" />
-                <span>{perfil.nombre_medico || 'Sin médico asig.'}</span>
+                <span>{perfil.doctorName || 'Sin médico asig.'}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Phone className="h-4 w-4 opacity-70" />
-                <span>{perfil.telefono_medico || 'Sin teléfono'}</span>
+                <span>{perfil.doctorPhone || 'Sin teléfono'}</span>
               </div>
             </div>
           </div>

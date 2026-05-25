@@ -1,88 +1,88 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { useAuthStore } from "@/features/auth/store";
+import { usePatientProfile, useUpdatePatientProfile } from "@/features/patient/hooks/use-patient-profile";
+import { useDailyRecords, useCreateDailyRecord } from "@/features/patient/hooks/use-daily-records";
 import { FormularioIMC } from "../FormularioIMC";
 import { ResultadoIMC } from "../ResultadoIMC";
-import { HistorialIMC } from "../HistorialIMC";
+import { HistorialIMC, ImcEntry } from "../HistorialIMC";
 import { TablaReferenciaIMC } from "../TablaReferenciaIMC";
 import { toast } from "sonner";
 
+function getCategoria(imc: number): string {
+  if (imc < 18.5) return "Bajo peso";
+  if (imc < 25.0) return "Normal";
+  if (imc < 30.0) return "Sobrepeso";
+  if (imc < 35.0) return "Obesidad grado I";
+  if (imc < 40.0) return "Obesidad grado II";
+  return "Obesidad grado III";
+}
+
 export function BmiCalculator() {
-  const { token } = useAuthStore();
-  const [historial, setHistorial] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  
-  // Current result to display
+  const { patientId } = useAuthStore();
+
+  const { data: profile } = usePatientProfile(patientId ?? "");
+  const { data: dailyRecords = [] } = useDailyRecords(patientId ?? "");
+  const { mutate: createRecord, isPending: isSaving } = useCreateDailyRecord(patientId ?? "");
+  const { mutate: updateProfile } = useUpdatePatientProfile(patientId ?? "");
+
   const [currentImc, setCurrentImc] = useState<number | null>(null);
   const [currentCat, setCurrentCat] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!token) return;
-    async function fetchHistorial() {
-      try {
-        const res = await fetch("/api/imc", {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setHistorial(data);
-          
-          // Show most recent as current result if exists
-          if (data.length > 0) {
-            setCurrentImc(data[0].imc);
-            setCurrentCat(data[0].categoria);
-          }
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    fetchHistorial();
-  }, [token]);
+  // Latest weight from daily records (most recent record with a weight)
+  const latestWeight = useMemo(() => {
+    const withWeight = dailyRecords.filter(r => r.weightKg !== null);
+    return withWeight.length > 0 ? withWeight[0].weightKg ?? undefined : undefined;
+  }, [dailyRecords]);
 
-  const handleCalcular = async (peso_kg: number, estatura_cm: number) => {
-    if (!token) return;
-    setLoading(true);
-    
-    // Optimistic UI calculation
-    const estaturaM = estatura_cm / 100;
-    const imc = peso_kg / (estaturaM * estaturaM);
-    const imcRedondeado = Math.round(imc * 10) / 10;
-    
-    let categoria = "Normal";
-    if (imcRedondeado < 18.5) categoria = "Bajo peso";
-    else if (imcRedondeado < 25.0) categoria = "Normal";
-    else if (imcRedondeado < 30.0) categoria = "Sobrepeso";
-    else if (imcRedondeado < 35.0) categoria = "Obesidad grado I";
-    else if (imcRedondeado < 40.0) categoria = "Obesidad grado II";
-    else categoria = "Obesidad grado III";
-
-    setCurrentImc(imcRedondeado);
-    setCurrentCat(categoria);
-
-    // Save to DB
-    try {
-      const res = await fetch("/api/imc", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ peso_kg, estatura_cm })
+  // Build IMC history from daily records that have weight, using profile height
+  const historial: ImcEntry[] = useMemo(() => {
+    const heightCm = profile?.heightCm;
+    if (!heightCm) return [];
+    return dailyRecords
+      .filter(r => r.weightKg !== null)
+      .map(r => {
+        const imc = r.weightKg! / Math.pow(heightCm / 100, 2);
+        return {
+          id: r.id,
+          fecha: r.recordDate,
+          peso_kg: r.weightKg!,
+          estatura_cm: heightCm,
+          imc: Math.round(imc * 10) / 10,
+          categoria: getCategoria(imc),
+        };
       });
+  }, [dailyRecords, profile?.heightCm]);
 
-      if (res.ok) {
-        const newRecord = await res.json();
-        setHistorial(prev => [newRecord, ...prev]);
-        toast.success("Medición guardada correctamente");
-      } else {
-        toast.error("Error al guardar la medición");
+  const handleCalcular = async (peso_kg: number, estatura_cm: number): Promise<void> => {
+    const imc = peso_kg / Math.pow(estatura_cm / 100, 2);
+    const imcRedondeado = Math.round(imc * 10) / 10;
+    setCurrentImc(imcRedondeado);
+    setCurrentCat(getCategoria(imc));
+
+    // Save weight as daily record
+    createRecord(
+      {
+        recordDate: new Date().toISOString().split("T")[0],
+        recordTime: null,
+        systolicPressure: null,
+        diastolicPressure: null,
+        heartRate: null,
+        weightKg: peso_kg,
+        waistCm: null,
+        notes: null,
+        glucoseReadings: null,
+      },
+      {
+        onSuccess: () => toast.success("Medición guardada correctamente"),
+        onError: () => toast.error("Error al guardar la medición"),
       }
-    } catch (e) {
-      toast.error("Error de conexión");
-    } finally {
-      setLoading(false);
+    );
+
+    // If height changed, update the profile
+    if (profile?.heightCm !== estatura_cm) {
+      updateProfile({ heightCm: estatura_cm });
     }
   };
 
@@ -90,7 +90,12 @@ export function BmiCalculator() {
     <div className="space-y-8 pb-12 animate-in fade-in duration-500">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="flex flex-col gap-8">
-          <FormularioIMC onCalcular={handleCalcular} loading={loading} />
+          <FormularioIMC
+            onCalcular={handleCalcular}
+            loading={isSaving}
+            initialPeso={latestWeight}
+            initialEstatura={profile?.heightCm ?? undefined}
+          />
         </div>
         <div>
           <ResultadoIMC imc={currentImc} categoria={currentCat} />
@@ -98,7 +103,7 @@ export function BmiCalculator() {
       </div>
 
       <HistorialIMC historial={historial} />
-      
+
       <TablaReferenciaIMC />
     </div>
   );

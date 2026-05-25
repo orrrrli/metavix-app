@@ -1,11 +1,29 @@
-import { format, parseISO } from "date-fns";
+import { parse, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { cn } from "@/shared/utils/index";
 
-interface HistorialIMCProps {
-  historial: any[];
+export interface ImcEntry {
+  id: string;
+  fecha: string;       // "dd/MM/yyyy" from API
+  peso_kg: number;
+  estatura_cm: number;
+  imc: number;
+  categoria: string;
 }
+
+interface HistorialIMCProps {
+  historial: ImcEntry[];
+}
+
+const getBadgeColor = (cat: string): string => {
+  if (cat === "Bajo peso") return "text-amber-700 bg-amber-100";
+  if (cat === "Normal") return "text-emerald-700 bg-emerald-100";
+  if (cat === "Sobrepeso") return "text-orange-700 bg-orange-100";
+  if (cat.includes("grado I")) return "text-red-600 bg-red-100";
+  if (cat.includes("grado II")) return "text-red-700 bg-red-100";
+  return "text-red-800 bg-red-200";
+};
 
 export function HistorialIMC({ historial }: HistorialIMCProps) {
   if (historial.length === 0) {
@@ -16,16 +34,6 @@ export function HistorialIMC({ historial }: HistorialIMCProps) {
     );
   }
 
-  const getBadgeColor = (cat: string) => {
-    if (cat === "Bajo peso") return "text-amber-700 bg-amber-100";
-    if (cat === "Normal") return "text-emerald-700 bg-emerald-100";
-    if (cat === "Sobrepeso") return "text-orange-700 bg-orange-100";
-    if (cat.includes("grado I")) return "text-red-600 bg-red-100";
-    if (cat.includes("grado II")) return "text-red-700 bg-red-100";
-    return "text-red-800 bg-red-200";
-  };
-
-  // Mostrar maximo 20
   const records = historial.slice(0, 20);
 
   return (
@@ -47,7 +55,7 @@ export function HistorialIMC({ historial }: HistorialIMCProps) {
               {records.map(r => (
                 <TableRow key={r.id}>
                   <TableCell className="font-medium whitespace-nowrap">
-                    {format(parseISO(r.fecha), "dd MMM, yyyy - HH:mm", { locale: es })}
+                    {format(parse(r.fecha, "dd/MM/yyyy", new Date()), "dd MMM, yyyy", { locale: es })}
                   </TableCell>
                   <TableCell>{r.peso_kg} kg</TableCell>
                   <TableCell>{r.estatura_cm} cm</TableCell>

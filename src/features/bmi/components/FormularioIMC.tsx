@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
@@ -7,11 +7,21 @@ import { Loader2 } from "lucide-react";
 interface FormularioIMCProps {
   onCalcular: (peso: number, estatura: number) => Promise<void>;
   loading: boolean;
+  initialPeso?: number;
+  initialEstatura?: number;
 }
 
-export function FormularioIMC({ onCalcular, loading }: FormularioIMCProps) {
-  const [peso, setPeso] = useState("");
-  const [estatura, setEstatura] = useState("");
+export function FormularioIMC({ onCalcular, loading, initialPeso, initialEstatura }: FormularioIMCProps) {
+  const [peso, setPeso] = useState(initialPeso?.toString() ?? "");
+  const [estatura, setEstatura] = useState(initialEstatura?.toString() ?? "");
+
+  useEffect(() => {
+    if (initialPeso !== undefined) setPeso(initialPeso.toString());
+  }, [initialPeso]);
+
+  useEffect(() => {
+    if (initialEstatura !== undefined) setEstatura(initialEstatura.toString());
+  }, [initialEstatura]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,30 +38,30 @@ export function FormularioIMC({ onCalcular, loading }: FormularioIMCProps) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="peso">Peso (kg)</Label>
-          <Input 
-            id="peso" 
-            type="number" 
-            step="0.1" 
-            min="20" 
+          <Input
+            id="peso"
+            type="number"
+            step="0.1"
+            min="20"
             max="300"
-            required 
+            required
             placeholder="Ej. 72.5"
-            value={peso} 
-            onChange={e => setPeso(e.target.value)} 
+            value={peso}
+            onChange={e => setPeso(e.target.value)}
           />
         </div>
         <div className="space-y-2">
           <Label htmlFor="estatura">Estatura (cm)</Label>
-          <Input 
-            id="estatura" 
-            type="number" 
-            step="0.1" 
-            min="100" 
+          <Input
+            id="estatura"
+            type="number"
+            step="0.1"
+            min="100"
             max="250"
-            required 
+            required
             placeholder="Ej. 170"
-            value={estatura} 
-            onChange={e => setEstatura(e.target.value)} 
+            value={estatura}
+            onChange={e => setEstatura(e.target.value)}
           />
         </div>
       </div>

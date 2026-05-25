@@ -21,7 +21,6 @@ interface AuthState {
   doctorId: string | null;
   fullName: string | null;
   email: string | null;
-  token: string | null;
 
   setHasHydrated: (value: boolean) => void;
   setSession: (session: SessionData) => void;
@@ -40,22 +39,21 @@ export const useAuthStore = create<AuthState>()(
       doctorId: null,
       fullName: null,
       email: null,
-      token: null,
 
       setHasHydrated: (value) => set({ _hasHydrated: value }),
 
       setSession: ({ userId, patientId, doctorId, role, fullName, email }) =>
-        set({ role, userId, patientId, doctorId, fullName, email, token: role === 'PATIENT' ? `mock-jwt-patient-${userId}` : null }),
+        set({ role, userId, patientId, doctorId, fullName, email }),
 
       loginAsPatient: (userId) =>
-        set({ role: 'PATIENT', userId, fullName: 'Demo Paciente', email: null, token: `mock-jwt-patient-${userId}` }),
+        set({ role: 'PATIENT', userId, fullName: 'Demo Paciente', email: null }),
 
       loginAsDoctor: (doctorId) =>
-        set({ role: 'DOCTOR', userId: doctorId, fullName: 'Demo Médico', email: null, token: null }),
+        set({ role: 'DOCTOR', userId: doctorId, fullName: 'Demo Médico', email: null }),
 
       logout: () => {
         logoutUser().catch(() => {});
-        set({ role: null, userId: null, patientId: null, doctorId: null, fullName: null, email: null, token: null });
+        set({ role: null, userId: null, patientId: null, doctorId: null, fullName: null, email: null });
       },
     }),
     {
