@@ -1,15 +1,30 @@
 "use client";
 
 import { useState } from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
+import { refreshToken } from '@/lib/api/auth';
+import { useAuthStore } from '@/features/auth/store';
 
 interface ProvidersProps {
   children: React.ReactNode;
 }
 
 function makeQueryClient(): QueryClient {
-  return new QueryClient({
+  const queryClient = new QueryClient({
+    queryCache: new QueryCache({
+      onError: async (error) => {
+        if (!(error instanceof Error && error.message.includes('401'))) return;
+
+        try {
+          await refreshToken();
+          await queryClient.invalidateQueries();
+        } catch {
+          useAuthStore.getState().logout();
+          window.location.href = '/login';
+        }
+      },
+    }),
     defaultOptions: {
       queries: {
         staleTime: 5 * 60 * 1000,
@@ -21,6 +36,8 @@ function makeQueryClient(): QueryClient {
       },
     },
   });
+
+  return queryClient;
 }
 
 export function Providers({ children }: ProvidersProps) {

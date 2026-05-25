@@ -8,6 +8,21 @@ import {
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
+export async function refreshToken(): Promise<void> {
+  const res = await fetch(`${BASE}/api/auth/refresh`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error('401');
+}
+
+export async function logoutUser(): Promise<void> {
+  await fetch(`${BASE}/api/auth/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+}
+
 export async function loginUser(data: LoginRequest): Promise<LoginResponseData> {
   const res = await fetch(`${BASE}/api/auth/login`, {
     method: 'POST',

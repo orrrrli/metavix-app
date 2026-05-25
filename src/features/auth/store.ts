@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { logoutUser } from '@/lib/api/auth';
 
 export type UserRole = 'PATIENT' | 'DOCTOR' | 'ADMIN' | null;
 
@@ -52,7 +53,10 @@ export const useAuthStore = create<AuthState>()(
       loginAsDoctor: (doctorId) =>
         set({ role: 'DOCTOR', userId: doctorId, fullName: 'Demo Médico', email: null, token: null }),
 
-      logout: () => set({ role: null, userId: null, patientId: null, doctorId: null, fullName: null, email: null, token: null }),
+      logout: () => {
+        logoutUser().catch(() => {});
+        set({ role: null, userId: null, patientId: null, doctorId: null, fullName: null, email: null, token: null });
+      },
     }),
     {
       name: 'ram-med-auth',
