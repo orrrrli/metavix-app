@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { loginUser } from "@/lib/api/auth";
 import { useAuthStore } from "@/features/auth/store";
 import type { UserRole } from "@/features/auth/store";
-import AuthSignIn from "@/shared/components/auth/AuthSignIn";
+import AuthSignIn, { type SignInFormData } from "@/shared/components/auth/AuthSignIn";
 import Image from "next/image";
 
 function mapRole(apiRole: string): UserRole {
@@ -28,7 +28,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { setSession, role } = useAuthStore();
 
-  const handleSignIn = async (credentials: any) => {
+  const handleSignIn = async (credentials: SignInFormData) => {
     try {
       const response = await loginUser({ 
         email: credentials.email, 
