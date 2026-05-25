@@ -196,9 +196,16 @@ export default function AuthSignUp({
                   color: '#101010',
                   margin: '0 0 6px',
                   textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
               >
-                Crea tu cuenta
+                Únete a {brandName}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={accentColor} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="m12 3-1.9 5.8a2 2 0 0 1-1.2 1.2L3 12l5.8 1.9a2 2 0 0 1 1.2 1.2L12 21l1.9-5.8a2 2 0 0 1 1.2-1.2L21 12l-5.8-1.9a2 2 0 0 1-1.2-1.2Z" />
+                </svg>
               </h1>
               <p
                 style={{
@@ -209,7 +216,7 @@ export default function AuthSignUp({
                   margin: '0 0 14px',
                 }}
               >
-                {subtitle}
+                Regístrate como especialista o paciente y transforma tu experiencia.
               </p>
 
               {/* Status */}
@@ -416,7 +423,7 @@ export default function AuthSignUp({
                       Creando cuenta...
                     </>
                   ) : (
-                    'Crear cuenta'
+                    'Crear mi cuenta ahora'
                   )}
                 </button>
               </form>
@@ -438,7 +445,7 @@ export default function AuthSignUp({
                     color: 'rgba(0,0,0,0.35)',
                   }}
                 >
-                  OR
+                  o regístrate con
                 </span>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(0,0,0,0.08)' }} />
               </div>
@@ -476,6 +483,7 @@ export default function AuthSignUp({
                 style={{
                   borderTop: '1px solid rgba(0,0,0,0.07)',
                   paddingTop: '16px',
+                  paddingBottom: '24px',
                   textAlign: 'center',
                 }}
               >

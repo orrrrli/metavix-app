@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowLeft, HeartHandshake } from 'lucide-react';
 import AuthImagePanel from './AuthImagePanel';
 import AuthFloatingInput from './AuthFloatingInput';
 
@@ -228,9 +228,14 @@ export default function AuthSignIn({
                   color: '#101010',
                   margin: '0 0 6px',
                   textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px'
                 }}
               >
-                Bienvenido a {brandName}
+                ¡Hola de nuevo!
+                <HeartHandshake size={28} color={accentColor} strokeWidth={2.5} />
               </h1>
               <p
                 style={{
@@ -241,7 +246,7 @@ export default function AuthSignIn({
                   margin: '0 0 24px',
                 }}
               >
-                Iniciá sesión para acceder a tu cuenta.
+                Ingresa tus datos para acceder a tu panel de control.
               </p>
 
               {/* Error */}
@@ -398,7 +403,7 @@ export default function AuthSignIn({
                       Entrando...
                     </>
                   ) : (
-                    'Iniciar sesión'
+                    'Acceder a mi cuenta'
                   )}
                 </button>
               </form>
@@ -420,7 +425,7 @@ export default function AuthSignIn({
                     color: 'rgba(0,0,0,0.35)',
                   }}
                 >
-                  OR
+                  o ingresa con
                 </span>
                 <div style={{ flex: 1, height: '1px', background: 'rgba(0,0,0,0.08)' }} />
               </div>
