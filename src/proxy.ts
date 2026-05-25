@@ -8,7 +8,7 @@ export function proxy(request: NextRequest): NextResponse {
   const isProtected = PROTECTED_PREFIXES.some(prefix => pathname.startsWith(prefix));
   if (!isProtected) return NextResponse.next();
 
-  const hasSession = request.cookies.has('access_token');
+  const hasSession = request.cookies.has('_session');
   if (hasSession) return NextResponse.next();
 
   const loginUrl = new URL('/login', request.url);

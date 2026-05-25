@@ -53,6 +53,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         logoutUser().catch(() => {});
+        document.cookie = '_session=; path=/; max-age=0';
         set({ role: null, userId: null, patientId: null, doctorId: null, fullName: null, email: null });
       },
     }),

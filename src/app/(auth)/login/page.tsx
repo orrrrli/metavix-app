@@ -45,7 +45,9 @@ export default function LoginPage() {
         email: response.email,
       });
 
-      return { 
+      document.cookie = "_session=1; path=/; secure; samesite=lax; max-age=900";
+
+      return {
         user: { 
           name: response.fullName.split(" ")[0], 
           isAdmin: userRole === "ADMIN" || userRole === "DOCTOR"
