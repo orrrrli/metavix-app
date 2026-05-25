@@ -62,6 +62,7 @@ interface AuthSignUpProps {
   homeHref?: string;
   signInHref?: string;
   subtitle?: string;
+  logoNode?: React.ReactNode;
 }
 
 // ---------------------------------------------------------------------------
