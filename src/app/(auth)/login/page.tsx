@@ -1,27 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { toast } from "sonner";
-import { HeartPulse, Loader2 } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Input } from "@/shared/components/ui/input";
-import { Label } from "@/shared/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { loginUser } from "@/lib/api/auth";
 import { useAuthStore } from "@/features/auth/store";
 import type { UserRole } from "@/features/auth/store";
-
-const loginSchema = z.object({
-  email: z.string().email("Ingresa un correo válido"),
-  password: z.string().min(1, "La contraseña es requerida"),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
+import AuthSignIn from "@/shared/components/auth/AuthSignIn";
+import Image from "next/image";
 
 function mapRole(apiRole: string): UserRole {
   switch (apiRole) {
@@ -42,112 +26,58 @@ function getRedirectPath(role: UserRole): string {
 
 export default function LoginPage() {
   const router = useRouter();
-  const { setSession } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const { setSession, role } = useAuthStore();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+  const handleSignIn = async (credentials: any) => {
     try {
-      const response = await loginUser(data);
-      const role = mapRole(response.role);
+      const response = await loginUser({ 
+        email: credentials.email, 
+        password: credentials.password 
+      });
+      const userRole = mapRole(response.role);
 
       setSession({
         userId: response.userId,
         patientId: response.patientId,
         doctorId: response.doctorId,
-        role,
+        role: userRole,
         fullName: response.fullName,
         email: response.email,
       });
 
-      router.replace(getRedirectPath(role));
-    } catch (error) {
+      return { 
+        user: { 
+          name: response.fullName.split(" ")[0], 
+          isAdmin: userRole === "ADMIN" || userRole === "DOCTOR"
+        } 
+      };
+    } catch (error: any) {
       const message = error instanceof Error ? error.message : "";
       if (message.includes("401")) {
-        toast.error("Credenciales incorrectas");
+        return { error: "Credenciales incorrectas" };
       } else if (message.includes("429")) {
-        toast.error("Demasiados intentos. Intenta más tarde.");
+        return { error: "Demasiados intentos. Intenta más tarde." };
       } else {
-        toast.error("Error al iniciar sesión. Intenta de nuevo.");
+        return { error: "Error al iniciar sesión. Intenta de nuevo." };
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
+  const handleSuccess = () => {
+    // We can read from the store state since it was updated in handleSignIn
+    const currentRole = useAuthStore.getState().role;
+    router.replace(getRedirectPath(currentRole));
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center p-3 bg-primary/10 rounded-full mb-4">
-            <HeartPulse className="size-8 text-primary" />
-          </div>
-          <h1 className="text-2xl font-display font-bold text-foreground">Metavix</h1>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl">Iniciar sesión</CardTitle>
-            <CardDescription>Ingresa tus credenciales para continuar</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="tu@correo.com"
-                  autoComplete="email"
-                  {...register("email")}
-                />
-                {errors.email && (
-                  <p className="text-sm text-destructive">{errors.email.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="password">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  {...register("password")}
-                />
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password.message}</p>
-                )}
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading && <Loader2 className="size-4 mr-2 animate-spin" />}
-                Iniciar sesión
-              </Button>
-            </form>
-
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              ¿No tienes cuenta?{" "}
-              <Link href="/register" className="text-primary underline-offset-4 hover:underline">
-                Regístrate
-              </Link>
-            </p>
-            <p className="text-center text-sm text-muted-foreground mt-2">
-              <Link href="/" className="text-muted-foreground underline-offset-4 hover:underline">
-                Volver al inicio
-              </Link>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+    <AuthSignIn
+      onSignIn={handleSignIn}
+      onSuccess={handleSuccess}
+      imageSrc="/images/login.jpg"
+      imageQuote="Metavix transformó la forma en que atendemos a nuestros pacientes."
+      imageAuthor="Dr. Ramses Valenzuela"
+      imageAuthorRole="Diabetologo y Educador"
+      logoNode={<Image src="/icon.svg" alt="Metavix" width={32} height={32} />}
+    />
   );
 }
