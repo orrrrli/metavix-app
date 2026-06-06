@@ -54,7 +54,7 @@ export function Navbar() {
               href="/register"
               className={buttonVariants({ className: "rounded-full px-5 shadow-md shadow-primary/20 min-h-[44px]" })}
             >
-              Comenzar
+              Registrarse
             </Link>
             <button
               onClick={() => setOpen(!open)}

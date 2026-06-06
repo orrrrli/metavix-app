@@ -6,19 +6,22 @@ import Image from "next/image";
 const steps = [
   {
     number: "01",
-    title: "Registra tu clínica",
-    description: "Crea tu cuenta como profesional de la salud o centro médico en minutos y configura tu perfil."
+    title: "Entra desde la web",
+    description:
+      "Disponible gratis desde cualquier navegador. Sin costo. Sin complicaciones.",
   },
   {
     number: "02",
-    title: "Invita a tus pacientes",
-    description: "Añade a tus pacientes a la plataforma para que puedan registrar sus signos vitales diarios."
+    title: "Registra tus mediciones del día",
+    description:
+      "Ingresa tu glucosa, presión, peso y más en menos de 2 minutos. Metavix guarda todo automáticamente en la nube.",
   },
   {
     number: "03",
-    title: "Monitorea y previene",
-    description: "Recibe alertas preventivas, visualiza gráficos de evolución y ajusta tratamientos con datos reales."
-  }
+    title: "Lleva tu historial a cada consulta",
+    description:
+      "Muéstrale a tu médico tus registros completos con gráficas. O comparte el acceso directo para que lo consulte en tiempo real.",
+  },
 ];
 
 export function HowItWorks() {
@@ -27,15 +30,12 @@ export function HowItWorks() {
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-20">
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-6">
-            ¿Cómo funciona Metavix?
+            Así de fácil funciona
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Una plataforma intuitiva pensada para simplificar tu flujo de trabajo sin sumar fricción a la consulta médica.
-          </p>
+          <p className="text-lg text-muted-foreground">Tres pasos. Sin complicaciones.</p>
         </div>
 
         <div className="relative max-w-5xl mx-auto">
-          {/* Connector Line */}
           <div className="hidden md:block absolute top-8 left-0 right-0 h-0.5 bg-border -translate-y-1/2 z-0" />
 
           <div className="grid md:grid-cols-3 gap-8 md:gap-12 relative z-10">
@@ -53,26 +53,23 @@ export function HowItWorks() {
                     {step.number}
                   </div>
                   <h3 className="text-xl font-bold text-foreground mb-4">{step.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    {step.description}
-                  </p>
+                  <p className="text-muted-foreground leading-relaxed">{step.description}</p>
                 </div>
               </motion.div>
             ))}
           </div>
         </div>
 
-        {/* Dashboard UI Image */}
-        <motion.div 
+        <motion.div
           className="mt-20 max-w-4xl mx-auto relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-2xl border border-border/50 bg-white"
           initial={{ opacity: 0, y: 40 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7 }}
         >
-          <Image 
-            src="/images/laptop.jpg" 
-            alt="Metavix Dashboard Interface" 
+          <Image
+            src="/images/laptop.jpg"
+            alt="Metavix Dashboard Interface"
             fill
             className="object-cover object-center"
           />

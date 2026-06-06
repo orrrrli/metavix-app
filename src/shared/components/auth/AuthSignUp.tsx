@@ -158,8 +158,8 @@ export default function AuthSignUp({
             </Link>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center px-6 py-6 md:px-10 md:py-8 overflow-y-auto">
-            <div className="w-full max-w-[360px] mx-auto">
+          <div className="flex-1 flex flex-col px-6 py-6 md:px-10 md:py-8 overflow-y-auto">
+            <div className="w-full max-w-[360px] mx-auto my-auto">
               <h1
                 style={{
                   fontFamily: 'var(--font-display, system-ui, sans-serif)',

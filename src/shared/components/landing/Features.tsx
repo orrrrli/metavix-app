@@ -1,29 +1,45 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Activity, Bell, ShieldCheck, Stethoscope } from "lucide-react";
+import { Activity, Heart, Scale, Droplets, Microscope, ClipboardList } from "lucide-react";
 
 const features = [
   {
     icon: Activity,
-    title: "Monitoreo en Tiempo Real",
-    description: "Sigue los signos vitales, glucosa y presión arterial de tus pacientes al instante."
+    title: "Glucosa",
+    description:
+      "Registra tus niveles de azúcar en sangre: en ayuno, antes y después de cada comida. Metavix te muestra si estás dentro de tu rango.",
   },
   {
-    icon: Bell,
-    title: "Alertas Inteligentes",
-    description: "Recibe notificaciones automáticas ante métricas fuera del rango de seguridad."
+    icon: Heart,
+    title: "Presión arterial",
+    description:
+      "Anota tu presión sistólica y diastólica junto con tu frecuencia cardíaca. Detecta tendencias antes de que se vuelvan un problema.",
   },
   {
-    icon: Stethoscope,
-    title: "Historial Clínico Unificado",
-    description: "Accede al perfil completo del paciente, diagnósticos y tratamientos en un solo lugar."
+    icon: Scale,
+    title: "Peso y talla",
+    description:
+      "Lleva el seguimiento de tu peso día a día y visualiza tu IMC actualizado automáticamente.",
   },
   {
-    icon: ShieldCheck,
-    title: "Máxima Seguridad",
-    description: "Tus datos y los de tus pacientes protegidos bajo los más altos estándares de privacidad."
-  }
+    icon: Droplets,
+    title: "Colesterol y triglicéridos",
+    description:
+      "Guarda tus resultados de laboratorio y observa cómo responden a tu tratamiento o dieta.",
+  },
+  {
+    icon: Microscope,
+    title: "Hemoglobina glucosilada",
+    description:
+      "Registra tu HbA1c cada vez que te la midan. Metavix la grafica junto a tus glucosas diarias para ver el panorama completo.",
+  },
+  {
+    icon: ClipboardList,
+    title: "Historial siempre disponible",
+    description:
+      "Todos tus registros están en la nube, organizados por fecha. Accede desde tu celular o desde cualquier computadora.",
+  },
 ];
 
 export function Features() {
@@ -32,14 +48,14 @@ export function Features() {
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-6">
-            Todo lo que necesitas para una atención de excelencia
+            ¿Qué puedes registrar en Metavix?
           </h2>
           <p className="text-lg text-muted-foreground">
-            Diseñado específicamente para cardiólogos, endocrinólogos y médicos generales que buscan optimizar el seguimiento de patologías crónicas.
+            Todo lo que tu médico necesita saber — en un solo lugar.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => (
             <motion.div
               key={index}
@@ -53,9 +69,7 @@ export function Features() {
                 <feature.icon className="size-7" />
               </div>
               <h3 className="text-xl font-bold text-foreground mb-3">{feature.title}</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                {feature.description}
-              </p>
+              <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
             </motion.div>
           ))}
         </div>
