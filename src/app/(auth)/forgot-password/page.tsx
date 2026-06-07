@@ -43,9 +43,12 @@ export default function ForgotPasswordPage(): React.ReactElement {
             Si <strong className="text-black/70">{submittedEmail}</strong> está registrado,
             recibirás un enlace para restablecer tu contraseña en los próximos minutos.
           </p>
-          <p className="text-xs text-black/35">
-            El enlace expira en 1 hora. Revisa también tu carpeta de spam.
-          </p>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', borderRadius: '8px', background: '#fffbeb', border: '1px solid #fcd34d', padding: '12px 16px', textAlign: 'left' }}>
+            <span style={{ color: '#d97706', fontSize: '14px', lineHeight: 1, marginTop: '1px' }}>⚠</span>
+            <p style={{ fontSize: '12px', color: '#92400e', lineHeight: '1.5', margin: 0 }}>
+              <strong>¿No ves el correo?</strong> Revisa tu carpeta de <strong>spam o correo no deseado</strong>. El enlace expira en 1 hora.
+            </p>
+          </div>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 text-sm font-semibold text-teal-500 underline underline-offset-4"
