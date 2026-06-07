@@ -41,8 +41,8 @@ function OAuthCallbackInner(): React.ReactElement {
 
         setSession({
           userId:    user.userId,
-          patientId: user.patientId ?? undefined,
-          doctorId:  user.doctorId  ?? undefined,
+          patientId: user.patientId,
+          doctorId:  user.doctorId,
           role,
           fullName:  user.fullName,
           email:     user.email,
