@@ -1,0 +1,77 @@
+'use client';
+
+import { Suspense, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { getCurrentUser } from '@/lib/api/auth';
+import { useAuthStore } from '@/features/auth/store';
+import type { UserRole } from '@/features/auth/store';
+
+function mapRole(apiRole: string): UserRole {
+  switch (apiRole) {
+    case 'Patient': return 'PATIENT';
+    case 'Doctor':  return 'DOCTOR';
+    case 'Admin':   return 'ADMIN';
+    default:        return null;
+  }
+}
+
+function getDashboard(role: UserRole): string {
+  switch (role) {
+    case 'PATIENT': return '/paciente/dashboard';
+    case 'DOCTOR':  return '/doctor/dashboard';
+    default:        return '/';
+  }
+}
+
+function OAuthCallbackInner(): React.ReactElement {
+  const router         = useRouter();
+  const params         = useSearchParams();
+  const { setSession } = useAuthStore();
+
+  useEffect(() => {
+    if (params.get('error')) {
+      router.replace('/login?error=oauth_failed');
+      return;
+    }
+
+    getCurrentUser()
+      .then((user) => {
+        const role = mapRole(user.role);
+
+        setSession({
+          userId:    user.userId,
+          patientId: user.patientId ?? undefined,
+          doctorId:  user.doctorId  ?? undefined,
+          role,
+          fullName:  user.fullName,
+          email:     user.email,
+        });
+
+        document.cookie = '_session=1; path=/; secure; samesite=lax; max-age=900';
+        router.replace(getDashboard(role));
+      })
+      .catch(() => {
+        router.replace('/login?error=oauth_failed');
+      });
+  }, []);
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#f2f2f2]">
+      <Loader2 className="size-8 animate-spin text-teal-500" />
+      <p className="text-sm text-black/40">Completando inicio de sesión...</p>
+    </div>
+  );
+}
+
+export default function AuthCallbackPage(): React.ReactElement {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#f2f2f2]">
+        <Loader2 className="size-8 animate-spin text-teal-500" />
+      </div>
+    }>
+      <OAuthCallbackInner />
+    </Suspense>
+  );
+}
