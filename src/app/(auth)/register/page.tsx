@@ -7,6 +7,8 @@ import type { UserRole } from "@/features/auth/store";
 import AuthSignUp from "@/shared/components/auth/AuthSignUp";
 import Image from "next/image";
 
+const API = process.env.NEXT_PUBLIC_API_URL ?? '';
+
 function mapRole(apiRole: string): UserRole {
   switch (apiRole) {
     case "Patient": return "PATIENT";
@@ -26,6 +28,10 @@ function getRedirectPath(role: UserRole): string {
 export default function RegisterPage() {
   const router = useRouter();
   const { setSession } = useAuthStore();
+
+  const handleGoogleSignUp = (role: 'patient' | 'doctor') => {
+    window.location.href = `${API}/api/auth/google?role=${role}`;
+  };
 
   const handleRegister = async (data: any) => {
     try {
@@ -75,6 +81,7 @@ export default function RegisterPage() {
   return (
     <AuthSignUp
       onRegister={handleRegister}
+      onGoogleSignUp={handleGoogleSignUp}
       imageSrc="/images/register.jpg"
       imageQuote="Monitorea y previene con datos reales en tiempo real."
       imageAuthor="Dr. Ramses Valenzuela"

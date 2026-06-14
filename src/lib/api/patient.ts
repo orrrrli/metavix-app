@@ -53,10 +53,11 @@ export async function revokeLinkRequest(requestId: string): Promise<LinkRequestR
 
 // === Patient Resumen ===
 
-export async function getPatientResumen(patientId: string): Promise<PatientResumenResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/resumen`, {
+export async function getPatientResumen(patientId: string): Promise<PatientResumenResponse | null> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/summary`, {
     credentials: 'include',
   });
+  if (res.status === 404) return null;
   if (!res.ok) throw new Error(`[getPatientResumen] ${res.status}`);
   const body = await res.json();
   return body.data;
@@ -142,10 +143,11 @@ export async function createLabRecord(
 
 // === Insulin DM1 ===
 
-export async function getInsulinProfile(patientId: string): Promise<InsulinProfileResponse> {
+export async function getInsulinProfile(patientId: string): Promise<InsulinProfileResponse | null> {
   const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/profile`, {
     credentials: 'include',
   });
+  if (res.status === 404) return null;
   if (!res.ok) throw new Error(`[getInsulinProfile] ${res.status}`);
   const body = await res.json();
   return body.data;
@@ -170,6 +172,7 @@ export async function getInsulinRecords(patientId: string): Promise<InsulinRecor
   const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records`, {
     credentials: 'include',
   });
+  if (res.status === 404) return [];
   if (!res.ok) throw new Error(`[getInsulinRecords] ${res.status}`);
   const body = await res.json();
   return body.data;

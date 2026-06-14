@@ -52,7 +52,7 @@ interface RegisterResult {
 
 interface AuthSignUpProps {
   onRegister: (data: RegisterData) => Promise<RegisterResult>;
-  onGoogleSignUp?: () => void;
+  onGoogleSignUp?: (role: 'patient' | 'doctor') => void;
   brandName?: string;
   accentColor?: string;
   imageSrc?: string;
@@ -88,6 +88,7 @@ export default function AuthSignUp({
   const {
     control,
     handleSubmit,
+    watch,
     formState: { isSubmitting },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -100,6 +101,8 @@ export default function AuthSignUp({
       confirmPassword: '',
     },
   });
+
+  const currentRole = watch('role');
 
   const onSubmit = async (data: SignUpFormData): Promise<void> => {
     setStatus(null);
@@ -418,7 +421,7 @@ export default function AuthSignUp({
 
               <button
                 type="button"
-                onClick={onGoogleSignUp}
+                onClick={() => onGoogleSignUp?.(currentRole)}
                 disabled={!onGoogleSignUp}
                 style={{
                   width: '100%',
