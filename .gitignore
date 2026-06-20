@@ -47,3 +47,6 @@ next-env.d.ts
 .windsurf/
 docs/brain/
 docs/brain
+
+# Graphify knowledge graph output
+graphify-out/
