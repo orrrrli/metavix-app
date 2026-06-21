@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { AlertTriangle, X } from "lucide-react";
 
 
 import { Search, Users, Bell, CheckCircle, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/store";
-import { useLinkedPatients, usePendingLinkRequests, useAcceptLinkRequest, useRejectLinkRequest } from "@/features/doctor/hooks/use-doctor";
+import { useLinkedPatients, usePendingLinkRequests, useAcceptLinkRequest, useRejectLinkRequest, useMyDoctorProfile } from "@/features/doctor/hooks/use-doctor";
 import { LinkedPatientResponse } from "@/types/doctor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -20,6 +21,14 @@ import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 export default function DoctorDashboard(): React.ReactElement {
   const { doctorId } = useAuthStore();
   const [search, setSearch] = useState("");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  const { data: myProfile } = useMyDoctorProfile();
+  const showVerificationBanner =
+    !bannerDismissed &&
+    myProfile !== undefined &&
+    !myProfile.isVerified &&
+    myProfile.licenseNumber !== "";
 
   const { data: patients = [], isLoading: loadingPatients } = useLinkedPatients(doctorId ?? "");
   const { data: pendingRequests = [], isLoading: loadingRequests } = usePendingLinkRequests(doctorId ?? "");
@@ -58,6 +67,25 @@ export default function DoctorDashboard(): React.ReactElement {
 
   return (
     <div className="space-y-6">
+      {showVerificationBanner && (
+        <div className="flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-800">
+          <AlertTriangle className="size-5 shrink-0 mt-0.5" />
+          <div className="flex-1 text-sm">
+            <p className="font-medium">Verificación SEP pendiente</p>
+            <p className="mt-0.5 text-yellow-700">
+              Tu cédula profesional está registrada y puedes atender pacientes. La verificación con el registro SEP puede tardar unos días hábiles.
+            </p>
+          </div>
+          <button
+            onClick={() => setBannerDismissed(true)}
+            aria-label="Cerrar aviso"
+            className="shrink-0 rounded p-0.5 hover:bg-yellow-100"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-display font-bold text-foreground">Panel Clínico</h2>
@@ -104,13 +132,13 @@ export default function DoctorDashboard(): React.ReactElement {
               {pendingRequests.map((req) => (
                 <div
                   key={req.requestId}
-                  className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 rounded-lg border border-border bg-muted/30"
                 >
                   <div>
                     <p className="font-medium text-foreground">{req.patientFirstName} {req.patientLastName}</p>
                     <p className="text-sm text-muted-foreground">{req.patientEmail}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2 flex-shrink-0">
                     <Button
                       size="sm"
                       variant="outline"
