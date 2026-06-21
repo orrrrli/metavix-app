@@ -13,29 +13,35 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { ArrowLeft, TrendingUp } from "lucide-react";
+import { ArrowLeft, CalendarIcon, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 import { useAuthStore } from "@/features/auth/store";
 import { useDailyRecordsInRange } from "@/features/patient/hooks/use-daily-records";
 import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
+import { EmptyState } from "@/features/bmi/components/EmptyState";
+import { Calendar } from "@/shared/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
+import { Button, buttonVariants } from "@/shared/components/ui/button";
+import { cn } from "@/shared/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/shared/components/ui/popover";
 
-type RangeKey = "7D" | "1M" | "3M" | "6M";
+type RangeKey = "7d" | "30d" | "90d";
 
 const RANGE_DAYS: Record<RangeKey, number> = {
-  "7D": 7,
-  "1M": 30,
-  "3M": 90,
-  "6M": 180,
+  "7d": 7,
+  "30d": 30,
+  "90d": 90,
 };
 
 const RANGE_LABELS: Record<RangeKey, string> = {
-  "7D": "7 días",
-  "1M": "1 mes",
-  "3M": "3 meses",
-  "6M": "6 meses",
+  "7d": "7d",
+  "30d": "30d",
+  "90d": "90d",
 };
 
 interface BmiDataPoint {
@@ -46,13 +52,18 @@ interface BmiDataPoint {
   waistCm: number | null;
 }
 
+interface DateRange {
+  from: Date | undefined;
+  to?: Date | undefined;
+}
+
 function parseDDMMYYYY(dateStr: string): Date {
   const [day, month, year] = dateStr.split("/");
   return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 function toISODate(date: Date): string {
-  return date.toISOString().split("T")[0];
+  return format(date, "yyyy-MM-dd");
 }
 
 function getBmiCategory(bmi: number): string {
@@ -73,13 +84,23 @@ function getBmiColor(bmi: number): string {
 
 export default function BmiTrendPage() {
   const { patientId } = useAuthStore();
-  const [range, setRange] = useState<RangeKey>("1M");
+  const [range, setRange] = useState<RangeKey>("30d");
+  const [mode, setMode] = useState<"preset" | "custom">("preset");
+  const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
+  const [pendingRange, setPendingRange] = useState<DateRange | undefined>(undefined);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
 
   const today = new Date();
-  const fromDate = new Date(today);
-  fromDate.setDate(today.getDate() - RANGE_DAYS[range]);
+  const presetFromDate = new Date(today);
+  presetFromDate.setDate(today.getDate() - RANGE_DAYS[range]);
+
+  const fromDate =
+    mode === "custom" && customRange?.from ? customRange.from : presetFromDate;
+  const toDate =
+    mode === "custom" && customRange?.to ? customRange.to : new Date(today);
   const from = toISODate(fromDate);
-  const to = toISODate(today);
+  const to = toISODate(toDate);
 
   const { data: profile, isLoading: profileLoading } = usePatientProfile(patientId ?? "");
   const { data: records = [], isLoading: recordsLoading } = useDailyRecordsInRange(
@@ -125,6 +146,35 @@ export default function BmiTrendPage() {
       : null;
   const minBmi = bmis.length > 0 ? Math.min(...bmis) : null;
   const maxBmi = bmis.length > 0 ? Math.max(...bmis) : null;
+
+  const handlePresetClick = (key: RangeKey) => {
+    setMode("preset");
+    setRange(key);
+    setCustomError(null);
+  };
+
+  const handleCustomOpenChange = (open: boolean) => {
+    setCustomOpen(open);
+    setCustomError(null);
+    if (open) {
+      const currentRange: DateRange =
+        mode === "custom" && customRange
+          ? customRange
+          : { from: presetFromDate, to: new Date(today) };
+      setPendingRange(currentRange);
+    }
+  };
+
+  const handleApplyCustom = () => {
+    if (!pendingRange?.from || !pendingRange?.to) {
+      setCustomError("Selecciona un rango de fechas completo.");
+      return;
+    }
+    setCustomRange({ from: pendingRange.from, to: pendingRange.to });
+    setMode("custom");
+    setCustomError(null);
+    setCustomOpen(false);
+  };
 
   const isLoading = profileLoading || recordsLoading;
   const tooltipStyle = {
@@ -186,14 +236,54 @@ export default function BmiTrendPage() {
             {(Object.keys(RANGE_DAYS) as RangeKey[]).map((key) => (
               <Button
                 key={key}
-                variant={key === range ? "default" : "outline"}
+                variant={mode === "preset" && range === key ? "default" : "outline"}
                 size="sm"
-                onClick={() => setRange(key)}
+                onClick={() => handlePresetClick(key)}
                 className="text-xs"
               >
                 {RANGE_LABELS[key]}
               </Button>
             ))}
+            <Popover open={customOpen} onOpenChange={handleCustomOpenChange}>
+              <PopoverTrigger
+                className={cn(
+                  buttonVariants({
+                    variant: mode === "custom" ? "default" : "outline",
+                    size: "sm",
+                  }),
+                  "text-xs"
+                )}
+              >
+                <CalendarIcon className="size-3 mr-1" />
+                Personalizado
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-3">
+                  <Calendar
+                    mode="range"
+                    selected={pendingRange}
+                    onSelect={setPendingRange}
+                    numberOfMonths={1}
+                    locale={es}
+                  />
+                  {customError && (
+                    <p className="text-xs text-destructive mt-2">{customError}</p>
+                  )}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCustomOpen(false)}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button size="sm" onClick={handleApplyCustom}>
+                      Aplicar
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </CardContent>
       </Card>
@@ -323,12 +413,16 @@ export default function BmiTrendPage() {
                 />
               </LineChart>
             </ResponsiveContainer>
-          ) : (
+          ) : !heightCm ? (
             <div className="h-64 flex items-center justify-center text-muted-foreground">
-              {!heightCm
-                ? "Registra tu estatura para ver la curva de IMC"
-                : "Sin registros de peso en el período seleccionado"}
+              Registra tu estatura para ver la curva de IMC
             </div>
+          ) : (
+            <EmptyState
+              title="Sin registros de peso"
+              description="No hay registros de peso en el período seleccionado. Agrega uno para ver tu progreso."
+              icon={TrendingUp}
+            />
           )}
         </CardContent>
       </Card>
