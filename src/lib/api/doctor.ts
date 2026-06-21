@@ -68,6 +68,34 @@ export async function getLinkedPatientLabResults(
   return body.data;
 }
 
+export async function getMyDoctorProfile(): Promise<DoctorProfileResponse> {
+  const res = await fetch(`${BASE}/api/doctor/me`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getMyDoctorProfile] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export interface UpdateDoctorProfileRequest {
+  licenseNumber: string;
+  speciality: string;
+}
+
+export async function updateDoctorProfile(
+  data: UpdateDoctorProfileRequest
+): Promise<DoctorProfileResponse> {
+  const res = await fetch(`${BASE}/api/doctor/me`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ licenseNumber: data.licenseNumber, speciality: data.speciality }),
+  });
+  if (!res.ok) throw new Error(`[updateDoctorProfile] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
 // === Link Requests ===
 
 export async function getPendingLinkRequests(doctorId: string): Promise<PendingLinkRequestResponse[]> {

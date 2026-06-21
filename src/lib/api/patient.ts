@@ -1,4 +1,4 @@
-import { CreateDailyRecordRequest, DailyRecordResponse } from '@/types/daily-record';
+import { CreateDailyRecordRequest, DailyRecordResponse, DailyRecordSnapshotResponse } from '@/types/daily-record';
 import { CreateLabRecordRequest, LabRecordResponse } from '@/types/lab-record';
 import { DoctorOption, LinkedDoctorResponse, SendLinkRequestBody, LinkRequestResponse } from '@/types/link-request';
 import { PatientResumenResponse } from '@/types/patient-resumen';
@@ -75,6 +75,21 @@ export async function getDailyRecords(patientId: string): Promise<DailyRecordRes
   return body.data;
 }
 
+export async function getDailyRecordsInRange(
+  patientId: string,
+  from: string,
+  to: string,
+): Promise<DailyRecordResponse[]> {
+  const params = new URLSearchParams({ from, to });
+  const res = await fetch(`${BASE}/api/patient/${patientId}/get-all/records/daily?${params}`, {
+    credentials: 'include',
+  });
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`[getDailyRecordsInRange] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
 export async function getDailyRecordById(
   patientId: string,
   recordId: string
@@ -98,6 +113,19 @@ export async function createDailyRecord(
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error(`[createDailyRecord] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
+
+export async function getDailyRecordSnapshot(
+  patientId: string,
+  date: string,
+): Promise<DailyRecordSnapshotResponse> {
+  const res = await fetch(
+    `${BASE}/api/patient/${patientId}/records/daily/snapshot?date=${date}`,
+    { credentials: 'include' },
+  );
+  if (!res.ok) throw new Error(`[getDailyRecordSnapshot] ${res.status}`);
   const body = await res.json();
   return body.data;
 }

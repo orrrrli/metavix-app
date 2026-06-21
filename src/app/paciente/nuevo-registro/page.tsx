@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,7 +10,7 @@ import { Save, AlertCircle, Plus, Trash2 } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store";
 import { usePatientProfile, useUpdatePatientProfile } from "@/features/patient/hooks/use-patient-profile";
-import { useCreateDailyRecord } from "@/features/patient/hooks/use-daily-records";
+import { useCreateDailyRecord, useDailyRecordSnapshot } from "@/features/patient/hooks/use-daily-records";
 import { useCreateLabRecord } from "@/features/patient/hooks/use-lab-records";
 import { GlucoseReadingType } from "@/types/daily-record";
 import { MealTimeSelector } from "@/shared/components/ui/meal-time-selector";
@@ -59,15 +60,21 @@ export default function NewRecordPage() {
   const router = useRouter();
   const { patientId } = useAuthStore();
 
+  const todayISO = new Date().toISOString().split('T')[0];
+
   const { data: profile, isLoading: loadingProfile } = usePatientProfile(patientId ?? '');
   const { mutateAsync: submitDailyRecord } = useCreateDailyRecord(patientId ?? '');
   const { mutateAsync: submitLabRecord }   = useCreateLabRecord(patientId ?? '');
   const { mutateAsync: submitProfilePatch } = useUpdatePatientProfile(patientId ?? '');
 
-  const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<RecordFormValues>({
+  const { data: snapshot, error: snapshotError } = useDailyRecordSnapshot(patientId ?? '', todayISO);
+
+  const [prefilled, setPrefilled] = useState({ peso: false, cintura: false });
+
+  const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting, dirtyFields } } = useForm<RecordFormValues>({
     resolver: zodResolver(recordSchema) as any,
     defaultValues: {
-      fecha:               new Date().toISOString().split('T')[0],
+      fecha:               todayISO,
       glucoseReadings:     [],
       presion_sistolica:   undefined,
       presion_diastolica:  undefined,
@@ -87,6 +94,24 @@ export default function NewRecordPage() {
       embarazada:          profile?.isPregnant ?? false,
     },
   });
+
+  useEffect(() => {
+    if (!snapshot) return;
+    if (snapshot.weightKg !== null) {
+      setValue('peso', snapshot.weightKg, { shouldDirty: false });
+      setPrefilled(prev => ({ ...prev, peso: true }));
+    }
+    if (snapshot.waistCm !== null) {
+      setValue('cintura', snapshot.waistCm, { shouldDirty: false });
+      setPrefilled(prev => ({ ...prev, cintura: true }));
+    }
+  }, [snapshot, setValue]);
+
+  useEffect(() => {
+    if (snapshotError) {
+      console.error('[nuevo-registro] snapshot pre-fill failed, continuing with blank fields:', snapshotError);
+    }
+  }, [snapshotError]);
 
   const { fields, append, remove } = useFieldArray({ control, name: "glucoseReadings" });
 
@@ -298,10 +323,16 @@ export default function NewRecordPage() {
                 <Label>Peso (kg)</Label>
                 <Input type="number" step="0.1" placeholder="ej: 72.5" {...register("peso")} />
                 {errors.peso && <p className="text-xs text-destructive">{errors.peso.message}</p>}
+                {prefilled.peso && !dirtyFields.peso && (
+                  <p className="text-xs text-muted-foreground">Pre-completado con tu primer registro de hoy. Edita el campo para cambiarlo.</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Cintura (cm)</Label>
                 <Input type="number" placeholder="ej: 88" {...register("cintura")} />
+                {prefilled.cintura && !dirtyFields.cintura && (
+                  <p className="text-xs text-muted-foreground">Pre-completado con tu primer registro de hoy. Edita el campo para cambiarlo.</p>
+                )}
               </div>
             </CardContent>
           </Card>

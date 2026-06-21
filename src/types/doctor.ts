@@ -6,6 +6,7 @@ export interface DoctorProfileResponse {
   speciality: string;
   email: string;
   phone: string | null;
+  isVerified: boolean;
   isActive: boolean;
   createdAt: string; // ISO 8601
 }

@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getDoctorProfile,
+  getMyDoctorProfile,
+  updateDoctorProfile,
   getLinkedPatients,
   getLinkedPatientProfile,
   getLinkedPatientDailyRecords,
@@ -56,6 +58,23 @@ export function usePendingLinkRequests(doctorId: string) {
     queryKey: ['pending-requests', doctorId],
     queryFn: () => getPendingLinkRequests(doctorId),
     enabled: !!doctorId,
+  });
+}
+
+export function useMyDoctorProfile() {
+  return useQuery({
+    queryKey: ['my-doctor-profile'],
+    queryFn: getMyDoctorProfile,
+  });
+}
+
+export function useUpdateDoctorProfile() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateDoctorProfile,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-doctor-profile'] });
+    },
   });
 }
 

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { loginUser, registerDoctor, registerPatient } from "@/lib/api/auth";
+import { getDoctorProfile } from "@/lib/api/doctor";
 import { useAuthStore } from "@/features/auth/store";
 import type { UserRole } from "@/features/auth/store";
 import AuthSignUp from "@/shared/components/auth/AuthSignUp";
@@ -17,12 +18,18 @@ function mapRole(apiRole: string): UserRole {
   }
 }
 
-function getRedirectPath(role: UserRole): string {
-  switch (role) {
-    case "PATIENT": return "/paciente/dashboard";
-    case "DOCTOR": return "/doctor/dashboard";
-    default: return "/";
+async function getRedirectPath(role: UserRole, doctorId: string | null): Promise<string> {
+  if (role === "PATIENT") return "/paciente/dashboard";
+  if (role === "DOCTOR" && doctorId) {
+    try {
+      const profile = await getDoctorProfile(doctorId);
+      if (!profile.licenseNumber) return "/doctor/onboarding";
+    } catch {
+      return "/doctor/onboarding";
+    }
+    return "/doctor/dashboard";
   }
+  return "/";
 }
 
 export default function RegisterPage() {
@@ -60,9 +67,9 @@ export default function RegisterPage() {
         email: session.email,
       });
 
-      // Redirect manually after a short delay since AuthSignUp shows a success state natively
+      const redirectPath = await getRedirectPath(role, session.doctorId);
       setTimeout(() => {
-        router.replace(getRedirectPath(role));
+        router.replace(redirectPath);
       }, 2000);
 
       return { success: "Cuenta creada exitosamente. Redirigiendo..." };

@@ -11,6 +11,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { useDailyRecords } from "@/features/patient/hooks/use-daily-records";
 import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
 import { GlucoseReadingType } from "@/types/daily-record";
+import { aggregateGlucoseCurvesByDate } from "@/features/patient/utils/glucose-curve-aggregator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
@@ -62,26 +63,16 @@ export default function GlucoseCurvesPage() {
   const { data: profile } = usePatientProfile(patientId ?? "");
 
   const daysWithData = useMemo(() => {
-    const days: { date: Date; label: string; readings: ReturnType<typeof buildChartData> }[] = [];
-    const seen = new Set<string>();
-
-    [...records]
-      .filter(r => r.glucoseReadings.length > 0)
-      .sort((a, b) => parseDDMMYYYY(b.recordDate).getTime() - parseDDMMYYYY(a.recordDate).getTime())
-      .forEach(r => {
-        const dateKey = r.recordDate;
-        if (!seen.has(dateKey)) {
-          seen.add(dateKey);
-          const date = parseDDMMYYYY(r.recordDate);
-          days.push({
-            date,
-            label: format(date, "MMM dd", { locale: es }),
-            readings: buildChartData(r.glucoseReadings),
-          });
-        }
+    return aggregateGlucoseCurvesByDate(records)
+      .sort((a, b) => parseDDMMYYYY(b.dateKey).getTime() - parseDDMMYYYY(a.dateKey).getTime())
+      .map(({ dateKey, glucoseReadings }) => {
+        const date = parseDDMMYYYY(dateKey);
+        return {
+          date,
+          label: format(date, "MMM dd", { locale: es }),
+          readings: buildChartData(glucoseReadings),
+        };
       });
-
-    return days;
   }, [records]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
