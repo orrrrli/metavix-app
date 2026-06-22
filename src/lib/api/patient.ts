@@ -4,6 +4,7 @@ import { DoctorOption, LinkedDoctorResponse, SendLinkRequestBody, LinkRequestRes
 import { PatientResumenResponse } from '@/types/patient-resumen';
 import { UpsertInsulinProfileRequest, InsulinProfileResponse, CreateInsulinRecordRequest, InsulinRecordResponse } from '@/types/insulin-dm1';
 import { PatientProfileResponse, UpdatePatientProfileRequest } from '@/types/patient-profile';
+import { GoalEvaluationResponse } from '@/types/goal-evaluation';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 
@@ -242,6 +243,18 @@ export async function deleteInsulinRecord(
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[deleteInsulinRecord] ${res.status}`);
+}
+
+// === Goal Evaluations ===
+
+export async function evaluateGoals(patientId: string): Promise<GoalEvaluationResponse> {
+  const res = await fetch(`${BASE}/api/patient/${patientId}/goal-evaluations`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[evaluateGoals] ${res.status}`);
+  const body = await res.json();
+  return body.data;
 }
 
 // === Patient Profile ===

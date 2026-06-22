@@ -41,6 +41,7 @@ const recordSchema = z.object({
   frecuencia_cardiaca: optionalNum(30, 250, "Rango: 30-250"),
   peso:                optionalNum(20, 300, "Rango: 20-300"),
   cintura:             optionalNum(40, 200, "Rango: 40-200"),
+  altura:              optionalNum(100, 250, "Rango: 100-250"),
   hba1c:               optionalNum(3, 20,   "Rango: 3-20"),
   colesterol_total:    optionalNum(50, 600,  "Rango: 50-600"),
   colesterol_ldl:      optionalNum(20, 400,  "Rango: 20-400"),
@@ -81,6 +82,7 @@ export default function NewRecordPage() {
       frecuencia_cardiaca: undefined,
       peso:                undefined,
       cintura:             undefined,
+      altura:              profile?.heightCm ?? undefined,
       hba1c:               undefined,
       colesterol_total:    undefined,
       colesterol_ldl:      undefined,
@@ -130,7 +132,9 @@ export default function NewRecordPage() {
       || data.ego_proteinas !== null
       || data.ego_glucosa !== null;
 
-    if (!hasDaily && !hasGlucose && !hasLab) {
+    const hasHeight = data.altura !== null && data.altura !== undefined;
+
+    if (!hasDaily && !hasGlucose && !hasLab && !hasHeight) {
       toast.error("Completa al menos un campo antes de guardar.");
       return;
     }
@@ -175,8 +179,11 @@ export default function NewRecordPage() {
         }));
       }
 
-      if (data.embarazada !== undefined && data.embarazada !== profile?.isPregnant) {
-        submitting.push(submitProfilePatch({ isPregnant: data.embarazada }));
+      const profilePatch: { isPregnant?: boolean; heightCm?: number } = {};
+      if (hasHeight) profilePatch.heightCm = data.altura as number;
+      if (data.embarazada !== undefined && data.embarazada !== profile?.isPregnant) profilePatch.isPregnant = data.embarazada;
+      if (Object.keys(profilePatch).length > 0) {
+        submitting.push(submitProfilePatch(profilePatch));
       }
 
       await Promise.all(submitting);
@@ -332,6 +339,14 @@ export default function NewRecordPage() {
                 <Input type="number" placeholder="ej: 88" {...register("cintura")} />
                 {prefilled.cintura && !dirtyFields.cintura && (
                   <p className="text-xs text-muted-foreground">Pre-completado con tu primer registro de hoy. Edita el campo para cambiarlo.</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Altura (cm)</Label>
+                <Input type="number" placeholder="ej: 170" {...register("altura")} />
+                {errors.altura && <p className="text-xs text-destructive">{errors.altura.message}</p>}
+                {profile?.heightCm != null && !dirtyFields.altura && (
+                  <p className="text-xs text-muted-foreground">Tomado de tu perfil médico. Edita para actualizar tu estatura.</p>
                 )}
               </div>
             </CardContent>

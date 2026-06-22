@@ -9,9 +9,10 @@ interface FormularioIMCProps {
   loading: boolean;
   initialPeso?: number;
   initialEstatura?: number;
+  latestCintura?: number;
 }
 
-export function FormularioIMC({ onCalcular, loading, initialPeso, initialEstatura }: FormularioIMCProps) {
+export function FormularioIMC({ onCalcular, loading, initialPeso, initialEstatura, latestCintura }: FormularioIMCProps) {
   const [peso, setPeso] = useState(initialPeso?.toString() ?? "");
   const [estatura, setEstatura] = useState(initialEstatura?.toString() ?? "");
 
@@ -65,6 +66,12 @@ export function FormularioIMC({ onCalcular, loading, initialPeso, initialEstatur
           />
         </div>
       </div>
+
+      {latestCintura !== undefined && (
+        <p className="text-sm text-muted-foreground">
+          Última cintura registrada: <span className="font-medium text-foreground">{latestCintura} cm</span>
+        </p>
+      )}
 
       <Button type="submit" disabled={loading} className="w-full h-12 text-lg">
         {loading ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}

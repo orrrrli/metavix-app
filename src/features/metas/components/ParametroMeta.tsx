@@ -7,10 +7,11 @@ interface ParametroMetaProps {
   param: DefParametro;
   valor: string;
   colorActual: string;
-  onChange: (val: string) => void;
+  onChange?: (val: string) => void;
+  readOnly?: boolean;
 }
 
-export function ParametroMeta({ param, valor, colorActual, onChange }: ParametroMetaProps) {
+export function ParametroMeta({ param, valor, colorActual, onChange, readOnly }: ParametroMetaProps) {
   return (
     <div className="bg-card border rounded-xl p-5 sm:p-6 shadow-sm hover:border-primary/20 transition-colors">
       <div className="flex flex-col md:flex-row md:items-center gap-6">
@@ -36,23 +37,38 @@ export function ParametroMeta({ param, valor, colorActual, onChange }: Parametro
 
         <ArrowRight className="hidden md:block w-5 h-5 text-muted-foreground/40 shrink-0" />
 
-        {/* Input y Semáforo */}
+        {/* Value display or input + Semáforo */}
         <div className="flex items-center gap-4 md:w-64 shrink-0">
-          <div className="relative flex-1">
-            <Input 
-              type="number"
-              step={param.step}
-              min={param.min}
-              max={param.max}
-              value={valor}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="Ej. 110"
-              className="pr-16 text-lg font-medium"
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium pointer-events-none">
-              {param.unidad}
-            </span>
-          </div>
+          {readOnly ? (
+            <div className="relative flex-1 h-10 flex items-center px-3 bg-muted/40 rounded-md border">
+              {valor ? (
+                <>
+                  <span className="text-lg font-medium">{valor}</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium pointer-events-none">
+                    {param.unidad}
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground italic">Sin datos</span>
+              )}
+            </div>
+          ) : (
+            <div className="relative flex-1">
+              <Input
+                type="number"
+                step={param.step}
+                min={param.min}
+                max={param.max}
+                value={valor}
+                onChange={(e) => onChange?.(e.target.value)}
+                placeholder="Ej. 110"
+                className="pr-16 text-lg font-medium"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium pointer-events-none">
+                {param.unidad}
+              </span>
+            </div>
+          )}
           <SemaforoIndicador color={colorActual} />
         </div>
       </div>

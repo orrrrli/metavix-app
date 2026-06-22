@@ -1,89 +1,162 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
+import { useAuthStore } from "@/features/auth/store";
+import { useLabRecords } from "@/features/patient/hooks/use-lab-records";
+import { useDailyRecords } from "@/features/patient/hooks/use-daily-records";
+import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
+import { useEvaluateGoals } from "@/features/patient/hooks/use-evaluate-goals";
 import { ParametroMeta } from "../ParametroMeta";
 import { ResumenControl } from "../ResumenControl";
-import { PARAMETROS_META, evaluarParametro, EvaluacionMeta } from "../../data/parametros";
+import { PARAMETROS_META, EvaluacionMeta } from "../../data/parametros";
+import { GlucoseReadingType } from "@/types/daily-record";
+import { GoalStatus } from "@/types/goal-evaluation";
+
+const DEFAULT_EVALUACIONES: Record<string, EvaluacionMeta> = PARAMETROS_META.reduce(
+  (acc, p) => ({ ...acc, [p.id]: { estado: "sin_dato", color: "bg-muted-foreground/30" } }),
+  {} as Record<string, EvaluacionMeta>,
+);
+
+function parseApiDate(dateStr: string): Date {
+  const [d, m, y] = dateStr.split("/").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function mapGoalStatus(status: GoalStatus): EvaluacionMeta {
+  switch (status) {
+    case "InRange":    return { estado: "en_meta",    color: "bg-emerald-500" };
+    case "AtRisk":     return { estado: "cuidado",    color: "bg-amber-500" };
+    case "OutOfRange": return { estado: "fuera_meta", color: "bg-red-500" };
+    case "NoData":     return { estado: "sin_dato",   color: "bg-muted-foreground/30" };
+  }
+}
 
 export function MetasControl() {
-  // Estado de valores ingresados
-  const [valores, setValores] = useState<Record<string, string>>({});
-  
-  // Estado de las evaluaciones (colores de semáforo). Por defecto todos grises.
-  const [evaluaciones, setEvaluaciones] = useState<Record<string, EvaluacionMeta>>(
-    PARAMETROS_META.reduce((acc, param) => {
-      acc[param.id] = { estado: "sin_dato", color: "bg-muted-foreground/30" };
-      return acc;
-    }, {} as Record<string, EvaluacionMeta>)
-  );
+  const { patientId } = useAuthStore();
 
+  // T2: fetch all data needed for pre-population
+  const { data: labRecords,    isLoading: loadingLab     } = useLabRecords(patientId ?? "");
+  const { data: dailyRecords,  isLoading: loadingDaily   } = useDailyRecords(patientId ?? "");
+  const { data: profile,       isLoading: loadingProfile } = usePatientProfile(patientId ?? "");
+  const { mutateAsync: evaluate, isPending: isEvaluating } = useEvaluateGoals(patientId ?? "");
+
+  const [evaluaciones, setEvaluaciones] = useState<Record<string, EvaluacionMeta>>(DEFAULT_EVALUACIONES);
   const [mostrarResumen, setMostrarResumen] = useState(false);
 
-  const handleChange = (id: string, val: string) => {
-    setValores(prev => ({ ...prev, [id]: val }));
-    // Esconder resumen y resetear color a gris al modificar
-    if (mostrarResumen) setMostrarResumen(false);
-    setEvaluaciones(prev => ({ 
-      ...prev, 
-      [id]: { estado: "sin_dato", color: "bg-muted-foreground/30" } 
-    }));
+  const isLoading = loadingLab || loadingDaily || loadingProfile;
+
+  // T3: sort daily records newest-first, derive fasting glucose from most recent fasting reading
+  const sortedDailyRecords = [...(dailyRecords ?? [])].sort(
+    (a, b) => parseApiDate(b.recordDate).getTime() - parseApiDate(a.recordDate).getTime(),
+  );
+
+  let fastingGlucose: number | null = null;
+  for (const record of sortedDailyRecords) {
+    const reading = record.glucoseReadings.find(
+      (r) => r.readingType === GlucoseReadingType.Fasting,
+    );
+    if (reading) {
+      fastingGlucose = reading.valueMgDl;
+      break;
+    }
+  }
+
+  // T4: compute IMC from most recent weight + profile height
+  const latestWeightKg = sortedDailyRecords.find((r) => r.weightKg !== null)?.weightKg ?? null;
+  const heightCm = profile?.heightCm ?? null;
+  const imc =
+    latestWeightKg !== null && heightCm !== null
+      ? latestWeightKg / Math.pow(heightCm / 100, 2)
+      : null;
+
+  const latestSBP = sortedDailyRecords.find((r) => r.systolicPressure !== null)?.systolicPressure ?? null;
+
+  const sortedLabRecords = [...(labRecords ?? [])].sort(
+    (a, b) => parseApiDate(b.sampleDate).getTime() - parseApiDate(a.sampleDate).getTime(),
+  );
+
+  // T5: derived read-only values — no manual input
+  const valores: Record<string, string> = {
+    hba1c:  sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
+    glucosa: fastingGlucose?.toString() ?? "",
+    pas:    latestSBP?.toString() ?? "",
+    ldl:    sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
+    imc:    imc !== null ? imc.toFixed(1) : "",
   };
 
-  const handleEvaluar = () => {
-    const nuevasEvaluaciones: Record<string, EvaluacionMeta> = {};
-    
-    PARAMETROS_META.forEach(param => {
-      nuevasEvaluaciones[param.id] = evaluarParametro(param.id, valores[param.id] || "");
-    });
-
-    setEvaluaciones(nuevasEvaluaciones);
-    setMostrarResumen(true);
-
-    setTimeout(() => {
-      document.getElementById("resumen-metas")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+  // T6: call evaluation API; T7: map GoalStatus → EvaluacionMeta
+  const handleEvaluar = async () => {
+    try {
+      const result = await evaluate();
+      const newEvaluaciones: Record<string, EvaluacionMeta> = {};
+      PARAMETROS_META.forEach((param) => {
+        const item = result.items.find((i) => i.parameterId === param.id);
+        newEvaluaciones[param.id] = item
+          ? mapGoalStatus(item.status)
+          : { estado: "sin_dato", color: "bg-muted-foreground/30" };
+      });
+      setEvaluaciones(newEvaluaciones);
+      setMostrarResumen(true);
+      setTimeout(() => {
+        document.getElementById("resumen-metas")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    } catch {
+      toast.error("No se pudo evaluar las metas. Inténtalo de nuevo.");
+    }
   };
 
-  const resultadosFormateados = PARAMETROS_META.map(param => ({
+  const resultadosFormateados = PARAMETROS_META.map((param) => ({
     param,
-    valor: valores[param.id] || "",
-    evaluacion: evaluaciones[param.id]
+    valor: valores[param.id] ?? "",
+    evaluacion: evaluaciones[param.id],
   }));
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+        <Loader2 className="h-8 w-8 animate-spin mb-4" />
+        <p>Cargando tus datos clínicos...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto pb-12 animate-in fade-in duration-500">
-      
       <p className="text-lg text-muted-foreground mb-8">
-        Ingrese sus últimos resultados de laboratorio en los campos. Si no tiene algún dato, déjelo vacío.
+        Tus últimos resultados disponibles han sido cargados automáticamente. Los parámetros sin datos no cuentan con registros recientes.
       </p>
 
       <div className="space-y-4">
-        {PARAMETROS_META.map(param => (
-          <ParametroMeta 
+        {PARAMETROS_META.map((param) => (
+          <ParametroMeta
             key={param.id}
             param={param}
-            valor={valores[param.id] || ""}
+            valor={valores[param.id] ?? ""}
             colorActual={evaluaciones[param.id].color}
-            onChange={(val) => handleChange(param.id, val)}
+            readOnly
           />
         ))}
       </div>
 
       <div className="mt-10 flex justify-center">
-        <Button onClick={handleEvaluar} className="w-full sm:w-auto h-14 px-10 text-lg shadow-md">
-          Ver mi resumen de control
+        <Button
+          onClick={handleEvaluar}
+          disabled={isEvaluating}
+          className="w-full sm:w-auto h-14 px-10 text-lg shadow-md"
+        >
+          {isEvaluating && <Loader2 className="h-5 w-5 mr-2 animate-spin" />}
+          Evaluar mis metas
         </Button>
       </div>
 
-      {mostrarResumen && (
-        <ResumenControl resultados={resultadosFormateados} />
-      )}
+      {mostrarResumen && <ResumenControl resultados={resultadosFormateados} />}
 
       <div className="mt-12 pt-6 border-t text-center text-sm text-muted-foreground">
         <p>Valores de referencia basados en los estándares de atención médica de la ADA (Standards of Care 2026).</p>
       </div>
-
     </div>
   );
 }

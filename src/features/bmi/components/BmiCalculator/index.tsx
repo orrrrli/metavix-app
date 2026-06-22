@@ -30,10 +30,14 @@ export function BmiCalculator() {
   const [currentImc, setCurrentImc] = useState<number | null>(null);
   const [currentCat, setCurrentCat] = useState<string | null>(null);
 
-  // Latest weight from daily records (most recent record with a weight)
   const latestWeight = useMemo(() => {
     const withWeight = dailyRecords.filter(r => r.weightKg !== null);
     return withWeight.length > 0 ? withWeight[0].weightKg ?? undefined : undefined;
+  }, [dailyRecords]);
+
+  const latestWaist = useMemo(() => {
+    const withWaist = dailyRecords.filter(r => r.waistCm !== null);
+    return withWaist.length > 0 ? withWaist[0].waistCm ?? undefined : undefined;
   }, [dailyRecords]);
 
   // Build IMC history from daily records that have weight, using profile height
@@ -95,6 +99,7 @@ export function BmiCalculator() {
             loading={isSaving}
             initialPeso={latestWeight}
             initialEstatura={profile?.heightCm ?? undefined}
+            latestCintura={latestWaist}
           />
         </div>
         <div>

@@ -62,20 +62,16 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
     },
   },
   {
-    id: 'peso',
-    titulo: 'Peso corporal',
-    unidad: 'kg',
-    campo: 'peso',
-    ruta: '/paciente/graficas/peso',
+    id: 'imc',
+    titulo: 'Índice de Masa Corporal',
+    unidad: 'kg/m²',
+    campo: 'imc',
+    ruta: '/paciente/herramientas/calculadora-imc',
     color: '#14B8A6',
-  },
-  {
-    id: 'cintura',
-    titulo: 'Cintura',
-    unidad: 'cm',
-    campo: 'cintura',
-    ruta: '/paciente/graficas/cintura',
-    color: '#F97316',
+    limites: {
+      superior: { tipo: 'fijo', valor: 24.9 },
+      inferior: { tipo: 'fijo', valor: 18.5 },
+    },
   },
   {
     id: 'hba1c',
@@ -193,6 +189,9 @@ export function extractMetricValue(
   if (campo === 'glucosa_ayuno') {
     const reading = record.glucosas_comidas?.find((g: any) => g.tipo === 'ayuno');
     return reading?.valor ?? null;
+  }
+  if (campo === 'imc') {
+    return record.imc ?? null;
   }
   return record[campo] ?? null;
 }

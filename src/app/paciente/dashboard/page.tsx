@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { useAuthStore } from "@/features/auth/store";
+import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
 import { usePatientResumen } from "@/features/patient/hooks/use-patient-resumen";
 import { useDailyRecords } from "@/features/patient/hooks/use-daily-records";
 import { useLabRecords } from "@/features/patient/hooks/use-lab-records";
@@ -47,7 +48,12 @@ function mapDiabetesType(apiType: string): DiabetesType {
   }
 }
 
-function mapDailyToRecord(r: DailyRecordResponse): HealthRecordDto {
+function mapDailyToRecord(r: DailyRecordResponse, heightCm: number | null): HealthRecordDto {
+  const weightKg = r.weightKg !== null ? Number(r.weightKg) : null;
+  const imc = weightKg !== null && heightCm !== null
+    ? Math.round((weightKg / Math.pow(heightCm / 100, 2)) * 10) / 10
+    : null;
+
   return {
     id: r.id,
     patientId: r.patientId,
@@ -61,8 +67,9 @@ function mapDailyToRecord(r: DailyRecordResponse): HealthRecordDto {
     presion_sistolica: r.systolicPressure,
     presion_diastolica: r.diastolicPressure,
     frecuencia_cardiaca: r.heartRate,
-    peso: r.weightKg !== null ? Number(r.weightKg) : null,
+    peso: weightKg,
     cintura: r.waistCm,
+    imc,
     hba1c: null,
     colesterol_total: null,
     colesterol_ldl: null,
@@ -87,6 +94,7 @@ function mapLabToRecord(r: LabRecordResponse): HealthRecordDto {
     frecuencia_cardiaca: null,
     peso: null,
     cintura: null,
+    imc: null,
     hba1c: r.hba1c !== null ? Number(r.hba1c) : null,
     colesterol_total: r.totalCholesterol !== null ? Number(r.totalCholesterol) : null,
     colesterol_ldl: r.ldl !== null ? Number(r.ldl) : null,
@@ -103,6 +111,13 @@ function mapLabToRecord(r: LabRecordResponse): HealthRecordDto {
 export default function PatientDashboard() {
   const { patientId, fullName } = useAuthStore();
   const firstName = fullName?.split(' ')[0] ?? 'Paciente';
+
+  const {
+    data: profile,
+    isLoading: loadingProfile,
+  } = usePatientProfile(patientId ?? '');
+
+  const heightCm = profile?.heightCm ?? null;
 
   const {
     data: resumen,
@@ -123,12 +138,12 @@ export default function PatientDashboard() {
   } = useLabRecords(patientId ?? '');
 
   const allRecords = useMemo<HealthRecordDto[]>(() => {
-    const daily = (dailyRecords ?? []).map(mapDailyToRecord);
+    const daily = (dailyRecords ?? []).map(r => mapDailyToRecord(r, heightCm));
     const lab = (labRecords ?? []).map(mapLabToRecord);
     return [...daily, ...lab].sort(
       (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-  }, [dailyRecords, labRecords]);
+  }, [dailyRecords, labRecords, heightCm]);
 
   const diabetesType = mapDiabetesType(resumen?.perfil.tipoDiabetes ?? 'none');
   const hasDiabetes = diabetesType !== 'Ninguna';
@@ -155,7 +170,7 @@ export default function PatientDashboard() {
     return g.valueMgDl <= lim && g.valueMgDl >= infMin;
   }).length;
 
-  if (loadingResumen || loadingDaily || loadingLab) {
+  if (loadingResumen || loadingDaily || loadingLab || loadingProfile) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center">
         <GooeyLoader />

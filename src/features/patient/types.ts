@@ -38,6 +38,7 @@ export interface HealthRecordDto {
   // Anthropometry
   peso: number | null;
   cintura: number | null;
+  imc: number | null;
   
   // Laboratory
   hba1c: number | null; // %
