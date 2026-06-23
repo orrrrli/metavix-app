@@ -7,9 +7,10 @@ import {
 } from '@/types/auth';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API  = `${API}/v1`;
 
 export async function refreshToken(): Promise<void> {
-  const res = await fetch(`${BASE}/api/auth/refresh`, {
+  const res = await fetch(`${API}/auth/refresh`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -17,14 +18,14 @@ export async function refreshToken(): Promise<void> {
 }
 
 export async function logoutUser(): Promise<void> {
-  await fetch(`${BASE}/api/auth/logout`, {
+  await fetch(`${API}/auth/logout`, {
     method: 'POST',
     credentials: 'include',
   });
 }
 
 export async function loginUser(data: LoginRequest): Promise<LoginResponseData> {
-  const res = await fetch(`${BASE}/api/auth/login`, {
+  const res = await fetch(`${API}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -38,7 +39,7 @@ export async function loginUser(data: LoginRequest): Promise<LoginResponseData> 
 export async function registerPatient(
   data: RegisterPatientRequest
 ): Promise<RegisterResponseData> {
-  const res = await fetch(`${BASE}/api/auth/register/patient`, {
+  const res = await fetch(`${API}/auth/register/patient`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -52,7 +53,7 @@ export async function registerPatient(
 export async function registerDoctor(
   data: RegisterDoctorRequest
 ): Promise<RegisterResponseData> {
-  const res = await fetch(`${BASE}/api/auth/register/doctor`, {
+  const res = await fetch(`${API}/auth/register/doctor`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -64,7 +65,7 @@ export async function registerDoctor(
 }
 
 export async function forgotPassword(email: string): Promise<void> {
-  const res = await fetch(`${BASE}/api/auth/forgot-password`, {
+  const res = await fetch(`${API}/auth/forgot-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
@@ -82,7 +83,7 @@ export interface MeResponse {
 }
 
 export async function getCurrentUser(): Promise<MeResponse> {
-  const res = await fetch(`${BASE}/api/auth/me`, {
+  const res = await fetch(`${API}/auth/me`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[getCurrentUser] ${res.status}`);
@@ -91,7 +92,7 @@ export async function getCurrentUser(): Promise<MeResponse> {
 }
 
 export async function resetPassword(token: string, newPassword: string): Promise<void> {
-  const res = await fetch(`${BASE}/api/auth/reset-password`, {
+  const res = await fetch(`${API}/auth/reset-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, newPassword }),

@@ -8,7 +8,7 @@ import type { UserRole } from "@/features/auth/store";
 import AuthSignUp from "@/shared/components/auth/AuthSignUp";
 import Image from "next/image";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1`;
 
 function mapRole(apiRole: string): UserRole {
   switch (apiRole) {
@@ -37,7 +37,7 @@ export default function RegisterPage() {
   const { setSession } = useAuthStore();
 
   const handleGoogleSignUp = (role: 'patient' | 'doctor') => {
-    window.location.href = `${API}/api/auth/google?role=${role}`;
+    window.location.href = `${API}/auth/google?role=${role}`;
   };
 
   const handleRegister = async (data: any) => {

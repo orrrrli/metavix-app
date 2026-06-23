@@ -7,7 +7,7 @@ import { useAuthStore } from '@/features/auth/store';
 import type { UserRole } from '@/features/auth/store';
 import AuthSignIn, { type SignInFormData } from '@/shared/components/auth/AuthSignIn';
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1`;
 
 function mapRole(apiRole: string): UserRole {
   switch (apiRole) {
@@ -74,7 +74,7 @@ export default function LoginPage(): React.ReactElement {
   };
 
   const handleGoogleSignIn = () => {
-    window.location.href = `${API}/api/auth/google?role=patient`;
+    window.location.href = `${API}/auth/google?role=patient`;
   };
 
   return (

@@ -7,11 +7,12 @@ import { PatientProfileResponse, UpdatePatientProfileRequest } from '@/types/pat
 import { GoalEvaluationResponse } from '@/types/goal-evaluation';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
+const API  = `${API}/v1`;
 
 // === Doctor Discovery ===
 
 export async function getAllDoctors(): Promise<DoctorOption[]> {
-  const res = await fetch(`${BASE}/api/patient/get-all-doctors`, {
+  const res = await fetch(`${API}/patient/get-all-doctors`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[getAllDoctors] ${res.status}`);
@@ -20,7 +21,7 @@ export async function getAllDoctors(): Promise<DoctorOption[]> {
 }
 
 export async function getLinkedDoctors(patientId: string): Promise<LinkedDoctorResponse[]> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/get-linked-doctors`, {
+  const res = await fetch(`${API}/patient/${patientId}/get-linked-doctors`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[getLinkedDoctors] ${res.status}`);
@@ -31,7 +32,7 @@ export async function getLinkedDoctors(patientId: string): Promise<LinkedDoctorR
 // === Link Requests ===
 
 export async function sendLinkRequest(data: SendLinkRequestBody): Promise<LinkRequestResponse> {
-  const res = await fetch(`${BASE}/api/patient/requests-link`, {
+  const res = await fetch(`${API}/patient/requests-link`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -43,7 +44,7 @@ export async function sendLinkRequest(data: SendLinkRequestBody): Promise<LinkRe
 }
 
 export async function revokeLinkRequest(requestId: string): Promise<LinkRequestResponse> {
-  const res = await fetch(`${BASE}/api/patient/requests/${requestId}/revoke`, {
+  const res = await fetch(`${API}/patient/requests/${requestId}/revoke`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -55,7 +56,7 @@ export async function revokeLinkRequest(requestId: string): Promise<LinkRequestR
 // === Patient Resumen ===
 
 export async function getPatientResumen(patientId: string): Promise<PatientResumenResponse | null> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/summary`, {
+  const res = await fetch(`${API}/patient/${patientId}/summary`, {
     credentials: 'include',
   });
   if (res.status === 404) return null;
@@ -67,7 +68,7 @@ export async function getPatientResumen(patientId: string): Promise<PatientResum
 // === Daily Records ===
 
 export async function getDailyRecords(patientId: string): Promise<DailyRecordResponse[]> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/get-all/records/daily`, {
+  const res = await fetch(`${API}/patient/${patientId}/get-all/records/daily`, {
     credentials: 'include',
   });
   if (res.status === 404) return [];
@@ -82,7 +83,7 @@ export async function getDailyRecordsInRange(
   to: string,
 ): Promise<DailyRecordResponse[]> {
   const params = new URLSearchParams({ from, to });
-  const res = await fetch(`${BASE}/api/patient/${patientId}/get-all/records/daily?${params}`, {
+  const res = await fetch(`${API}/patient/${patientId}/get-all/records/daily?${params}`, {
     credentials: 'include',
   });
   if (res.status === 404) return [];
@@ -95,7 +96,7 @@ export async function getDailyRecordById(
   patientId: string,
   recordId: string
 ): Promise<DailyRecordResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/record/daily/${recordId}`, {
+  const res = await fetch(`${API}/patient/${patientId}/record/daily/${recordId}`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[getDailyRecordById] ${res.status}`);
@@ -107,7 +108,7 @@ export async function createDailyRecord(
   patientId: string,
   data: CreateDailyRecordRequest
 ): Promise<DailyRecordResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/records/daily`, {
+  const res = await fetch(`${API}/patient/${patientId}/records/daily`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -123,7 +124,7 @@ export async function getDailyRecordSnapshot(
   date: string,
 ): Promise<DailyRecordSnapshotResponse> {
   const res = await fetch(
-    `${BASE}/api/patient/${patientId}/records/daily/snapshot?date=${date}`,
+    `${API}/patient/${patientId}/records/daily/snapshot?date=${date}`,
     { credentials: 'include' },
   );
   if (!res.ok) throw new Error(`[getDailyRecordSnapshot] ${res.status}`);
@@ -134,7 +135,7 @@ export async function getDailyRecordSnapshot(
 // === Lab Records ===
 
 export async function getLabRecords(patientId: string): Promise<LabRecordResponse[]> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/get-all/records/lab`, {
+  const res = await fetch(`${API}/patient/${patientId}/get-all/records/lab`, {
     credentials: 'include',
   });
   if (res.status === 404) return [];
@@ -147,7 +148,7 @@ export async function getLabRecordById(
   patientId: string,
   recordId: string
 ): Promise<LabRecordResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/records/lab/${recordId}`, {
+  const res = await fetch(`${API}/patient/${patientId}/records/lab/${recordId}`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[getLabRecordById] ${res.status}`);
@@ -159,7 +160,7 @@ export async function createLabRecord(
   patientId: string,
   data: CreateLabRecordRequest
 ): Promise<LabRecordResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/records/lab`, {
+  const res = await fetch(`${API}/patient/${patientId}/records/lab`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -173,7 +174,7 @@ export async function createLabRecord(
 // === Insulin DM1 ===
 
 export async function getInsulinProfile(patientId: string): Promise<InsulinProfileResponse | null> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/profile`, {
+  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/profile`, {
     credentials: 'include',
   });
   if (res.status === 404) return null;
@@ -186,7 +187,7 @@ export async function upsertInsulinProfile(
   patientId: string,
   data: UpsertInsulinProfileRequest
 ): Promise<InsulinProfileResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/profile`, {
+  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/profile`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -198,7 +199,7 @@ export async function upsertInsulinProfile(
 }
 
 export async function getInsulinRecords(patientId: string): Promise<InsulinRecordResponse[]> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records`, {
+  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/records`, {
     credentials: 'include',
   });
   if (res.status === 404) return [];
@@ -211,7 +212,7 @@ export async function getInsulinRecordById(
   patientId: string,
   recordId: string
 ): Promise<InsulinRecordResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records/${recordId}`, {
+  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/records/${recordId}`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[getInsulinRecordById] ${res.status}`);
@@ -223,7 +224,7 @@ export async function createInsulinRecord(
   patientId: string,
   data: CreateInsulinRecordRequest
 ): Promise<InsulinRecordResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records`, {
+  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/records`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
@@ -238,7 +239,7 @@ export async function deleteInsulinRecord(
   patientId: string,
   recordId: string
 ): Promise<void> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/insulin-dm1/records/${recordId}`, {
+  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/records/${recordId}`, {
     method: 'DELETE',
     credentials: 'include',
   });
@@ -248,7 +249,7 @@ export async function deleteInsulinRecord(
 // === Goal Evaluations ===
 
 export async function evaluateGoals(patientId: string): Promise<GoalEvaluationResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/goal-evaluations`, {
+  const res = await fetch(`${API}/patient/${patientId}/goal-evaluations`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -260,7 +261,7 @@ export async function evaluateGoals(patientId: string): Promise<GoalEvaluationRe
 // === Patient Profile ===
 
 export async function getPatientProfile(patientId: string): Promise<PatientProfileResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/profile`, {
+  const res = await fetch(`${API}/patient/${patientId}/profile`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error(`[getPatientProfile] ${res.status}`);
@@ -272,7 +273,7 @@ export async function updatePatientProfile(
   patientId: string,
   data: UpdatePatientProfileRequest
 ): Promise<PatientProfileResponse> {
-  const res = await fetch(`${BASE}/api/patient/${patientId}/profile`, {
+  const res = await fetch(`${API}/patient/${patientId}/profile`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
