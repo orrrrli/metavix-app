@@ -7,7 +7,7 @@ import {
 } from '@/types/auth';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-const API  = `${API}/v1`;
+const API  = `${BASE}/api/v1`;
 
 export async function refreshToken(): Promise<void> {
   const res = await fetch(`${API}/auth/refresh`, {

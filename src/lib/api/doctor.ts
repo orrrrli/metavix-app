@@ -4,7 +4,7 @@ import { DailyRecordResponse } from '@/types/daily-record';
 import { LabRecordResponse } from '@/types/lab-record';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-const API  = `${API}/v1`;
+const API  = `${BASE}/api/v1`;
 
 // === Doctor Profile ===
 
