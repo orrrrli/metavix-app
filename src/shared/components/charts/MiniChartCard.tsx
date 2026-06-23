@@ -48,7 +48,17 @@ export function MiniChartCard({ config, records, diabetesType, gender, companion
   }, [records, config.campo, companionField]);
 
   const latestValue = chartData.length > 0 ? chartData[chartData.length - 1].value : null;
-  const latestCompanion: number | null = companionField ? chartData.at(-1)?.companion ?? null : null;
+  const latestCompanion: number | null = useMemo(() => {
+    if (!companionField) return null;
+    const sorted = [...records].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    for (const r of sorted) {
+      const v = (r as unknown as Record<string, unknown>)[companionField] as number | null;
+      if (v != null) return v;
+    }
+    return null;
+  }, [records, companionField]);
   const status = getStatus(latestValue, config, diabetesType, gender);
   const statusInfo = STATUS_MAP[status];
 

@@ -148,12 +148,19 @@ export default function PatientDashboard() {
   const diabetesType = mapDiabetesType(resumen?.perfil.tipoDiabetes ?? 'none');
   const hasDiabetes = diabetesType !== 'Ninguna';
 
-  // Most recent daily record that has glucose readings
-  const todayRecord = useMemo(
-    () => (dailyRecords ?? []).find(r => r.glucoseReadings.length > 0),
-    [dailyRecords]
-  );
-  const todayReadings = todayRecord?.glucoseReadings ?? [];
+  // Most recent date that has glucose readings — merge all records from that date
+  const { todayRecord, todayReadings } = useMemo(() => {
+    const withGlucose = (dailyRecords ?? []).filter(r => r.glucoseReadings.length > 0);
+    if (!withGlucose.length) return { todayRecord: null, todayReadings: [] };
+    const sorted = [...withGlucose].sort(
+      (a, b) => parseDDMMYYYY(b.recordDate).getTime() - parseDDMMYYYY(a.recordDate).getTime()
+    );
+    const latestDate = sorted[0].recordDate;
+    const dayReadings = withGlucose
+      .filter(r => r.recordDate === latestDate)
+      .flatMap(r => r.glucoseReadings);
+    return { todayRecord: sorted[0], todayReadings: dayReadings };
+  }, [dailyRecords]);
   const todayValues = todayReadings.map(g => g.valueMgDl);
   const todayAvg = todayValues.length > 0 ? Math.round(todayValues.reduce((a, b) => a + b, 0) / todayValues.length) : null;
   const todayMax = todayValues.length > 0 ? Math.max(...todayValues) : null;
