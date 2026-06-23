@@ -66,7 +66,7 @@ export default function DoctoresPage(): React.ReactElement {
 
   function handleRevoke(linked: LinkedDoctorResponse): void {
     revokeLink(linked.requestId, {
-      onSuccess: () => toast.success(`Vinculación con Dr. ${linked.doctorLastName} eliminada`),
+      onSuccess: () => toast.success(`Vinculación con Dr. ${linked.doctorPaternalLastName} eliminada`),
       onError: () => toast.error("No se pudo eliminar la vinculación"),
     });
   }
@@ -120,7 +120,7 @@ export default function DoctoresPage(): React.ReactElement {
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-foreground truncate">
-                        Dr. {linked.doctorFirstName} {linked.doctorLastName}
+                        Dr. {linked.doctorFirstName} {linked.doctorPaternalLastName}
                       </p>
                       <p className="text-sm text-muted-foreground truncate">{linked.speciality}</p>
                       <p className="text-xs text-muted-foreground">{linked.email}</p>

@@ -10,7 +10,7 @@ export interface LinkedDoctorResponse {
   requestId: string;
   doctorId: string;
   doctorFirstName: string;
-  doctorLastName: string;
+  doctorPaternalLastName: string;
   speciality: string;
   email: string;
   linkedAt: string; // ISO 8601
