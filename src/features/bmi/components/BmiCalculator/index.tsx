@@ -30,21 +30,26 @@ export function BmiCalculator() {
   const [currentImc, setCurrentImc] = useState<number | null>(null);
   const [currentCat, setCurrentCat] = useState<string | null>(null);
 
+  const sortedDailyRecords = useMemo(() =>
+    [...dailyRecords].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    [dailyRecords]
+  );
+
   const latestWeight = useMemo(() => {
-    const withWeight = dailyRecords.filter(r => r.weightKg !== null);
-    return withWeight.length > 0 ? withWeight[0].weightKg ?? undefined : undefined;
-  }, [dailyRecords]);
+    const r = sortedDailyRecords.find(r => r.weightKg !== null);
+    return r ? r.weightKg ?? undefined : undefined;
+  }, [sortedDailyRecords]);
 
   const latestWaist = useMemo(() => {
-    const withWaist = dailyRecords.filter(r => r.waistCm !== null);
-    return withWaist.length > 0 ? withWaist[0].waistCm ?? undefined : undefined;
-  }, [dailyRecords]);
+    const r = sortedDailyRecords.find(r => r.waistCm !== null);
+    return r ? Number(r.waistCm) : undefined;
+  }, [sortedDailyRecords]);
 
   // Build IMC history from daily records that have weight, using profile height
   const historial: ImcEntry[] = useMemo(() => {
     const heightCm = profile?.heightCm;
     if (!heightCm) return [];
-    return dailyRecords
+    return sortedDailyRecords
       .filter(r => r.weightKg !== null)
       .map(r => {
         const imc = r.weightKg! / Math.pow(heightCm / 100, 2);
@@ -58,7 +63,7 @@ export function BmiCalculator() {
           cintura_cm: r.waistCm ?? null,
         };
       });
-  }, [dailyRecords, profile?.heightCm]);
+  }, [sortedDailyRecords, profile?.heightCm]);
 
   const handleCalcular = async (peso_kg: number, estatura_cm: number, cintura: number | null): Promise<void> => {
     const imc = peso_kg / Math.pow(estatura_cm / 100, 2);
