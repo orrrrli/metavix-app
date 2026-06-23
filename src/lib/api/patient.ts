@@ -7,7 +7,7 @@ import { PatientProfileResponse, UpdatePatientProfileRequest } from '@/types/pat
 import { GoalEvaluationResponse } from '@/types/goal-evaluation';
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
-const API  = `${API}/v1`;
+const API  = `${BASE}/api/v1`;
 
 // === Doctor Discovery ===
 
