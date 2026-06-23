@@ -448,9 +448,9 @@ export default function AuthSignUp({
 
               <div style={{ borderTop: '1px solid rgba(0,0,0,0.07)', paddingTop: '16px', paddingBottom: '24px', textAlign: 'center' }}>
                 <p style={{ fontFamily: 'var(--font-sans, system-ui, sans-serif)', fontSize: '0.875rem', color: 'rgba(0,0,0,0.4)', margin: 0 }}>
-                  ¿Ya tenés cuenta?{' '}
+                  ¿Ya tienes cuenta?{' '}
                   <Link href={signInHref} style={{ fontWeight: 700, color: accentColor, textDecoration: 'underline', textUnderlineOffset: '3px' }}>
-                    Iniciá sesión
+                    Inicia sesión
                   </Link>
                 </p>
               </div>

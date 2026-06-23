@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, Eye, EyeOff, ArrowLeft, HeartHandshake } from 'lucide-react';
+import { Loader2, Eye, EyeOff, ArrowLeft, HeartHandshake, User, Stethoscope } from 'lucide-react';
 import AuthImagePanel from './AuthImagePanel';
 import AuthFloatingInput from './AuthFloatingInput';
 
@@ -25,6 +25,8 @@ export type SignInFormData = z.infer<typeof signInSchema>;
 // Types
 // ---------------------------------------------------------------------------
 
+type RoleSelection = 'patient' | 'doctor';
+
 interface SignInResult {
   error?: string;
   user?: { name: string; isAdmin: boolean };
@@ -33,7 +35,7 @@ interface SignInResult {
 interface AuthSignInProps {
   onSignIn: (credentials: SignInFormData) => Promise<SignInResult>;
   onSuccess?: (user: { name: string; isAdmin: boolean }) => void;
-  onGoogleSignIn?: () => void;
+  onGoogleSignIn?: (role: RoleSelection) => void;
   brandName?: string;
   accentColor?: string;
   imageSrc?: string;
@@ -68,6 +70,8 @@ export default function AuthSignIn({
   adminRedirectLabel = 'Entrando al panel de administración...',
   userRedirectLabel = 'Preparando tu experiencia...',
 }: AuthSignInProps): React.ReactElement {
+  const [step, setStep] = useState<'role-select' | 'form'>('role-select');
+  const [selectedRole, setSelectedRole] = useState<RoleSelection | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [redirecting, setRedirecting] = useState<{ name: string; isAdmin: boolean } | null>(null);
@@ -165,6 +169,198 @@ export default function AuthSignIn({
     );
   }
 
+  // ----- Role selection step -----
+  if (step === 'role-select') {
+    return (
+      <div className="h-[100dvh] w-full bg-white md:bg-[#f2f2f2] flex items-center justify-center md:p-6 p-0 overflow-hidden box-border">
+        <div className="w-full max-w-[960px] bg-white md:rounded-[24px] rounded-none md:shadow-[0_4px_48px_rgba(0,0,0,0.1)] shadow-none flex flex-col md:flex-row h-full md:h-auto md:max-h-[90vh] overflow-hidden">
+          {imageSrc && (
+            <div className="hidden lg:flex" style={{ width: '400px', flexShrink: 0 }}>
+              <AuthImagePanel
+                imageSrc={imageSrc}
+                quote={imageQuote}
+                author={imageAuthor}
+                authorRole={imageAuthorRole}
+                brandName={brandName}
+                brandHref={homeHref}
+              />
+            </div>
+          )}
+
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 16px 0' }}>
+              <Link
+                href={homeHref}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  color: 'rgba(0,0,0,0.5)',
+                  textDecoration: 'none',
+                  background: 'rgba(0,0,0,0.05)',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  borderRadius: '9999px',
+                  padding: '6px 14px 6px 10px',
+                  transition: 'background 0.15s ease, color 0.15s ease',
+                }}
+              >
+                <ArrowLeft size={14} />
+                <span className="hidden sm:inline">Inicio</span>
+              </Link>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center px-6 py-6 md:px-10 md:py-8 overflow-y-auto">
+              <div className="w-full max-w-[360px] mx-auto">
+                <h1
+                  style={{
+                    fontFamily: 'var(--font-display, system-ui, sans-serif)',
+                    fontSize: '1.875rem',
+                    fontWeight: 700,
+                    color: '#101010',
+                    margin: '0 0 6px',
+                    textAlign: 'center',
+                  }}
+                >
+                  ¿Cómo ingresas hoy?
+                </h1>
+                <p
+                  style={{
+                    fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+                    fontSize: '0.875rem',
+                    color: 'rgba(0,0,0,0.4)',
+                    textAlign: 'center',
+                    margin: '0 0 32px',
+                  }}
+                >
+                  Selecciona tu perfil para continuar.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {(
+                    [
+                      {
+                        role: 'patient' as RoleSelection,
+                        icon: <User size={28} />,
+                        title: 'Soy Paciente',
+                        description: 'Accede a tu historial médico y registros diarios.',
+                      },
+                      {
+                        role: 'doctor' as RoleSelection,
+                        icon: <Stethoscope size={28} />,
+                        title: 'Soy Doctor',
+                        description: 'Consulta los registros de tus pacientes vinculados.',
+                      },
+                    ] as const
+                  ).map(({ role, icon, title, description }) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => { setSelectedRole(role); setStep('form'); }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        padding: '20px',
+                        borderRadius: '16px',
+                        border: '1.5px solid rgba(0,0,0,0.1)',
+                        background: 'white',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = accentColor;
+                        (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 0 3px ${accentColor}20`;
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0,0,0,0.1)';
+                        (e.currentTarget as HTMLButtonElement).style.boxShadow = 'none';
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '52px',
+                          height: '52px',
+                          borderRadius: '14px',
+                          background: `${accentColor}15`,
+                          color: accentColor,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {icon}
+                      </span>
+                      <span>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontFamily: 'var(--font-display, system-ui, sans-serif)',
+                            fontSize: '1rem',
+                            fontWeight: 700,
+                            color: '#101010',
+                            marginBottom: '2px',
+                          }}
+                        >
+                          {title}
+                        </span>
+                        <span
+                          style={{
+                            display: 'block',
+                            fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+                            fontSize: '0.8125rem',
+                            color: 'rgba(0,0,0,0.45)',
+                          }}
+                        >
+                          {description}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <div
+                  style={{
+                    borderTop: '1px solid rgba(0,0,0,0.07)',
+                    paddingTop: '16px',
+                    marginTop: '28px',
+                    textAlign: 'center',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+                      fontSize: '0.875rem',
+                      color: 'rgba(0,0,0,0.4)',
+                      margin: 0,
+                    }}
+                  >
+                    ¿No tienes cuenta?{' '}
+                    <Link
+                      href={signUpHref}
+                      style={{
+                        fontWeight: 700,
+                        color: accentColor,
+                        textDecoration: 'underline',
+                        textUnderlineOffset: '3px',
+                      }}
+                    >
+                      Regístrate
+                    </Link>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ----- Main form -----
   return (
     <div className="h-[100dvh] w-full bg-white md:bg-[#f2f2f2] flex items-center justify-center md:p-6 p-0 overflow-hidden box-border">
@@ -209,6 +405,54 @@ export default function AuthSignIn({
 
           <div className="flex-1 flex flex-col justify-center px-6 py-6 md:px-10 md:py-8 overflow-y-auto">
             <div className="w-full max-w-[360px] mx-auto">
+              {selectedRole && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '20px',
+                    padding: '8px 12px',
+                    borderRadius: '10px',
+                    background: `${accentColor}12`,
+                    border: `1px solid ${accentColor}30`,
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      color: accentColor,
+                    }}
+                  >
+                    {selectedRole === 'patient' ? <User size={14} /> : <Stethoscope size={14} />}
+                    {selectedRole === 'patient' ? 'Paciente' : 'Doctor'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => { setStep('role-select'); setApiError(null); }}
+                    style={{
+                      fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      color: 'rgba(0,0,0,0.45)',
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      textDecoration: 'underline',
+                      textUnderlineOffset: '2px',
+                    }}
+                  >
+                    Cambiar
+                  </button>
+                </div>
+              )}
+
               <h1
                 style={{
                   fontFamily: 'var(--font-display, system-ui, sans-serif)',
@@ -441,7 +685,7 @@ export default function AuthSignIn({
 
               <button
                 type="button"
-                onClick={onGoogleSignIn}
+                onClick={() => onGoogleSignIn?.(selectedRole ?? 'patient')}
                 disabled={!onGoogleSignIn}
                 style={{
                   width: '100%',
@@ -481,7 +725,7 @@ export default function AuthSignIn({
                     margin: 0,
                   }}
                 >
-                  ¿No tenés cuenta?{' '}
+                  ¿No tienes cuenta?{' '}
                   <Link
                     href={signUpHref}
                     style={{
@@ -491,7 +735,7 @@ export default function AuthSignIn({
                       textUnderlineOffset: '3px',
                     }}
                   >
-                    Registrate
+                    Regístrate
                   </Link>
                 </p>
               </div>

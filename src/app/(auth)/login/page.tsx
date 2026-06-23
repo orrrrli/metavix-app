@@ -73,8 +73,8 @@ export default function LoginPage(): React.ReactElement {
     router.replace(getRedirectPath(currentRole));
   };
 
-  const handleGoogleSignIn = () => {
-    window.location.href = `${API}/auth/google?role=patient`;
+  const handleGoogleSignIn = (role: 'patient' | 'doctor') => {
+    window.location.href = `${API}/auth/google?role=${role}`;
   };
 
   return (
