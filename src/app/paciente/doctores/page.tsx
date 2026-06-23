@@ -40,7 +40,7 @@ export default function DoctoresPage(): React.ReactElement {
   const filteredAvailable: DoctorOption[] = search
     ? availableDoctors.filter(
         (d) =>
-          `${d.firstName} ${d.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+          `${d.firstName} ${d.paternalLastName}`.toLowerCase().includes(search.toLowerCase()) ||
           d.speciality.toLowerCase().includes(search.toLowerCase())
       )
     : availableDoctors;
@@ -52,7 +52,7 @@ export default function DoctoresPage(): React.ReactElement {
       {
         onSuccess: () => {
           setPendingDoctorIds((prev) => new Set(prev).add(doctor.id));
-          toast.success(`Solicitud enviada al Dr. ${doctor.lastName}`);
+          toast.success(`Solicitud enviada al Dr. ${doctor.paternalLastName}`);
         },
         onError: (err) => {
           const msg = err.message.includes("409")
@@ -199,7 +199,7 @@ export default function DoctoresPage(): React.ReactElement {
                     </div>
                     <div className="min-w-0">
                       <p className="font-semibold text-foreground truncate">
-                        Dr. {doctor.firstName} {doctor.lastName}
+                        Dr. {doctor.firstName} {doctor.paternalLastName}
                       </p>
                       <p className="text-sm text-muted-foreground">{doctor.speciality}</p>
                       <p className="text-xs text-muted-foreground">{doctor.email}</p>
@@ -234,7 +234,7 @@ export default function DoctoresPage(): React.ReactElement {
                 .map((d) => (
                   <div key={d.id} className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Badge variant="secondary" className="text-xs">Pendiente</Badge>
-                    <span>Dr. {d.firstName} {d.lastName} — {d.speciality}</span>
+                    <span>Dr. {d.firstName} {d.paternalLastName} — {d.speciality}</span>
                   </div>
                 ))}
             </div>

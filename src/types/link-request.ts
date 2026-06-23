@@ -1,7 +1,7 @@
 export interface DoctorOption {
   id: string;
   firstName: string;
-  lastName: string;
+  paternalLastName: string;
   speciality: string;
   email: string;
 }
