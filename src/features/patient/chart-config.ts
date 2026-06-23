@@ -5,9 +5,10 @@ import { DiabetesType } from './types';
 export type MetricStatus = 'en_meta' | 'revisar' | 'fuera_de_meta' | 'sin_datos';
 
 export interface RefLimit {
-  tipo: 'fijo' | 'dinamico';
+  tipo: 'fijo' | 'dinamico' | 'genero';
   valor?: number;
   valores?: { sin_diabetes: number; con_diabetes: number };
+  valores_genero?: { femenino: number; masculino: number };
 }
 
 export interface ChartDefinition {
@@ -151,12 +152,26 @@ export const CHART_DEFINITIONS: ChartDefinition[] = [
       inferior: { tipo: 'fijo', valor: 7 },
     },
   },
+  {
+    id: 'cintura',
+    titulo: 'Cintura',
+    unidad: 'cm',
+    campo: 'cintura',
+    ruta: '/paciente/graficas/cintura',
+    color: '#F97316',
+    limites: {
+      superior: { tipo: 'genero', valores_genero: { femenino: 88, masculino: 102 } },
+    },
+  },
 ];
 
 // --- Utility Functions ---
 
-export function resolveLimit(limit: RefLimit, diabetesType: DiabetesType): number {
+export function resolveLimit(limit: RefLimit, diabetesType: DiabetesType, gender?: string | null): number {
   if (limit.tipo === 'fijo') return limit.valor!;
+  if (limit.tipo === 'genero') {
+    return gender === 'Female' ? limit.valores_genero!.femenino : limit.valores_genero!.masculino;
+  }
   const hasDiabetes = diabetesType !== 'Ninguna';
   return hasDiabetes ? limit.valores!.con_diabetes : limit.valores!.sin_diabetes;
 }
@@ -164,12 +179,13 @@ export function resolveLimit(limit: RefLimit, diabetesType: DiabetesType): numbe
 export function getStatus(
   value: number | null | undefined,
   config: ChartDefinition,
-  diabetesType: DiabetesType
+  diabetesType: DiabetesType,
+  gender?: string | null
 ): MetricStatus {
   if (value == null) return 'sin_datos';
 
-  const sup = config.limites?.superior ? resolveLimit(config.limites.superior, diabetesType) : null;
-  const inf = config.limites?.inferior ? resolveLimit(config.limites.inferior, diabetesType) : null;
+  const sup = config.limites?.superior ? resolveLimit(config.limites.superior, diabetesType, gender) : null;
+  const inf = config.limites?.inferior ? resolveLimit(config.limites.inferior, diabetesType, gender) : null;
 
   // Out of range
   if (sup != null && value > sup) return 'fuera_de_meta';

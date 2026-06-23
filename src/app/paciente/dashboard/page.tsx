@@ -260,6 +260,10 @@ export default function PatientDashboard() {
               config={config}
               records={allRecords}
               diabetesType={diabetesType}
+              gender={profile?.gender ?? null}
+              companionField={config.id === 'imc' ? 'cintura' : undefined}
+              companionLabel={config.id === 'imc' ? 'Cintura' : undefined}
+              companionUnit={config.id === 'imc' ? ' cm' : undefined}
             />
           ))}
         </div>

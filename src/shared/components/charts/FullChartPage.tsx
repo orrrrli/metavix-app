@@ -16,9 +16,10 @@ interface FullChartPageProps {
   config: ChartDefinition;
   records: HealthRecordDto[];
   diabetesType: DiabetesType;
+  gender?: string | null;
 }
 
-export function FullChartPage({ config, records, diabetesType }: FullChartPageProps) {
+export function FullChartPage({ config, records, diabetesType, gender }: FullChartPageProps) {
   const chartData = useMemo(() => {
     return [...records]
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
@@ -35,10 +36,10 @@ export function FullChartPage({ config, records, diabetesType }: FullChartPagePr
   const max = values.length > 0 ? Math.max(...values) : null;
   const min = values.length > 0 ? Math.min(...values) : null;
 
-  const supLimit = config.limites?.superior ? resolveLimit(config.limites.superior, diabetesType) : null;
-  const infLimit = config.limites?.inferior ? resolveLimit(config.limites.inferior, diabetesType) : null;
+  const supLimit = config.limites?.superior ? resolveLimit(config.limites.superior, diabetesType, gender) : null;
+  const infLimit = config.limites?.inferior ? resolveLimit(config.limites.inferior, diabetesType, gender) : null;
 
-  const status = getStatus(latestValue, config, diabetesType);
+  const status = getStatus(latestValue, config, diabetesType, gender);
   const statusMap = {
     en_meta: { label: "En meta", cls: "bg-emerald-100 text-emerald-700" },
     revisar: { label: "Revisar", cls: "bg-amber-100 text-amber-700" },

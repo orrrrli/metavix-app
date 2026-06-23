@@ -55,17 +55,18 @@ export function BmiCalculator() {
           estatura_cm: heightCm,
           imc: Math.round(imc * 10) / 10,
           categoria: getCategoria(imc),
+          cintura_cm: r.waistCm ?? null,
         };
       });
   }, [dailyRecords, profile?.heightCm]);
 
-  const handleCalcular = async (peso_kg: number, estatura_cm: number): Promise<void> => {
+  const handleCalcular = async (peso_kg: number, estatura_cm: number, cintura: number | null): Promise<void> => {
     const imc = peso_kg / Math.pow(estatura_cm / 100, 2);
     const imcRedondeado = Math.round(imc * 10) / 10;
     setCurrentImc(imcRedondeado);
     setCurrentCat(getCategoria(imc));
 
-    // Save weight as daily record
+    // Save weight (and optionally cintura) as daily record
     createRecord(
       {
         recordDate: new Date().toISOString().split("T")[0],
@@ -74,7 +75,7 @@ export function BmiCalculator() {
         diastolicPressure: null,
         heartRate: null,
         weightKg: peso_kg,
-        waistCm: null,
+        waistCm: cintura,
         notes: null,
         glucoseReadings: null,
       },
@@ -99,7 +100,7 @@ export function BmiCalculator() {
             loading={isSaving}
             initialPeso={latestWeight}
             initialEstatura={profile?.heightCm ?? undefined}
-            latestCintura={latestWaist}
+            latestCintura={latestWaist ?? undefined}
           />
         </div>
         <div>

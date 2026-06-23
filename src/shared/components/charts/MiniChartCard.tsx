@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, LabelList } from "recharts";
 
 import { ChartDefinition, MetricStatus, getStatus, extractMetricValue, resolveLimit } from "@/features/patient/chart-config";
 import { DiabetesType, HealthRecordDto } from "@/features/patient/types";
@@ -15,6 +15,10 @@ interface MiniChartCardProps {
   config: ChartDefinition;
   records: HealthRecordDto[];
   diabetesType: DiabetesType;
+  gender?: string | null;
+  companionField?: string;
+  companionLabel?: string;
+  companionUnit?: string;
 }
 
 const STATUS_MAP: Record<MetricStatus, { label: string; className: string }> = {
@@ -24,18 +28,20 @@ const STATUS_MAP: Record<MetricStatus, { label: string; className: string }> = {
   sin_datos: { label: "Sin datos", className: "bg-gray-100 text-gray-500 border-gray-200" },
 };
 
-export function MiniChartCard({ config, records, diabetesType }: MiniChartCardProps) {
+export function MiniChartCard({ config, records, diabetesType, gender, companionField, companionLabel, companionUnit }: MiniChartCardProps) {
   const chartData = [...records]
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map(r => ({ 
+    .map(r => ({
       date: format(parseISO(r.timestamp), "MMM dd"),
-      value: extractMetricValue(r, config.campo) 
+      value: extractMetricValue(r, config.campo),
+      companion: companionField ? ((r as unknown as Record<string, unknown>)[companionField] as number | null) ?? null : null,
     }))
     .filter(d => d.value != null)
     .slice(-21);
 
   const latestValue = chartData.length > 0 ? chartData[chartData.length - 1].value : null;
-  const status = getStatus(latestValue, config, diabetesType);
+  const latestCompanion: number | null = companionField ? chartData.at(-1)?.companion ?? null : null;
+  const status = getStatus(latestValue, config, diabetesType, gender);
   const statusInfo = STATUS_MAP[status];
 
   return (
@@ -49,6 +55,12 @@ export function MiniChartCard({ config, records, diabetesType }: MiniChartCardPr
             </span>
             <span className="text-xs text-muted-foreground">{config.unidad}</span>
           </div>
+          {companionLabel != null && latestCompanion != null && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <span>{companionLabel}:</span>
+              <span className="font-medium text-foreground">{latestCompanion}{companionUnit}</span>
+            </div>
+          )}
         </div>
         {config.limites && (
           <Badge variant="outline" className={`text-[10px] shrink-0 ${statusInfo.className}`}>
@@ -83,10 +95,19 @@ export function MiniChartCard({ config, records, diabetesType }: MiniChartCardPr
                   strokeWidth={2}
                   fillOpacity={1}
                   fill={`url(#grad-${config.id})`}
-                  dot={false}
+                  dot={companionField ? { r: 3, fill: config.color, strokeWidth: 0 } : false}
                   activeDot={{ r: 4, strokeWidth: 0, fill: config.color }}
                   connectNulls
-                />
+                >
+                  {companionField && (
+                    <LabelList
+                      dataKey="companion"
+                      position="top"
+                      style={{ fontSize: 9, fill: '#6A7B78' }}
+                      formatter={(v: unknown) => (v != null ? `${v}cm` : '')}
+                    />
+                  )}
+                </Area>
               </AreaChart>
             </ResponsiveContainer>
           ) : (

@@ -10,6 +10,7 @@ export interface ImcEntry {
   estatura_cm: number;
   imc: number;
   categoria: string;
+  cintura_cm: number | null;
 }
 
 interface HistorialIMCProps {
@@ -47,6 +48,7 @@ export function HistorialIMC({ historial }: HistorialIMCProps) {
                 <TableHead>Fecha</TableHead>
                 <TableHead>Peso</TableHead>
                 <TableHead>Estatura</TableHead>
+                <TableHead>Cintura</TableHead>
                 <TableHead>IMC</TableHead>
                 <TableHead>Categoría</TableHead>
               </TableRow>
@@ -59,6 +61,7 @@ export function HistorialIMC({ historial }: HistorialIMCProps) {
                   </TableCell>
                   <TableCell>{r.peso_kg} kg</TableCell>
                   <TableCell>{r.estatura_cm} cm</TableCell>
+                  <TableCell>{r.cintura_cm != null ? `${r.cintura_cm} cm` : '—'}</TableCell>
                   <TableCell className="font-bold">{r.imc.toFixed(1)}</TableCell>
                   <TableCell>
                     <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold", getBadgeColor(r.categoria))}>
