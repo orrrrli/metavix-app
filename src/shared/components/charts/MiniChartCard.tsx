@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -29,15 +30,22 @@ const STATUS_MAP: Record<MetricStatus, { label: string; className: string }> = {
 };
 
 export function MiniChartCard({ config, records, diabetesType, gender, companionField, companionLabel, companionUnit }: MiniChartCardProps) {
-  const chartData = [...records]
-    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map(r => ({
-      date: format(parseISO(r.timestamp), "MMM dd"),
-      value: extractMetricValue(r, config.campo),
-      companion: companionField ? ((r as unknown as Record<string, unknown>)[companionField] as number | null) ?? null : null,
-    }))
-    .filter(d => d.value != null)
-    .slice(-21);
+  const chartData = useMemo(() => {
+    const byDate = new Map<string, { date: string; value: number; companion: number | null }>();
+    [...records]
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+      .forEach(r => {
+        const date = format(parseISO(r.timestamp), "MMM dd");
+        const value = extractMetricValue(r, config.campo);
+        if (value != null && !byDate.has(date)) {
+          const companion = companionField
+            ? ((r as unknown as Record<string, unknown>)[companionField] as number | null) ?? null
+            : null;
+          byDate.set(date, { date, value, companion });
+        }
+      });
+    return Array.from(byDate.values()).slice(-21);
+  }, [records, config.campo, companionField]);
 
   const latestValue = chartData.length > 0 ? chartData[chartData.length - 1].value : null;
   const latestCompanion: number | null = companionField ? chartData.at(-1)?.companion ?? null : null;

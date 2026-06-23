@@ -21,13 +21,17 @@ interface FullChartPageProps {
 
 export function FullChartPage({ config, records, diabetesType, gender }: FullChartPageProps) {
   const chartData = useMemo(() => {
-    return [...records]
+    const byDate = new Map<string, number>();
+    [...records]
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      .map(r => ({
-        date: format(parseISO(r.timestamp), "MMM dd, yyyy"),
-        value: extractMetricValue(r, config.campo),
-      }))
-      .filter(d => d.value != null);
+      .forEach(r => {
+        const date = format(parseISO(r.timestamp), "MMM dd, yyyy");
+        const value = extractMetricValue(r, config.campo);
+        if (value != null && !byDate.has(date)) {
+          byDate.set(date, value);
+        }
+      });
+    return Array.from(byDate.entries()).map(([date, value]) => ({ date, value }));
   }, [records, config.campo]);
 
   const values = chartData.map(d => d.value).filter(v => v != null) as number[];
