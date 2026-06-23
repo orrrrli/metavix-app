@@ -18,6 +18,7 @@ function makeQueryClient(): QueryClient {
 
         try {
           await refreshToken();
+          document.cookie = '_session=1; path=/; secure; samesite=lax; max-age=900';
           await queryClient.invalidateQueries();
         } catch {
           useAuthStore.getState().logout();
