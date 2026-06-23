@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAllDoctors, getLinkedDoctors, sendLinkRequest, revokeLinkRequest } from '@/lib/api/patient';
-import { SendLinkRequestBody } from '@/types/link-request';
+import { LinkedDoctorResponse, SendLinkRequestBody } from '@/types/link-request';
 
 export function useAllDoctors() {
   return useQuery({
@@ -32,8 +32,11 @@ export function useRevokeLinkRequest(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (requestId: string) => revokeLinkRequest(requestId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['linked-doctors', patientId] });
+    onSuccess: (_, requestId) => {
+      queryClient.setQueryData<LinkedDoctorResponse[]>(
+        ['linked-doctors', patientId],
+        (old) => old?.filter((d) => d.requestId !== requestId) ?? []
+      );
     },
   });
 }

@@ -24,6 +24,7 @@ export async function getLinkedDoctors(patientId: string): Promise<LinkedDoctorR
   const res = await fetch(`${API}/patient/${patientId}/get-linked-doctors`, {
     credentials: 'include',
   });
+  if (res.status === 404) return [];
   if (!res.ok) throw new Error(`[getLinkedDoctors] ${res.status}`);
   const body = await res.json();
   return body.data;
