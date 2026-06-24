@@ -12,13 +12,14 @@ interface PatientDataHook {
 }
 
 export function usePatientData(): PatientDataHook {
-  const { userId } = useAuthStore();
+  const { userId, patientId } = useAuthStore();
+  const id = patientId ?? userId;
 
   const mockDb = useMockDb();
 
-  const profile = mockDb.patients.find((p) => p.id === userId) ?? null;
+  const profile = mockDb.patients.find((p) => p.id === id) ?? null;
   const records = mockDb.records
-    .filter((r) => r.patientId === userId)
+    .filter((r) => r.patientId === id)
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return {
@@ -28,7 +29,7 @@ export function usePatientData(): PatientDataHook {
     updateRecord: mockDb.updateRecord,
     deleteRecord: mockDb.deleteRecord,
     updateProfile: (updates) => {
-      if (userId) mockDb.updatePatient(userId, updates);
+      if (id) mockDb.updatePatient(id, updates);
     },
   };
 }

@@ -42,7 +42,7 @@ function mapReadingType(rt: GlucoseReadingType): string {
   }
 }
 
-function parseDDMMYYYY(dateStr: string): Date {
+function parseDailyDate(dateStr: string): Date {
   const [day, month, year] = dateStr.split("/");
   return new Date(Number(year), Number(month) - 1, Number(day));
 }
@@ -64,9 +64,9 @@ export default function GlucoseCurvesPage() {
 
   const daysWithData = useMemo(() => {
     return aggregateGlucoseCurvesByDate(records)
-      .sort((a, b) => parseDDMMYYYY(b.dateKey).getTime() - parseDDMMYYYY(a.dateKey).getTime())
+      .sort((a, b) => parseDailyDate(b.dateKey).getTime() - parseDailyDate(a.dateKey).getTime())
       .map(({ dateKey, glucoseReadings }) => {
-        const date = parseDDMMYYYY(dateKey);
+        const date = parseDailyDate(dateKey);
         return {
           date,
           label: format(date, "MMM dd", { locale: es }),
@@ -203,14 +203,30 @@ export default function GlucoseCurvesPage() {
             <ResponsiveContainer width="100%" height={500}>
               <LineChart data={chartData} margin={{ top: 20, right: 20, bottom: 40, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8DFD4" />
-                <XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#6A7B78" }} dy={10} angle={-25} textAnchor="end" />
+                <XAxis dataKey="id" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "#6A7B78" }} dy={10} angle={-25} textAnchor="end" tickFormatter={(id) => id.replace(/-\d+$/, "")} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: "#6A7B78" }} dx={-10}
                   domain={[
                     Math.min(limits.infMin - 10, (minimo ?? 70) - 10),
                     Math.max(limits.supPost + 20, (maximo ?? 180) + 20),
                   ]}
                 />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div style={{ ...tooltipStyle, backgroundColor: 'white' }} className="text-sm px-3 py-2">
+                        <p className="font-semibold">{d.hora ? `${d.label}, ${d.hora}` : d.label}</p>
+                        <p className="mt-1">{d.valor} mg/dL</p>
+                        <div className="mt-2 pt-2 border-t text-muted-foreground text-xs">
+                          <p>Promedio día: {promedio} mg/dL</p>
+                          <p>Mín: {minimo} / Máx: {maximo}</p>
+                          <p>Mediciones: {totalMediciones}</p>
+                        </div>
+                      </div>
+                    );
+                  }}
+                />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: "20px" }} />
                 <Line type="monotone" name="Glucosa registrada (mg/dL)" dataKey="valor" stroke="#00BFA5" strokeWidth={3} dot={{ r: 5, strokeWidth: 2 }} activeDot={{ r: 7 }} />
                 <ReferenceLine y={limits.supPost}  stroke="#EF4444" strokeDasharray="8 4" strokeWidth={2} label={{ value: `Límite post. ${limits.supPost}`,  position: "insideTopRight",    fontSize: 11, fill: "#EF4444" }} />
@@ -262,10 +278,11 @@ export default function GlucoseCurvesPage() {
 
 function buildChartData(readings: import("@/types/daily-record").GlucoseReadingResponse[]) {
   return readings
-    .map(g => {
+    .map((g, i) => {
       const tipo = mapReadingType(g.readingType);
       const info = MEAL_ORDER[tipo];
       return {
+        id: `${info?.label ?? tipo}-${i}`,
         tipo,
         label:     info?.label    ?? tipo,
         orden:     info?.orden    ?? 99,

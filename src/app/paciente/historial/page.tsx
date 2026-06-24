@@ -24,7 +24,7 @@ const READING_TYPE_TO_TIPO: Record<GlucoseReadingType, string> = {
   [GlucoseReadingType.Overnight]:     'madrugada',
 };
 
-function parseDDMMYYYY(dateStr: string): Date {
+function parseDailyDate(dateStr: string): Date {
   const [day, month, year] = dateStr.split('/');
   return new Date(Number(year), Number(month) - 1, Number(day));
 }
@@ -91,7 +91,7 @@ export default function HistorialPage() {
     const lab = (labRecords ?? []).map(mapLabToRegistro);
 
     return [...daily, ...lab].sort(
-      (a, b) => parseDDMMYYYY(b.fecha).getTime() - parseDDMMYYYY(a.fecha).getTime()
+      (a, b) => parseDailyDate(b.fecha).getTime() - parseDailyDate(a.fecha).getTime()
     );
   }, [dailyRecords, labRecords]);
 

@@ -57,7 +57,7 @@ interface DateRange {
   to?: Date | undefined;
 }
 
-function parseDDMMYYYY(dateStr: string): Date {
+function parseDailyDate(dateStr: string): Date {
   const [day, month, year] = dateStr.split("/");
   return new Date(Number(year), Number(month) - 1, Number(day));
 }
@@ -125,7 +125,7 @@ export default function BmiTrendPage() {
 
     return Array.from(byDate.values())
       .map((r) => {
-        const date = parseDDMMYYYY(r.recordDate);
+        const date = parseDailyDate(r.recordDate);
         const bmi = r.weightKg! / Math.pow(heightCm / 100, 2);
         return {
           date,

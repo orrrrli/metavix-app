@@ -24,8 +24,6 @@ interface AuthState {
 
   setHasHydrated: (value: boolean) => void;
   setSession: (session: SessionData) => void;
-  loginAsPatient: (userId: string) => void;
-  loginAsDoctor: (doctorId: string) => void;
   logout: () => void;
 }
 
@@ -44,12 +42,6 @@ export const useAuthStore = create<AuthState>()(
 
       setSession: ({ userId, patientId, doctorId, role, fullName, email }) =>
         set({ role, userId, patientId, doctorId, fullName, email }),
-
-      loginAsPatient: (userId) =>
-        set({ role: 'PATIENT', userId, fullName: 'Demo Paciente', email: null }),
-
-      loginAsDoctor: (doctorId) =>
-        set({ role: 'DOCTOR', userId: doctorId, fullName: 'Demo Médico', email: null }),
 
       logout: () => {
         logoutUser().catch(() => {});

@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { format, parseISO } from "date-fns";
@@ -25,18 +26,45 @@ const STATUS_MAP: Record<MetricStatus, { label: string; className: string }> = {
 };
 
 export function MiniChartCard({ config, records, diabetesType }: MiniChartCardProps) {
-  const chartData = [...records]
-    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-    .map(r => ({ 
-      date: format(parseISO(r.timestamp), "MMM dd"),
-      value: extractMetricValue(r, config.campo) 
-    }))
-    .filter(d => d.value != null)
-    .slice(-21);
+  const chartData = useMemo(() => {
+    const groups = new Map<string, { values: number[]; timestamp: Date }>();
+
+    for (const r of records) {
+      const value = extractMetricValue(r, config.campo);
+      if (value == null) continue;
+      const dayKey = format(parseISO(r.timestamp), "yyyy-MM-dd");
+      const existing = groups.get(dayKey);
+      if (existing) {
+        existing.values.push(value);
+      } else {
+        groups.set(dayKey, { values: [value], timestamp: parseISO(r.timestamp) });
+      }
+    }
+
+    return Array.from(groups.entries())
+      .sort((a, b) => a[1].timestamp.getTime() - b[1].timestamp.getTime())
+      .slice(-21)
+      .map(([dayKey, { values }]) => ({
+        date: format(parseISO(dayKey), "MMM dd"),
+        value: Math.round(values.reduce((a, b) => a + b, 0) / values.length),
+        min: Math.min(...values),
+        max: Math.max(...values),
+        count: values.length,
+      }));
+  }, [records, config.campo]);
 
   const latestValue = chartData.length > 0 ? chartData[chartData.length - 1].value : null;
   const status = getStatus(latestValue, config, diabetesType);
   const statusInfo = STATUS_MAP[status];
+
+  const tooltipStyle = {
+    borderRadius: '8px',
+    border: 'none',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+    fontSize: '12px',
+    padding: '4px 8px',
+    backgroundColor: 'white',
+  };
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow flex flex-col">
@@ -70,11 +98,24 @@ export function MiniChartCard({ config, records, diabetesType }: MiniChartCardPr
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E8DFD4" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#6A7B78" }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "#6A7B78" }} dx={-10} domain={['dataMin - (dataMax-dataMin)*0.1', 'dataMax + (dataMax-dataMin)*0.1']} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)', fontSize: '12px', padding: '4px 8px' }}
-                  labelStyle={{ display: 'none' }}
-                  itemStyle={{ color: config.color }}
-                  formatter={(value: any) => [`${value} ${config.unidad}`, config.titulo]}
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div style={tooltipStyle}>
+                        <p style={{ fontWeight: 600, marginBottom: '4px' }}>{d.date}</p>
+                        <p>
+                          Promedio:{" "}
+                          <span style={{ fontWeight: 500, color: config.color }}>
+                            {d.value} {config.unidad}
+                          </span>
+                        </p>
+                        <p style={{ color: '#6A7B78' }}>Mín: {d.min} / Máx: {d.max}</p>
+                        <p style={{ color: '#6A7B78' }}>Mediciones: {d.count}</p>
+                      </div>
+                    );
+                  }}
                 />
                 <Area
                   type="monotone"

@@ -20,13 +20,29 @@ interface FullChartPageProps {
 
 export function FullChartPage({ config, records, diabetesType }: FullChartPageProps) {
   const chartData = useMemo(() => {
-    return [...records]
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
-      .map(r => ({
-        date: format(parseISO(r.timestamp), "MMM dd, yyyy"),
-        value: extractMetricValue(r, config.campo),
-      }))
-      .filter(d => d.value != null);
+    const groups = new Map<string, { values: number[]; timestamp: Date }>();
+
+    for (const r of records) {
+      const value = extractMetricValue(r, config.campo);
+      if (value == null) continue;
+      const dayKey = format(parseISO(r.timestamp), "yyyy-MM-dd");
+      const existing = groups.get(dayKey);
+      if (existing) {
+        existing.values.push(value);
+      } else {
+        groups.set(dayKey, { values: [value], timestamp: parseISO(r.timestamp) });
+      }
+    }
+
+    return Array.from(groups.entries())
+      .sort((a, b) => a[1].timestamp.getTime() - b[1].timestamp.getTime())
+      .map(([dayKey, { values }]) => ({
+        date: format(parseISO(dayKey), "MMM dd, yyyy"),
+        value: Math.round(values.reduce((a, b) => a + b, 0) / values.length),
+        min: Math.min(...values),
+        max: Math.max(...values),
+        count: values.length,
+      }));
   }, [records, config.campo]);
 
   const values = chartData.map(d => d.value).filter(v => v != null) as number[];
@@ -46,7 +62,14 @@ export function FullChartPage({ config, records, diabetesType }: FullChartPagePr
     sin_datos: { label: "Sin datos", cls: "bg-gray-100 text-gray-500" },
   };
 
-  const tooltipStyle = { borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' };
+  const tooltipStyle = {
+    borderRadius: '8px',
+    border: 'none',
+    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+    fontSize: '12px',
+    padding: '4px 8px',
+    backgroundColor: 'white',
+  };
 
   // Calculate Y domain to include reference lines
   const allVals = [...values];
@@ -147,7 +170,25 @@ export function FullChartPage({ config, records, diabetesType }: FullChartPagePr
                   dx={-10}
                   domain={[Math.floor(yMin - padding), Math.ceil(yMax + padding)]}
                 />
-                <Tooltip contentStyle={tooltipStyle} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0].payload;
+                    return (
+                      <div style={tooltipStyle}>
+                        <p style={{ fontWeight: 600, marginBottom: '4px' }}>{d.date}</p>
+                        <p>
+                          Promedio:{" "}
+                          <span style={{ fontWeight: 500, color: config.color }}>
+                            {d.value} {config.unidad}
+                          </span>
+                        </p>
+                        <p style={{ color: '#6A7B78' }}>Mín: {d.min} / Máx: {d.max}</p>
+                        <p style={{ color: '#6A7B78' }}>Mediciones: {d.count}</p>
+                      </div>
+                    );
+                  }}
+                />
                 <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
                 
                 {/* Main data line */}

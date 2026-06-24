@@ -87,9 +87,6 @@ export function FilaRegistro({ registro, tipoDiabetes }: FilaRegistroProps) {
   
   const estHDL = estadoHDL(registro.colesterol_hdl);
 
-  // Formateo de fecha
-  const fechaObj = new Date(registro.fecha);
-  // Add UTC offset correction if necessary or just display the string simply
   const fechaFormat = registro.fecha;
 
   const truncarNotas = (nota: string | undefined) => {

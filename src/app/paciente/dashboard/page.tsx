@@ -20,7 +20,7 @@ import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 
-function parseDDMMYYYY(dateStr: string): Date {
+function parseDailyDate(dateStr: string): Date {
   const [day, month, year] = dateStr.split('/');
   return new Date(Number(year), Number(month) - 1, Number(day));
 }
@@ -57,7 +57,7 @@ function mapDailyToRecord(r: DailyRecordResponse, heightCm: number | null): Heal
   return {
     id: r.id,
     patientId: r.patientId,
-    timestamp: parseDDMMYYYY(r.recordDate).toISOString(),
+    timestamp: parseDailyDate(r.recordDate).toISOString(),
     glucosas_comidas: r.glucoseReadings.map((g): GlucoseReading => ({
       tipo: mapReadingTypeToTipo(g.readingType),
       valor: g.valueMgDl,
@@ -87,7 +87,7 @@ function mapLabToRecord(r: LabRecordResponse): HealthRecordDto {
   return {
     id: r.id,
     patientId: r.patientId,
-    timestamp: parseDDMMYYYY(r.sampleDate).toISOString(),
+    timestamp: parseDailyDate(r.sampleDate).toISOString(),
     glucosas_comidas: [],
     presion_sistolica: null,
     presion_diastolica: null,
@@ -207,7 +207,7 @@ export default function PatientDashboard() {
             <CardTitle>Curvas de glucosa del día</CardTitle>
             <CardDescription>
               {todayRecord
-                ? format(parseDDMMYYYY(todayRecord.recordDate), "EEEE, d 'de' MMMM", { locale: es })
+                ? format(parseDailyDate(todayRecord.recordDate), "EEEE, d 'de' MMMM", { locale: es })
                 : "Sin registros hoy"}
             </CardDescription>
           </div>
