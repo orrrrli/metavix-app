@@ -108,8 +108,8 @@ export function PatientProfileCard() {
     );
   }
 
-  const fullName = `${profile.firstName} ${profile.lastName}`;
-  const initials = [profile.firstName[0], profile.lastName[0]].join('').toUpperCase();
+  const fullName = `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim() || '—';
+  const initials = [profile.firstName?.[0], profile.lastName?.[0]].filter(Boolean).join('').toUpperCase() || '?';
 
   const parseSafe = (value: string): Date | null => {
     const d = parseISO(value);
