@@ -36,6 +36,7 @@ interface AuthSignInProps {
   onSignIn: (credentials: SignInFormData) => Promise<SignInResult>;
   onSuccess?: (user: { name: string; isAdmin: boolean }) => void;
   onGoogleSignIn?: (role: RoleSelection) => void;
+  oauthError?: string;
   brandName?: string;
   accentColor?: string;
   imageSrc?: string;
@@ -58,6 +59,7 @@ export default function AuthSignIn({
   onSignIn,
   onSuccess,
   onGoogleSignIn,
+  oauthError,
   brandName = 'Metavix',
   accentColor = '#00BFA5',
   imageSrc,
@@ -73,7 +75,7 @@ export default function AuthSignIn({
   const [step, setStep] = useState<'role-select' | 'form'>('role-select');
   const [selectedRole, setSelectedRole] = useState<RoleSelection | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(oauthError ?? null);
   const [redirecting, setRedirecting] = useState<{ name: string; isAdmin: boolean } | null>(null);
 
   const {
@@ -237,6 +239,8 @@ export default function AuthSignIn({
                 >
                   Selecciona tu perfil para continuar.
                 </p>
+
+                <ErrorBanner message={apiError} />
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {(
@@ -482,24 +486,7 @@ export default function AuthSignIn({
                 Ingresa tus datos para acceder a tu panel de control.
               </p>
 
-              <div style={{ minHeight: '44px', marginBottom: '4px' }}>
-                {apiError && (
-                  <div
-                    style={{
-                      padding: '10px 14px',
-                      borderRadius: '10px',
-                      fontSize: '0.875rem',
-                      fontFamily: 'var(--font-sans, system-ui, sans-serif)',
-                      fontWeight: 500,
-                      background: 'rgba(247,45,45,0.08)',
-                      color: '#d42020',
-                      border: '1px solid rgba(247,45,45,0.2)',
-                    }}
-                  >
-                    {apiError}
-                  </div>
-                )}
-              </div>
+              <ErrorBanner message={apiError} />
 
               <form onSubmit={handleSubmit(onSubmit)}>
                 <div style={{ marginBottom: '10px' }}>
@@ -742,6 +729,28 @@ export default function AuthSignIn({
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorBanner({ message }: { message: string | null }): React.ReactElement | null {
+  if (!message) return null;
+  return (
+    <div style={{ minHeight: '44px', marginBottom: '16px' }}>
+      <div
+        style={{
+          padding: '10px 14px',
+          borderRadius: '10px',
+          fontSize: '0.875rem',
+          fontFamily: 'var(--font-sans, system-ui, sans-serif)',
+          fontWeight: 500,
+          background: 'rgba(247,45,45,0.08)',
+          color: '#d42020',
+          border: '1px solid rgba(247,45,45,0.2)',
+        }}
+      >
+        {message}
       </div>
     </div>
   );

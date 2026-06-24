@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, Eye, EyeOff, ArrowLeft, ChevronDown } from 'lucide-react';
@@ -37,7 +37,7 @@ type SignUpFormData = z.infer<typeof signUpSchema>;
 // Types
 // ---------------------------------------------------------------------------
 
-interface RegisterData {
+export interface RegisterData {
   firstName: string;
   lastName: string;
   email: string;
@@ -88,7 +88,6 @@ export default function AuthSignUp({
   const {
     control,
     handleSubmit,
-    watch,
     formState: { isSubmitting },
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
@@ -102,7 +101,7 @@ export default function AuthSignUp({
     },
   });
 
-  const currentRole = watch('role');
+  const currentRole = useWatch({ control, name: 'role' });
 
   const onSubmit = async (data: SignUpFormData): Promise<void> => {
     setStatus(null);

@@ -5,7 +5,7 @@ import { loginUser, registerDoctor, registerPatient } from "@/lib/api/auth";
 import { getDoctorProfile } from "@/lib/api/doctor";
 import { useAuthStore } from "@/features/auth/store";
 import type { UserRole } from "@/features/auth/store";
-import AuthSignUp from "@/shared/components/auth/AuthSignUp";
+import AuthSignUp, { type RegisterData } from "@/shared/components/auth/AuthSignUp";
 import Image from "next/image";
 
 const API = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1`;
@@ -37,10 +37,11 @@ export default function RegisterPage() {
   const { setSession } = useAuthStore();
 
   const handleGoogleSignUp = (role: 'patient' | 'doctor') => {
+    sessionStorage.setItem('oauth_requested_role', role);
     window.location.href = `${API}/auth/google?role=${role}`;
   };
 
-  const handleRegister = async (data: any) => {
+  const handleRegister = async (data: RegisterData) => {
     try {
       const payload = {
         firstName: data.firstName,
@@ -73,7 +74,7 @@ export default function RegisterPage() {
       }, 2000);
 
       return { success: "Cuenta creada exitosamente. Redirigiendo..." };
-    } catch (error: any) {
+    } catch (error) {
       const message = error instanceof Error ? error.message : "";
       if (message.includes("409")) {
         return { error: "Este correo ya está registrado" };

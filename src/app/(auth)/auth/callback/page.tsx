@@ -24,6 +24,14 @@ function getDashboard(role: UserRole): string {
   }
 }
 
+function mapRequestedRole(value: string | null): UserRole {
+  switch (value) {
+    case 'patient': return 'PATIENT';
+    case 'doctor':  return 'DOCTOR';
+    default:        return null;
+  }
+}
+
 function OAuthCallbackInner(): React.ReactElement {
   const router         = useRouter();
   const params         = useSearchParams();
@@ -31,30 +39,39 @@ function OAuthCallbackInner(): React.ReactElement {
 
   useEffect(() => {
     if (params.get('error')) {
+      sessionStorage.removeItem('oauth_requested_role');
       router.replace('/login?error=oauth_failed');
       return;
     }
 
     getCurrentUser()
       .then((user) => {
-        const role = mapRole(user.role);
+        const actualRole    = mapRole(user.role);
+        const requestedRole = mapRequestedRole(sessionStorage.getItem('oauth_requested_role'));
+        sessionStorage.removeItem('oauth_requested_role');
+
+        if (requestedRole && requestedRole !== actualRole) {
+          router.replace('/login?error=role_mismatch');
+          return;
+        }
 
         setSession({
           userId:    user.userId,
           patientId: user.patientId,
           doctorId:  user.doctorId,
-          role,
+          role:      actualRole,
           fullName:  user.fullName,
           email:     user.email,
         });
 
         document.cookie = '_session=1; path=/; secure; samesite=lax; max-age=900';
-        router.replace(getDashboard(role));
+        router.replace(getDashboard(actualRole));
       })
       .catch(() => {
+        sessionStorage.removeItem('oauth_requested_role');
         router.replace('/login?error=oauth_failed');
       });
-  }, []);
+  }, [params, router, setSession]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#f2f2f2]">
