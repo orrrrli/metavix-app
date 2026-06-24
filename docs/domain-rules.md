@@ -30,7 +30,7 @@
 ## 3. Local Architecture and Stack
 
 - **Core Framework:** Next.js 16.2.6 App Router (React 19). ⚠️ Breaking changes from 14/15 — read `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
-- **Backend:** External REST API — `metavix-api` (ASP.NET Core 9, Clean Architecture). See `/Users/orla/dev/metavix/docs/API.md` for full reference.
+- **Backend:** External REST API — `metavix-api` (ASP.NET Core 9, Clean Architecture). See `../metavix-api/docs/api-guidelines.md` for full reference.
 - **Auth:** JWT issued by the API. Sent automatically via HTTP-Only cookies. Non-sensitive session data (`userId`, `role`, `fullName`) stored in Zustand for routing and UI decisions only.
 
   **Token flow:**
