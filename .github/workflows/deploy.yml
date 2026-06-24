@@ -25,4 +25,5 @@ jobs:
             cd /home/rokev-dynamics/metavix/metavix-app
             git pull https://x-access-token:${GH_PAT}@github.com/orrrrli/metavix-app.git main
             docker compose -f /home/rokev-dynamics/metavix/docker-compose.yml build metavix-app
+            docker compose -f /home/rokev-dynamics/metavix/docker-compose.yml down metavix-app
             docker compose -f /home/rokev-dynamics/metavix/docker-compose.yml up -d metavix-app
