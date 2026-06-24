@@ -38,7 +38,7 @@ export function DashboardLayout({ children, navGroups, title }: DashboardLayoutP
     .join('')
     .toUpperCase();
   const roleLabel = role === 'PATIENT' ? 'Paciente' : 'Médico';
-  const profileHref = role === 'PATIENT' ? '/paciente/perfil' : null;
+  const profileHref = role === 'PATIENT' ? '/paciente/perfil' : '/doctor/perfil';
 
   const handleLogout = () => {
     logout();

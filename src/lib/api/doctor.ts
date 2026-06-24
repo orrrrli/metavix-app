@@ -80,7 +80,7 @@ export async function getMyDoctorProfile(): Promise<DoctorProfileResponse> {
 
 export interface UpdateDoctorProfileRequest {
   licenseNumber: string;
-  speciality: string;
+  speciality?: string;
 }
 
 export async function updateDoctorProfile(
