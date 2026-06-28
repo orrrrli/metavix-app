@@ -17,21 +17,24 @@ export default function LandingPage() {
         <Benefits />
         <HowItWorks />
         <TargetAudience />
-        <FinalCTA />
         <DoctorCTA />
+        <FinalCTA />
       </main>
 
-      <footer className="bg-white border-t border-border/50 py-12">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between text-sm text-muted-foreground gap-4">
-          <p>© {new Date().getFullYear()} Metavix. Todos los derechos reservados.</p>
-          <div className="flex flex-wrap gap-x-6 gap-y-2 justify-center">
-            <a href="/caracteristicas" className="hover:text-primary transition-colors py-1">Características</a>
-            <a href="/precios" className="hover:text-primary transition-colors py-1">Precios</a>
-            <a href="/recursos" className="hover:text-primary transition-colors py-1">Recursos</a>
-            <a href="#" className="hover:text-primary transition-colors py-1">Términos y condiciones</a>
-            <a href="#" className="hover:text-primary transition-colors py-1">Política de privacidad</a>
-            <a href="#" className="hover:text-primary transition-colors py-1">Contacto</a>
+      <footer style={{ padding: "52px 56px", background: "#fafafa", borderTop: "1.5px solid #f2f2f2" }}>
+        <div style={{ maxWidth: 1080, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00c9a7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
+            </svg>
+            <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 16, fontWeight: 700, color: "#0a0a0a", letterSpacing: "-0.03em" }}>Metavix</span>
           </div>
+          <div style={{ display: "flex", gap: 30 }}>
+            <a href="#registrar" style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: "#666666", textDecoration: "none" }}>Características</a>
+            <a href="#beneficios" style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: "#666666", textDecoration: "none" }}>Beneficios</a>
+            <a href="#medicos" style={{ fontFamily: "'Sora', sans-serif", fontSize: 14, color: "#666666", textDecoration: "none" }}>Para médicos</a>
+          </div>
+          <span style={{ fontFamily: "'Sora', sans-serif", fontSize: 13, color: "#bbbbbb" }}>© {new Date().getFullYear()} Metavix · Salud personal digital</span>
         </div>
       </footer>
     </div>
