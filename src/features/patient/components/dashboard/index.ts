@@ -1,5 +1,4 @@
-export { default as MetavixDashboardLayout } from "./MetavixDashboardLayout";
-export type { MetavixNavItem, MetavixDashboardLayoutProps } from "./MetavixDashboardLayout";
+export type { MetavixNavItem, MetavixCta, MetavixDashboardLayoutProps } from "@/shared/components/layout/MetavixDashboardLayout";
 
 export { default as MetavixUltimaLectura } from "./MetavixUltimaLectura";
 export type { MetavixUltimaLecturaProps, EstadoClinico } from "./MetavixUltimaLectura";

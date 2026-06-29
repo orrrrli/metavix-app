@@ -2,26 +2,21 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { useAuthStore } from "@/features/auth/store";
 
 /**
- * MetavixDashboardLayout — el "marco" del dashboard del paciente:
- * sidebar de navegación + topbar + CTA flotante (FAB) sticky + slot de contenido.
+ * MetavixDashboardLayout — marco del dashboard con identidad Metavix:
+ * sidebar de navegación + topbar + (opcional) CTA flotante + slot de contenido.
  *
- * Es el ÚNICO componente self-contained completo: define las variables de tema
- * (colores clínicos, dark mode, --accent) sobre el wrapper `.mvx-dash`. Todas las
- * piezas de contenido (MetavixUltimaLectura, MetavixProgresoDia, etc.) se renderizan
- * como `children` y heredan esas variables vía cascada CSS.
+ * El layout no toca auth ni store: recibe userName, role label, onLogout,
+ * etc. por props. El padre (app/(rol)/layout.tsx) lee el store y pasa los
+ * datos. Esto mantiene la separación shared/ sin imports hacia features/.
  *
- * Integración:
- * - Dark mode: usa `useTheme()` de next-themes. El toggle sincroniza con el resto de la app.
- * - Nav: los items principales son links a rutas reales del paciente.
- * - User: toma nombre, rol e iniciales de `useAuthStore`.
- *
- * Para probarlo aislado (sin el layout app), envuelve el componente en
- * `<div className="mvx-dash" style={{ padding: 40 }}>…</div>`.
+ * Define las variables de tema (colores clínicos, dark mode, --accent)
+ * sobre el wrapper `.mvx-dash`. Las piezas de contenido (MetavixUltimaLectura,
+ * MetavixProgresoDia, etc.) se renderizan como children y heredan esas
+ * variables vía cascada CSS.
  */
 
 export interface MetavixNavItem {
@@ -33,18 +28,28 @@ export interface MetavixNavItem {
   external?: boolean;
 }
 
+export interface MetavixCta {
+  label: string;
+  onClick: () => void;
+}
+
 export interface MetavixDashboardLayoutProps {
-  /** Color de acento (teal por defecto). Se aplica como override de --accent */
-  accent?: string;
-  /** Subtítulo bajo el saludo (ej. fecha + racha). ReactNode para formateo rico. */
+  userName: string;
+  userRoleLabel: string;
+  onLogout: () => void;
+  title: string;
+  navItems: MetavixNavItem[];
+
+  profileHref?: string;
+  userInitials?: string;
+  brand?: string;
+  toolsItems?: MetavixNavItem[];
+  navLabel?: string;
+  toolsLabel?: string;
+  cta?: MetavixCta;
+  greetingPrefix?: string;
   subSaludo?: React.ReactNode;
-  /** Ítems de navegación principales. Si lo omites, usa el set por defecto */
-  navItems?: MetavixNavItem[];
-  /** Acción del CTA principal (FAB + botones del hero) */
-  onRegistrar?: () => void;
-  /** Texto del CTA flotante */
-  ctaLabel?: string;
-  /** Contenido del dashboard */
+  accent?: string;
   children?: React.ReactNode;
 }
 
@@ -109,30 +114,22 @@ function Icon({ children, size = 19 }: { children: React.ReactNode; size?: numbe
   );
 }
 
-function getDefaultNav(): MetavixNavItem[] {
-  return [
-    { label: "Inicio", href: "/paciente/dashboard", icon: <Icon>{ICON.inicio}</Icon> },
-    { label: "Mi historial", href: "/paciente/historial", icon: <Icon>{ICON.historial}</Icon> },
-    { label: "Mis metas", href: "/paciente/herramientas/metas", icon: <Icon>{ICON.metas}</Icon> },
-    { label: "Mis médicos", href: "/paciente/doctores", icon: <Icon>{ICON.medicos}</Icon> },
-  ];
-}
-
-function getDefaultTools(): MetavixNavItem[] {
-  return [
-    { label: "Curvas de glucosa", href: "/paciente/herramientas/curvas-glucosa", icon: <Icon>{ICON.curvas}</Icon> },
-    { label: "Calculadora IMC", href: "/paciente/herramientas/calculadora-imc", icon: <Icon>{ICON.imc}</Icon> },
-    { label: "Conversor HbA1c", href: "/paciente/herramientas/convertidor-hba1c", icon: <Icon>{ICON.hba1c}</Icon> },
-    { label: "Ver todas las herramientas", href: "/paciente/herramientas", icon: <Icon>{ICON.mas}</Icon>, muted: true },
-  ];
-}
-
 export default function MetavixDashboardLayout({
-  accent = "#00c9a7",
-  subSaludo,
+  userName,
+  userRoleLabel,
+  userInitials: userInitialsProp,
+  onLogout,
+  title,
   navItems,
-  onRegistrar,
-  ctaLabel = "Registrar nueva lectura",
+  toolsItems,
+  profileHref,
+  brand = "Metavix",
+  navLabel = "Principal",
+  toolsLabel = "Herramientas",
+  cta,
+  greetingPrefix = "Hola, ",
+  subSaludo,
+  accent = "#00c9a7",
   children,
 }: MetavixDashboardLayoutProps) {
   const { theme, setTheme } = useTheme();
@@ -140,8 +137,6 @@ export default function MetavixDashboardLayout({
   const [profileOpen, setProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
-  const router = useRouter();
-  const { fullName, role, logout } = useAuthStore();
 
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- needed to avoid hydration mismatch with next-themes
@@ -173,15 +168,15 @@ export default function MetavixDashboardLayout({
 
   const isDark = mounted && theme === "dark";
 
-  const userName = fullName ?? "Paciente";
-  const userRole = role === "DOCTOR" ? "Médico" : "Paciente";
-  const userInitials = userName
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0] ?? "")
-    .join("")
-    .toUpperCase();
-  const saludo = `Hola, ${userName.split(" ")[0] ?? "Paciente"}`;
+  const userInitials = userInitialsProp
+    ?? userName
+      .split(" ")
+      .slice(0, 2)
+      .map((w) => w[0] ?? "")
+      .join("")
+      .toUpperCase();
+  const firstName = userName.split(" ")[0] || userName;
+  const saludo = `${greetingPrefix}${firstName}`;
 
   const rootStyle: React.CSSProperties = {
     display: "flex",
@@ -201,19 +196,8 @@ export default function MetavixDashboardLayout({
     textTransform: "uppercase",
   };
 
-  const nav = navItems ?? getDefaultNav();
-  const tools = getDefaultTools();
-
   const isActive = (href: string) => {
     return pathname === href || pathname.startsWith(href + "/");
-  };
-
-  const handleRegistrar = () => {
-    if (onRegistrar) {
-      onRegistrar();
-    } else {
-      router.push("/paciente/nuevo-registro");
-    }
   };
 
   const handleToggleTheme = () => {
@@ -222,7 +206,7 @@ export default function MetavixDashboardLayout({
 
   const handleLogout = () => {
     if (!window.confirm("¿Cerrar sesión?")) return;
-    logout();
+    onLogout();
     window.location.href = "/";
   };
 
@@ -248,11 +232,11 @@ export default function MetavixDashboardLayout({
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
           </svg>
-          <span style={{ fontSize: 19, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.03em" }}>Metavix</span>
+          <span style={{ fontSize: 19, fontWeight: 700, color: "var(--text)", letterSpacing: "-0.03em" }}>{brand}</span>
         </div>
 
-        <div style={sectionLabel}>Principal</div>
-        {nav.map((item) => {
+        <div style={sectionLabel}>{navLabel}</div>
+        {navItems.map((item) => {
           const active = isActive(item.href);
           return (
             <Link
@@ -266,21 +250,25 @@ export default function MetavixDashboardLayout({
           );
         })}
 
-        <div style={{ ...sectionLabel, paddingTop: 22 }}>Herramientas</div>
-        {tools.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`mvxdl-nav${active ? " on" : ""}`}
-              style={item.muted ? { color: "var(--soft)", fontSize: 13.5 } : undefined}
-            >
-              {item.icon}
-              {item.label}
-            </Link>
-          );
-        })}
+        {toolsItems && toolsItems.length > 0 && (
+          <>
+            <div style={{ ...sectionLabel, paddingTop: 22 }}>{toolsLabel}</div>
+            {toolsItems.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`mvxdl-nav${active ? " on" : ""}`}
+                  style={item.muted ? { color: "var(--soft)", fontSize: 13.5 } : undefined}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              );
+            })}
+          </>
+        )}
 
         <div style={{ marginTop: "auto", paddingTop: 22 }}>
           <a
@@ -313,7 +301,7 @@ export default function MetavixDashboardLayout({
             borderBottom: "1.5px solid var(--bd)",
           }}
         >
-          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>Portal del Paciente</span>
+          <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{title}</span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20 }}>
             <button
               className="mvxdl-toggle"
@@ -341,7 +329,7 @@ export default function MetavixDashboardLayout({
               >
                 <div style={{ textAlign: "right", lineHeight: 1.25 }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>{userName}</div>
-                  <div style={{ fontSize: 11.5, color: "var(--soft)" }}>{userRole}</div>
+                  <div style={{ fontSize: 11.5, color: "var(--soft)" }}>{userRoleLabel}</div>
                 </div>
                 <div
                   style={{
@@ -379,35 +367,37 @@ export default function MetavixDashboardLayout({
                     fontFamily: F,
                   }}
                 >
-                  <Link
-                    href="/paciente/perfil"
-                    role="menuitem"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 11,
-                      padding: "10px 12px",
-                      borderRadius: 9,
-                      textDecoration: "none",
-                      color: "var(--text)",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      transition: "background-color .15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--nav-active-bg)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                      <circle cx="12" cy="7" r="4" />
-                    </svg>
-                    Ver perfil
-                  </Link>
-                  <div style={{ height: 1, background: "var(--bd)", margin: "4px 8px" }} />
+                  {profileHref && (
+                    <Link
+                      href={profileHref}
+                      role="menuitem"
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 11,
+                        padding: "10px 12px",
+                        borderRadius: 9,
+                        textDecoration: "none",
+                        color: "var(--text)",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        transition: "background-color .15s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "var(--nav-active-bg)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "transparent";
+                      }}
+                    >
+                      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                      </svg>
+                      Ver perfil
+                    </Link>
+                  )}
+                  {profileHref && <div style={{ height: 1, background: "var(--bd)", margin: "4px 8px" }} />}
                   <button
                     type="button"
                     onClick={handleLogout}
@@ -476,9 +466,11 @@ export default function MetavixDashboardLayout({
       </div>
 
       {/* ════ CTA FLOTANTE ════ */}
-      <button className="mvxdl-fab" aria-label={ctaLabel} onClick={handleRegistrar}>
-        <span className="mvxdl-fp">+</span> {ctaLabel}
-      </button>
+      {cta && (
+        <button className="mvxdl-fab" aria-label={cta.label} onClick={cta.onClick}>
+          <span className="mvxdl-fp">+</span> {cta.label}
+        </button>
+      )}
     </div>
   );
 }
