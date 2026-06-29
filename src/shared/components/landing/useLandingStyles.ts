@@ -26,6 +26,21 @@ const CSS = `
 .mvx-card:hover { transform: translateY(-5px); border-color: var(--accent) !important; box-shadow: 0 18px 40px rgba(0,0,0,.08); }
 .mvx-chip { transition: transform .25s cubic-bezier(.2,.85,.25,1), border-color .25s ease, color .25s ease; cursor: default; }
 .mvx-chip:hover { transform: translateY(-3px); border-color: var(--accent) !important; color: var(--accent) !important; }
+
+/* ponytail: !important overrides inline-style padding/grid on landing sections (no per-component changes needed) */
+@media (max-width: 768px) {
+  .mvx-home { padding: 56px 20px !important; }
+  .mvx-home [style*="grid-template-columns"] { grid-template-columns: 1fr !important; gap: 14px !important; }
+  .mvx-home h2 { font-size: 30px !important; line-height: 1.1 !important; }
+  .mvx-home button { min-height: 44px; }
+  .mvx-footer { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; padding: 36px 20px !important; }
+  .mvx-footer-links { gap: 20px !important; flex-wrap: wrap !important; }
+}
+
+@media (max-width: 480px) {
+  .mvx-home { padding: 44px 18px !important; }
+  .mvx-home h2 { font-size: 26px !important; }
+}
 `;
 
 let injected = false;
