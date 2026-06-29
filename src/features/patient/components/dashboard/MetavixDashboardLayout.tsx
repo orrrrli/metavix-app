@@ -205,7 +205,6 @@ export default function MetavixDashboardLayout({
   const tools = getDefaultTools();
 
   const isActive = (href: string) => {
-    if (href === "/paciente/dashboard") return pathname === "/dashboard-v2" || pathname === "/paciente/dashboard";
     return pathname === href || pathname.startsWith(href + "/");
   };
 
