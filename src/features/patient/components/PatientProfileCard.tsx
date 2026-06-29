@@ -1,18 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { Pencil, Check, Phone, Ruler, Baby, Mail, Calendar, User, Activity, Hash, Venus, Mars } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/card';
-import { Button } from '@/shared/components/ui/button';
-import { Input } from '@/shared/components/ui/input';
-import { Label } from '@/shared/components/ui/label';
-import { Badge } from '@/shared/components/ui/badge';
+import { Pencil, Check, Phone, Ruler, Baby, Mail, Calendar, Activity, Hash, Venus, Mars } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, MetavixButton, MetavixInput, MetavixLabel, MetavixBadge } from '@/shared/components/ui/metavix';
 import { usePatientProfile, useUpdatePatientProfile } from '@/features/patient/hooks/use-patient-profile';
 import { useAuthStore } from '@/features/auth/store';
 
@@ -31,16 +27,23 @@ const profileSchema = z.object({
 
 type ProfileFormData = z.infer<typeof profileSchema>;
 
-function ProfileRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
+function ProfileRow({ icon, label, value, last }: { icon: ReactNode; label: string; value: ReactNode; last?: boolean }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b last:border-0">
-      <dt className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div
+      className="flex items-center justify-between py-2.5"
+      style={last ? undefined : { borderBottom: '1px solid var(--bd)' }}
+    >
+      <dt className="flex items-center gap-2 text-sm" style={{ color: 'var(--mut)' }}>
         {icon}
         {label}
       </dt>
-      <dd className="text-sm font-medium text-right">{value}</dd>
+      <dd className="text-sm font-medium text-right" style={{ color: 'var(--text)' }}>{value}</dd>
     </div>
   );
+}
+
+function Muted({ children }: { children: ReactNode }) {
+  return <span style={{ color: 'var(--mut)' }} className="italic">{children}</span>;
 }
 
 export function PatientProfileCard() {
@@ -91,8 +94,8 @@ export function PatientProfileCard() {
   if (isLoading) {
     return (
       <Card className="w-full max-w-2xl">
-        <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground text-center">Cargando perfil...</p>
+        <CardContent>
+          <p className="text-sm text-center" style={{ color: 'var(--mut)' }}>Cargando perfil...</p>
         </CardContent>
       </Card>
     );
@@ -101,8 +104,8 @@ export function PatientProfileCard() {
   if (isError || !profile) {
     return (
       <Card className="w-full max-w-2xl">
-        <CardContent className="pt-6">
-          <p className="text-sm text-destructive text-center">No se pudo cargar el perfil.</p>
+        <CardContent>
+          <p className="text-sm text-center" style={{ color: 'var(--bad)' }}>No se pudo cargar el perfil.</p>
         </CardContent>
       </Card>
     );
@@ -125,37 +128,40 @@ export function PatientProfileCard() {
     <div className="w-full max-w-2xl space-y-4">
       {/* Profile header */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent>
           <div className="flex items-center gap-4">
-            <div className="flex items-center justify-center size-16 rounded-full bg-primary/10 text-primary font-bold text-xl shrink-0">
+            <div
+              className="flex items-center justify-center size-16 rounded-full font-bold text-xl shrink-0"
+              style={{ background: 'var(--nav-active-bg)', color: 'var(--nav-active)' }}
+            >
               {initials}
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-foreground">{fullName}</h3>
-              <p className="text-sm text-muted-foreground flex items-center gap-1.5 mt-0.5">
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--text)' }}>{fullName}</h3>
+              <p className="text-sm flex items-center gap-1.5 mt-0.5" style={{ color: 'var(--mut)' }}>
                 <Hash className="size-3.5" />
                 {profile.medicalRecordNumber}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Paciente desde {memberSince}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--mut)' }}>Paciente desde {memberSince}</p>
             </div>
-            <Badge variant="secondary" className="ml-auto">
+            <MetavixBadge variant="neutral" className="ml-auto">
               {DIABETES_LABELS[profile.diabetesType] ?? profile.diabetesType}
-            </Badge>
+            </MetavixBadge>
           </div>
         </CardContent>
       </Card>
 
       {/* Read-only personal info */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Información personal</CardTitle>
+        <CardHeader>
+          <CardTitle>Información personal</CardTitle>
         </CardHeader>
         <CardContent>
           <dl className="space-y-0">
             <ProfileRow
               icon={<Mail className="size-4" />}
               label="Correo electrónico"
-              value={profile.email ?? <span className="text-muted-foreground italic">No registrado</span>}
+              value={profile.email ?? <Muted>No registrado</Muted>}
             />
             <ProfileRow
               icon={<Calendar className="size-4" />}
@@ -168,13 +174,14 @@ export function PatientProfileCard() {
               value={
                 profile.gender === 'Female' ? 'Femenino'
                 : profile.gender === 'Male' ? 'Masculino'
-                : <span className="text-muted-foreground italic">No especificado</span>
+                : <Muted>No especificado</Muted>
               }
             />
             <ProfileRow
               icon={<Activity className="size-4" />}
               label="Tipo de diabetes"
               value={DIABETES_LABELS[profile.diabetesType] ?? profile.diabetesType}
+              last
             />
           </dl>
         </CardContent>
@@ -182,82 +189,90 @@ export function PatientProfileCard() {
 
       {/* Editable fields */}
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-base">Datos de salud</CardTitle>
-          {!editing && (
-            <Button variant="ghost" size="sm" onClick={handleEdit}>
-              <Pencil className="size-4 mr-1" />
-              Editar
-            </Button>
-          )}
+        <CardHeader>
+          <div className="flex flex-row items-center justify-between">
+            <CardTitle>Datos de salud</CardTitle>
+            {!editing && (
+              <MetavixButton variant="ghost" size="sm" onClick={handleEdit}>
+                <Pencil className="size-4 mr-1" />
+                Editar
+              </MetavixButton>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {editing ? (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="heightCm">
+                <MetavixLabel htmlFor="heightCm">
                   <Ruler className="inline size-3.5 mr-1 mb-0.5" />
                   Estatura (cm)
-                </Label>
-                <Input
+                </MetavixLabel>
+                <MetavixInput
                   id="heightCm"
                   type="number"
                   placeholder="Ej. 165"
                   {...register('heightCm')}
                 />
                 {errors.heightCm && (
-                  <p className="text-xs text-destructive">{errors.heightCm.message}</p>
+                  <p className="text-xs" style={{ color: 'var(--bad)' }}>{errors.heightCm.message}</p>
                 )}
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="phone">
+                <MetavixLabel htmlFor="phone">
                   <Phone className="inline size-3.5 mr-1 mb-0.5" />
                   Teléfono
-                </Label>
-                <Input
+                </MetavixLabel>
+                <MetavixInput
                   id="phone"
                   type="tel"
                   placeholder="Ej. +52 664 123 4567"
                   {...register('phone')}
                 />
                 {errors.phone && (
-                  <p className="text-xs text-destructive">{errors.phone.message}</p>
+                  <p className="text-xs" style={{ color: 'var(--bad)' }}>{errors.phone.message}</p>
                 )}
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-3">
+              <div
+                className="flex items-center justify-between rounded-lg p-3"
+                style={{ border: '1px solid var(--bd)' }}
+              >
                 <div className="flex items-center gap-2">
-                  <Baby className="size-4 text-muted-foreground" />
-                  <Label htmlFor="isPregnant" className="cursor-pointer text-sm font-medium leading-none">
+                  <Baby className="size-4" style={{ color: 'var(--mut)' }} />
+                  <MetavixLabel htmlFor="isPregnant" className="cursor-pointer text-sm font-medium leading-none">
                     ¿Embarazada actualmente?
-                  </Label>
+                  </MetavixLabel>
                 </div>
                 <button
                   type="button"
                   role="switch"
                   aria-checked={isPregnantValue}
                   onClick={() => setValue('isPregnant', !isPregnantValue)}
-                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                    isPregnantValue ? 'bg-primary' : 'bg-input'
-                  }`}
+                  className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2"
+                  style={{
+                    background: isPregnantValue ? 'var(--accent)' : 'var(--ph)',
+                  }}
                 >
                   <span
-                    className={`pointer-events-none inline-block size-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${
-                      isPregnantValue ? 'translate-x-5' : 'translate-x-0'
-                    }`}
+                    className="pointer-events-none inline-block size-5 rounded-full shadow-lg ring-0 transition-transform"
+                    style={{
+                      background: 'var(--card)',
+                      transform: isPregnantValue ? 'translateX(20px)' : 'translateX(0)',
+                    }}
                   />
                 </button>
               </div>
 
               <div className="flex gap-3 pt-1">
-                <Button type="button" variant="ghost" className="flex-1" onClick={handleCancel} disabled={isPending}>
+                <MetavixButton type="button" variant="ghost" className="flex-1" onClick={handleCancel} disabled={isPending}>
                   Cancelar
-                </Button>
-                <Button type="submit" className="flex-1" disabled={isPending}>
+                </MetavixButton>
+                <MetavixButton type="submit" variant="primary" className="flex-1" disabled={isPending}>
                   <Check className="size-4 mr-1.5" />
                   {isPending ? 'Guardando...' : 'Guardar cambios'}
-                </Button>
+                </MetavixButton>
               </div>
             </form>
           ) : (
@@ -265,21 +280,22 @@ export function PatientProfileCard() {
               <ProfileRow
                 icon={<Ruler className="size-4" />}
                 label="Estatura"
-                value={profile.heightCm ? `${profile.heightCm} cm` : <span className="text-muted-foreground italic">No registrada</span>}
+                value={profile.heightCm ? `${profile.heightCm} cm` : <Muted>No registrada</Muted>}
               />
               <ProfileRow
                 icon={<Phone className="size-4" />}
                 label="Teléfono"
-                value={profile.phone ?? <span className="text-muted-foreground italic">No registrado</span>}
+                value={profile.phone ?? <Muted>No registrado</Muted>}
               />
               <ProfileRow
                 icon={<Baby className="size-4" />}
                 label="Embarazo activo"
                 value={
-                  <Badge variant={profile.isPregnant ? 'default' : 'secondary'}>
+                  <MetavixBadge variant={profile.isPregnant ? 'ok' : 'neutral'}>
                     {profile.isPregnant ? 'Sí' : 'No'}
-                  </Badge>
+                  </MetavixBadge>
                 }
+                last
               />
             </dl>
           )}
