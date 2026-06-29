@@ -151,6 +151,7 @@ const CSS = `
   font-weight: 600;
   color: #1a1a1a;
   cursor: pointer;
+  white-space: nowrap;
   transition: border-color .2s ease, background .2s ease;
 }
 .mxl-soc:hover { border-color: #cfcfcf; background: #fafafa; }
@@ -299,6 +300,8 @@ const CSS = `
   .mxl-only-a { display: none !important; }
   .mxl-only-d { display: flex !important; }
   .mxl-logo-m { display: flex; }
+  .mxl-row { flex-direction: column; align-items: flex-start !important; gap: 12px; }
+  .mxl-soc-role { display: none; }
 }
 `;
 
@@ -537,7 +540,7 @@ export default function AuthSignIn({
           </div>
 
           {/* remember + forgot */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 13 }}>
+          <div className="mxl-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 13 }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, color: '#555', cursor: 'pointer' }}>
               <button type="button" className={`mxl-toggle${remember ? ' on' : ''}`} onClick={() => setRemember(r => !r)} aria-pressed={remember} aria-label="Recordarme" />
               Recordarme
@@ -563,7 +566,7 @@ export default function AuthSignIn({
           {/* Google */}
           <button type="button" className="mxl-soc" onClick={() => onGoogleSignIn?.(externalRole)}>
             <GoogleIcon />
-            Continuar con Google como <b>{roleLabel}</b>
+            Continuar con Google<span className="mxl-soc-role"> como <b>{roleLabel}</b></span>
           </button>
 
           {/* footer (mobile) */}
