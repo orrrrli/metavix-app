@@ -11,10 +11,22 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     if (!_hasHydrated) return;
+    if (role === "DOCTOR") {
+      router.replace("/doctor/dashboard");
+      return;
+    }
     if (role !== "PATIENT") {
       router.replace("/");
     }
   }, [_hasHydrated, role, router]);
+
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) router.refresh();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [router]);
 
   if (!_hasHydrated || role !== "PATIENT") {
     return (

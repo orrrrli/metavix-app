@@ -222,6 +222,7 @@ export default function MetavixDashboardLayout({
   };
 
   const handleLogout = () => {
+    if (!window.confirm("¿Cerrar sesión?")) return;
     logout();
     window.location.href = "/";
   };

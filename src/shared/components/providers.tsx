@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import { refreshToken } from '@/lib/api/auth';
 import { useAuthStore } from '@/features/auth/store';
 
@@ -22,7 +22,8 @@ function makeQueryClient(): QueryClient {
           await queryClient.invalidateQueries();
         } catch {
           useAuthStore.getState().logout();
-          window.location.href = '/login';
+          toast.error('Tu sesión expiró. Vuelve a iniciar sesión.');
+          window.location.href = '/login?reason=expired';
         }
       },
     }),

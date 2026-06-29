@@ -22,10 +22,22 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (!_hasHydrated) return;
+    if (role === 'PATIENT') {
+      router.replace("/paciente/dashboard");
+      return;
+    }
     if (role !== 'DOCTOR') {
       router.replace("/");
     }
   }, [_hasHydrated, role, router]);
+
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) router.refresh();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, [router]);
 
   if (!_hasHydrated || role !== 'DOCTOR') {
     return <div className="min-h-screen bg-background flex items-center justify-center">Cargando...</div>;

@@ -1,10 +1,32 @@
 'use client';
 
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuthStore, type UserRole } from '@/features/auth/store';
+
+function redirectForRole(role: UserRole): string {
+  switch (role) {
+    case 'PATIENT': return '/paciente/dashboard';
+    case 'DOCTOR':  return '/doctor/dashboard';
+    case 'ADMIN':   return '/admin';
+    default:        return '/';
+  }
+}
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { role, _hasHydrated } = useAuthStore();
+
+  useEffect(() => {
+    if (!_hasHydrated) return;
+    if (role !== null) {
+      router.replace(redirectForRole(role));
+    }
+  }, [_hasHydrated, role, router]);
+
+  if (!_hasHydrated || role !== null) return null;
 
   return (
     <AnimatePresence mode="wait" initial={false}>

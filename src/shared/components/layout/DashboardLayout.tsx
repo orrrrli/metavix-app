@@ -41,6 +41,7 @@ export function DashboardLayout({ children, navGroups, title }: DashboardLayoutP
   const profileHref = role === 'PATIENT' ? '/paciente/perfil' : '/doctor/perfil';
 
   const handleLogout = () => {
+    if (!window.confirm("¿Cerrar sesión?")) return;
     logout();
     window.location.href = "/";
   };
