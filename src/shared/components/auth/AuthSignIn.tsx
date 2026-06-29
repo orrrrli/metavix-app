@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -367,6 +368,7 @@ export default function AuthSignIn({
   imageQuote = 'Metavix transformó la forma en que atendemos a nuestros pacientes.',
   imageAuthor = 'Dr. Ramses Valenzuela',
   imageAuthorRole = 'Diabetólogo y Educador',
+  homeHref = '/',
   signUpHref = '/register',
   forgotPasswordHref = '/forgot-password',
   adminRedirectLabel = 'Entrando al panel de administración...',
@@ -453,12 +455,26 @@ export default function AuthSignIn({
         {/* ── Form ── */}
         <form className="mxl-form" onSubmit={handleSubmit}>
 
-          {/* top-right (desktop) */}
-          <div className="mxl-only-a" style={{ justifyContent: 'flex-end' }}>
+          {/* top bar */}
+          <div className="mxl-only-a" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Link className="mxl-link" href={homeHref} style={{ fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+              </svg>
+              Volver al inicio
+            </Link>
             <span style={{ fontSize: 13, color: '#777' }}>
-              ¿Sin cuenta? <a className="mxl-link" href={signUpHref}>Regístrate</a>
+              ¿Sin cuenta? <Link className="mxl-link" href={signUpHref}>Regístrate</Link>
             </span>
           </div>
+
+          {/* top bar (mobile) */}
+          <Link className="mxl-only-d mxl-link" href={homeHref} style={{ fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+            </svg>
+            Volver al inicio
+          </Link>
 
           {/* logo (mobile) */}
           <div className="mxl-logo-m" style={{ flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
@@ -545,7 +561,7 @@ export default function AuthSignIn({
               <button type="button" className={`mxl-toggle${remember ? ' on' : ''}`} onClick={() => setRemember(r => !r)} aria-pressed={remember} aria-label="Recordarme" />
               Recordarme
             </label>
-            <a className="mxl-link" href={forgotPasswordHref} style={{ fontSize: 13 }}>¿Olvidaste tu contraseña?</a>
+            <Link className="mxl-link" href={forgotPasswordHref} style={{ fontSize: 13 }}>¿Olvidaste tu contraseña?</Link>
           </div>
 
           {/* CTA */}

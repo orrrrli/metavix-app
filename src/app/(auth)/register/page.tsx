@@ -6,7 +6,6 @@ import { getDoctorProfile } from "@/lib/api/doctor";
 import { useAuthStore } from "@/features/auth/store";
 import type { UserRole } from "@/features/auth/store";
 import AuthSignUp, { type RegisterData } from "@/shared/components/auth/AuthSignUp";
-import Image from "next/image";
 
 const API = `${process.env.NEXT_PUBLIC_API_URL ?? ''}/api/v1`;
 
@@ -90,11 +89,6 @@ export default function RegisterPage() {
     <AuthSignUp
       onRegister={handleRegister}
       onGoogleSignUp={handleGoogleSignUp}
-      imageSrc="/images/register.jpg"
-      imageQuote="Monitorea y previene con datos reales en tiempo real."
-      imageAuthor="Dr. Ramses Valenzuela"
-      imageAuthorRole="Diabetologo y Educador"
-      logoNode={<Image src="/icon.svg" alt="Metavix" width={32} height={32} />}
     />
   );
 }
