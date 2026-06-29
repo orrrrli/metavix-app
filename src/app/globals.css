@@ -68,3 +68,68 @@
     @apply font-sans;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Metavix Dashboard — sistema de variables de tema
+   El wrapper `.mvx-dash` define los colores del dashboard.
+   Integra con next-themes: el dark mode se activa cuando `<html>` tiene `.dark`.
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes mvxFabPulse {
+  0%   { box-shadow:0 14px 30px rgba(0,201,167,.42), 0 0 0 0 rgba(0,201,167,.45); }
+  70%  { box-shadow:0 14px 30px rgba(0,201,167,.42), 0 0 0 16px rgba(0,201,167,0); }
+  100% { box-shadow:0 14px 30px rgba(0,201,167,.42), 0 0 0 0 rgba(0,201,167,0); }
+}
+
+@keyframes mvxulDot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50%     { opacity:.35; transform:scale(.7); }
+}
+
+.mvx-dash {
+  --accent:#00c9a7;
+  --canvas:#faf4ec; --sidebar:#ffffff; --card:#ffffff; --card-bd:#efe7db;
+  --topbar:#ffffff; --bd:#f0e9dd;
+  --text:#15201b; --mut:#6b7670; --soft:#9aa39c; --faint:#b8bfb8;
+  --ok:#1f9d6b; --ok-bg:#e7f6ee; --warn:#cf9300; --warn-bg:#fbf1d6;
+  --bad:#dd5236; --bad-bg:#fae9e3; --info:#2f6fdb; --info-bg:#e7eefb;
+  --nav-mut:#6b7670; --nav-active-bg:#e6faf6; --nav-active:#0a8c77;
+  --ph:#f4f1ea; --skel:#ece6db;
+}
+.dark .mvx-dash {
+  --canvas:#0b1620; --sidebar:#0e1f2b; --card:#0e1f2b; --card-bd:rgba(255,255,255,.07);
+  --topbar:#0e1f2b; --bd:rgba(255,255,255,.07);
+  --text:#f1f5f3; --mut:rgba(255,255,255,.56); --soft:rgba(255,255,255,.4); --faint:rgba(255,255,255,.3);
+  --ok:#46c98c; --ok-bg:rgba(31,157,107,.16); --warn:#e7b53a; --warn-bg:rgba(207,147,0,.16);
+  --bad:#f0795d; --bad-bg:rgba(221,82,54,.16); --info:#6fa0f0; --info-bg:rgba(47,111,219,.16);
+  --nav-mut:rgba(255,255,255,.5); --nav-active-bg:rgba(0,201,167,.14); --nav-active:#2fe0c2;
+  --ph:rgba(255,255,255,.04); --skel:rgba(255,255,255,.08);
+}
+.mvx-dash, .mvx-dash * { box-sizing:border-box; transition: background-color .45s ease, color .35s ease, border-color .45s ease; }
+
+.mvxdl-nav { display:flex; align-items:center; gap:13px; padding:10px 14px; border-radius:11px; cursor:pointer; text-decoration:none; color:var(--nav-mut); font-family:'Sora',sans-serif; font-size:14.5px; font-weight:500; transition:background-color .2s ease, color .2s ease; }
+.mvxdl-nav:hover { background:var(--nav-active-bg); color:var(--nav-active); }
+.mvxdl-nav.on { background:var(--nav-active-bg); color:var(--nav-active); font-weight:600; }
+.mvxdl-nav svg { flex-shrink:0; }
+
+.mvxdl-fab { position:fixed; right:34px; bottom:32px; z-index:120; display:flex; align-items:center; gap:11px; padding:16px 26px 16px 22px; border:none; border-radius:999px; background:var(--accent); color:#03251d; font-family:'Sora',sans-serif; font-size:16px; font-weight:700; cursor:pointer; animation:mvxFabPulse 2.6s ease-out infinite; transition: transform .26s cubic-bezier(.2,.85,.25,1); }
+.mvxdl-fab:hover { transform:translateY(-3px) scale(1.03); }
+.mvxdl-fab:active { transform:translateY(-1px) scale(.98); }
+.mvxdl-fab .mvxdl-fp { font-size:22px; line-height:1; transition:transform .3s cubic-bezier(.2,.85,.25,1); }
+.mvxdl-fab:hover .mvxdl-fp { transform:rotate(90deg); }
+
+.mvxdl-toggle { position:relative; width:50px; height:27px; border-radius:30px; border:none; cursor:pointer; background:var(--skel); padding:0; flex-shrink:0; }
+.mvxdl-knob { position:absolute; top:3px; left:3px; width:21px; height:21px; border-radius:50%; background:var(--accent); box-shadow:0 2px 6px rgba(0,0,0,.25); transition:left .38s cubic-bezier(.5,1.55,.5,1); }
+.dark .mvx-dash .mvxdl-knob { left:26px; }
+
+.mvxpr-card { transition: transform .28s cubic-bezier(.2,.85,.25,1), box-shadow .28s ease, border-color .28s ease, background-color .45s ease; }
+.mvxpr-card:hover { transform:translateY(-3px); box-shadow:0 16px 36px rgba(20,40,30,.08); border-color:var(--accent); }
+
+.mvxul-btn { transition: transform .24s cubic-bezier(.2,.85,.25,1), box-shadow .24s ease, background-color .3s; cursor:pointer; }
+.mvxul-btn:hover { transform:translateY(-2px); }
+
+.mvxev-btn { transition: transform .24s cubic-bezier(.2,.85,.25,1), box-shadow .24s ease; cursor:pointer; }
+.mvxev-btn:hover { transform:translateY(-2px); }
+
+.mvxtc-chip { cursor:pointer; transition: background-color .2s, color .2s, border-color .2s; font-family:'Sora',sans-serif; }
+.mvxoi-chip { cursor:pointer; transition: background-color .2s, color .2s; font-family:'Sora',sans-serif; }
