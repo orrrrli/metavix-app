@@ -106,7 +106,7 @@ export default function HistorialPage() {
   if (errorDaily || errorLab) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-destructive text-sm">Error al cargar el historial. Intenta de nuevo.</p>
+        <p className="text-sm" style={{ color: 'var(--bad)' }}>Error al cargar el historial. Intenta de nuevo.</p>
       </div>
     );
   }
@@ -115,10 +115,10 @@ export default function HistorialPage() {
     return (
       <div className="space-y-6 max-w-7xl mx-auto">
         <div>
-          <h2 className="text-3xl font-display font-bold text-foreground">Mi Historial</h2>
-          <p className="text-muted-foreground mt-1">Visualiza todos tus registros diarios y monitorea tus metas.</p>
+          <h2 className="text-3xl font-display font-bold" style={{ color: 'var(--text)' }}>Mi Historial</h2>
+          <p className="mt-1" style={{ color: 'var(--mut)' }}>Visualiza todos tus registros diarios y monitorea tus metas.</p>
         </div>
-        <p className="text-muted-foreground text-sm text-center py-12">Aún no tienes registros. Comienza registrando tu primera lectura.</p>
+        <p className="text-sm text-center py-12" style={{ color: 'var(--mut)' }}>Aún no tienes registros. Comienza registrando tu primera lectura.</p>
       </div>
     );
   }
@@ -126,8 +126,8 @@ export default function HistorialPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       <div>
-        <h2 className="text-3xl font-display font-bold text-foreground">Mi Historial</h2>
-        <p className="text-muted-foreground mt-1">
+        <h2 className="text-3xl font-display font-bold" style={{ color: 'var(--text)' }}>Mi Historial</h2>
+        <p className="mt-1" style={{ color: 'var(--mut)' }}>
           Visualiza todos tus registros diarios y monitorea tus metas.
         </p>
       </div>

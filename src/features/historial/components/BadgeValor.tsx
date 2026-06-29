@@ -10,26 +10,29 @@ interface BadgeValorProps {
 
 const COLOR_MAP: Record<Exclude<EstadoValor, 'sin_dato'>, React.CSSProperties> = {
   en_meta: {
-    backgroundColor: '#d1fae5',
-    color: '#065f46',
-    borderColor: '#a7f3d0',
+    backgroundColor: 'var(--ok-bg)',
+    color: 'var(--ok)',
+    borderColor: 'var(--ok)',
   },
   revisar: {
-    backgroundColor: '#fef3c7',
-    color: '#92400e',
-    borderColor: '#fde68a',
+    backgroundColor: 'var(--warn-bg)',
+    color: 'var(--warn)',
+    borderColor: 'var(--warn)',
   },
   fuera_de_meta: {
-    backgroundColor: '#fee2e2',
-    color: '#991b1b',
-    borderColor: '#fecaca',
+    backgroundColor: 'var(--bad-bg)',
+    color: 'var(--bad)',
+    borderColor: 'var(--bad)',
   },
 };
 
 export function BadgeValor({ valor, estado, suffix = '', label }: BadgeValorProps) {
   if (valor == null || valor === '' || estado === 'sin_dato') {
     return (
-      <span className="inline-flex items-center rounded-md bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
+      <span
+        className="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium"
+        style={{ backgroundColor: 'var(--ph)', color: 'var(--mut)' }}
+      >
         —
       </span>
     );
@@ -40,7 +43,7 @@ export function BadgeValor({ valor, estado, suffix = '', label }: BadgeValorProp
   return (
     <span
       className="inline-flex flex-col items-center justify-center rounded-md border px-2 py-1 text-xs font-medium min-w-[3rem]"
-      style={colorStyle}
+      style={{ ...colorStyle, fontFamily: "'Sora', sans-serif" }}
     >
       {label && <span className="text-[10px] opacity-70 mb-0.5">{label}</span>}
       <span>{valor}{suffix}</span>
