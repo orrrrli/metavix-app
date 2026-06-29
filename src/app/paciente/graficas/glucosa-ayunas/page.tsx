@@ -11,7 +11,7 @@ export default function ChartPage() {
 
   if (isLoading) {
     return (
-      <div className="h-40 flex items-center justify-center text-muted-foreground">
+      <div className="h-40 flex items-center justify-center" style={{ color: 'var(--mut)' }}>
         Cargando...
       </div>
     );
