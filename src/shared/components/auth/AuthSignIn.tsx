@@ -566,7 +566,7 @@ export default function AuthSignIn({
           {/* Google */}
           <button type="button" className="mxl-soc" onClick={() => onGoogleSignIn?.(externalRole)}>
             <GoogleIcon />
-            Continuar con Google<span className="mxl-soc-role"> como <b>{roleLabel}</b></span>
+            <span>Continuar con Google<span className="mxl-soc-role"> como <b>{roleLabel}</b></span></span>
           </button>
 
           {/* footer (mobile) */}
