@@ -11,20 +11,36 @@ interface ProvidersProps {
   children: React.ReactNode;
 }
 
+// Shared promise so concurrent 401s don't each fire a separate refresh.
+let refreshInFlight: Promise<void> | null = null;
+let sessionExpired = false;
+
 function makeQueryClient(): QueryClient {
   const queryClient = new QueryClient({
     queryCache: new QueryCache({
       onError: async (error) => {
         if (!(error instanceof Error && error.message.includes('401'))) return;
+        if (sessionExpired) return;
 
-        try {
-          await refreshToken();
-          await queryClient.invalidateQueries();
-        } catch {
-          useAuthStore.getState().logout();
-          toast.error('Tu sesión expiró. Vuelve a iniciar sesión.');
-          window.location.href = '/login?reason=expired';
+        if (!refreshInFlight) {
+          refreshInFlight = refreshToken()
+            .then(async () => {
+              document.cookie = '_session=1; path=/; samesite=lax; max-age=604800';
+              await queryClient.refetchQueries({ type: 'active' });
+            })
+            .catch(() => {
+              if (sessionExpired) return;
+              sessionExpired = true;
+              useAuthStore.getState().logout();
+              toast.error('Tu sesión expiró. Vuelve a iniciar sesión.');
+              window.location.href = '/login?reason=expired';
+            })
+            .finally(() => {
+              refreshInFlight = null;
+            });
         }
+
+        await refreshInFlight;
       },
     }),
     defaultOptions: {

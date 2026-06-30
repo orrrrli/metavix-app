@@ -15,7 +15,7 @@ export function middleware(request: NextRequest) {
 
   const session = request.cookies.get("_session")?.value;
   if (!session) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
   return NextResponse.next();
