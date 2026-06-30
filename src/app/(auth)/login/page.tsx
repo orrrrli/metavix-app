@@ -61,6 +61,8 @@ function LoginPageContent(): React.ReactElement {
         email:     response.email,
       });
 
+      document.cookie = '_session=1; path=/; secure; samesite=lax; max-age=900';
+
       return {
         user: {
           name:    response.fullName.split(' ')[0],

@@ -45,13 +45,23 @@ export const useAuthStore = create<AuthState>()(
 
       logout: () => {
         logoutUser().catch(() => {});
+        document.cookie = '_session=; path=/; max-age=0';
         set({ role: null, userId: null, patientId: null, doctorId: null, fullName: null, email: null });
       },
     }),
     {
       name: 'ram-med-auth',
+      partialize: (state) => ({
+        role:      state.role,
+        userId:    state.userId,
+        patientId: state.patientId,
+        doctorId:  state.doctorId,
+        fullName:  state.fullName,
+        email:     state.email,
+      }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        // Always mark hydrated, even when state is undefined (rehydration error)
+        (state ?? useAuthStore.getState()).setHasHydrated(true);
       },
     }
   )

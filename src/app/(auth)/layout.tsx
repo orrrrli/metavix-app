@@ -17,14 +17,23 @@ function redirectForRole(role: UserRole): string {
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { role, _hasHydrated } = useAuthStore();
+  const { role, _hasHydrated, logout } = useAuthStore();
 
   useEffect(() => {
     if (!_hasHydrated) return;
     if (role !== null) {
+      // If the session cookie is gone (expired) but Zustand still has a role,
+      // clear the stale state so the user can log in instead of being bounced.
+      const hasSessionCookie = document.cookie.split(';').some(
+        (c) => c.trim().startsWith('_session=')
+      );
+      if (!hasSessionCookie) {
+        logout();
+        return;
+      }
       router.replace(redirectForRole(role));
     }
-  }, [_hasHydrated, role, router]);
+  }, [_hasHydrated, role, router, logout]);
 
   if (!_hasHydrated || role !== null) return null;
 

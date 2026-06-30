@@ -64,6 +64,7 @@ function OAuthCallbackInner(): React.ReactElement {
           email:     user.email,
         });
 
+        document.cookie = '_session=1; path=/; secure; samesite=lax; max-age=900';
         router.replace(getDashboard(actualRole));
       })
       .catch(() => {
