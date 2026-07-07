@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store";
 import MetavixDashboardLayout, { type MetavixNavItem } from "@/shared/components/layout/MetavixDashboardLayout";
+import SubSaludoPaciente from "@/features/patient/components/saludo/SubSaludoPaciente";
 
 function Icon({ children, size = 19 }: { children: ReactNode; size?: number }) {
   return (
@@ -73,6 +74,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       toolsItems={TOOLS}
       profileHref="/paciente/perfil"
       onLogout={logout}
+      subSaludo={<SubSaludoPaciente rango="7d" />}
       cta={hideCta ? undefined : {
         label: "Registrar nueva lectura",
         onClick: () => router.push("/paciente/nuevo-registro"),

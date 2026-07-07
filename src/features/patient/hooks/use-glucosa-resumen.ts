@@ -61,6 +61,8 @@ export interface GlucosaResumen {
   loading: boolean;
   /** Error de fetch (issue #7): distinto de "sin registros". */
   error: boolean;
+  /** Issue #9: días consecutivos con al menos una lectura (incluye hoy si hay registro). */
+  rachaDias: number;
 }
 
 function parseDailyDate(dateStr: string): Date {
@@ -146,6 +148,7 @@ export function useGlucosaResumen(
       tieneRegistros: false,
       loading: isLoading,
       error: hasQueryError,
+      rachaDias: 0,
     };
 
     // Error de red/servidor: no confundir con "sin registros" (issue #7).
@@ -293,6 +296,31 @@ export function useGlucosaResumen(
       promedioVentana,
       promedio30d,
       tieneRegistros: records.some((r) => r.glucoseReadings.length > 0),
+      rachaDias: calcularRacha(records, now),
     };
   }, [records, profile, isLoading, hasQueryError, rango]);
+}
+
+/** Cuenta días consecutivos hacia atrás con al menos una lectura de glucosa. */
+function calcularRacha(records: DailyRecordResponse[], now: Date): number {
+  const diasConLectura = new Set<string>();
+  for (const r of records) {
+    if (r.glucoseReadings.length > 0) diasConLectura.add(r.recordDate);
+  }
+  if (diasConLectura.size === 0) return 0;
+
+  const racha: number[] = [];
+  const cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  for (;;) {
+    const key = `${String(cursor.getDate()).padStart(2, "0")}/${String(cursor.getMonth() + 1).padStart(2, "0")}/${cursor.getFullYear()}`;
+    if (diasConLectura.has(key)) {
+      racha.push(1);
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      // Si el primer día (hoy) no tiene lectura pero ayer sí, no penalizamos
+      // saltando hoy — la racha se considera "aún activa" sólo si hoy midió.
+      break;
+    }
+  }
+  return racha.length;
 }

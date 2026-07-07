@@ -478,11 +478,7 @@ export default function MetavixDashboardLayout({
               {saludo}
             </h1>
             <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
-              {subSaludo ?? (
-                <>
-                  Sábado, 28 de junio · llevas <span style={{ color: "var(--text)", fontWeight: 600 }}>4 días seguidos</span> registrando.
-                </>
-              )}
+              {subSaludo}
             </p>
           </div>
           {children}
