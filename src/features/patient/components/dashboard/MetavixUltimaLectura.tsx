@@ -68,17 +68,14 @@ export default function MetavixUltimaLectura({
     border: "1.5px solid var(--card-bd)",
     borderRadius: 22,
     padding: "30px 34px",
-    display: "grid",
-    gridTemplateColumns: "1.15fr 1fr",
-    gap: 38,
     boxShadow: "0 12px 30px rgba(20,40,30,.05)",
     fontFamily: F,
   };
 
   return (
-    <section style={card}>
+    <section className="mvxul-card" style={card}>
       {/* izquierda: la lectura */}
-      <div style={{ borderRight: "1.5px solid var(--bd)", paddingRight: 34 }}>
+      <div className="mvxul-divider">
         <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 16 }}>
           <span
             style={{

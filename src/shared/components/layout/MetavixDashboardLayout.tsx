@@ -135,6 +135,7 @@ export default function MetavixDashboardLayout({
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const pathname = usePathname();
 
@@ -162,8 +163,9 @@ export default function MetavixDashboardLayout({
   }, [profileOpen]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- close dropdown on route change
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- close menus on route change
     setProfileOpen(false);
+    setNavOpen(false);
   }, [pathname]);
 
   const isDark = mounted && theme === "dark";
@@ -212,22 +214,15 @@ export default function MetavixDashboardLayout({
 
   return (
     <div className="mvx-dash" style={rootStyle}>
+      {/* backdrop del drawer (solo visible en <lg) */}
+      <div
+        className={`mvxdl-backdrop${navOpen ? " open" : ""}`}
+        onClick={() => setNavOpen(false)}
+        aria-hidden={!navOpen}
+      />
+
       {/* ════ SIDEBAR ════ */}
-      <aside
-        style={{
-          width: 262,
-          flexShrink: 0,
-          background: "var(--sidebar)",
-          borderRight: "1.5px solid var(--bd)",
-          position: "sticky",
-          top: 0,
-          height: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          padding: "22px 18px",
-          overflowY: "auto",
-        }}
-      >
+      <aside className={`mvxdl-sidebar${navOpen ? " open" : ""}`}>
         <div style={{ display: "flex", alignItems: "center", gap: 9, padding: "4px 8px 22px" }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="22,12 18,12 15,21 9,3 6,12 2,12" />
@@ -288,6 +283,7 @@ export default function MetavixDashboardLayout({
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         {/* topbar */}
         <header
+          className="mvxdl-topbar"
           style={{
             position: "sticky",
             top: 0,
@@ -301,14 +297,41 @@ export default function MetavixDashboardLayout({
             borderBottom: "1.5px solid var(--bd)",
           }}
         >
+          <button
+            type="button"
+            className="mvxdl-hamburger"
+            onClick={() => setNavOpen(true)}
+            aria-label="Abrir menú de navegación"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
           <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{title}</span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20 }}>
             <button
               className="mvxdl-toggle"
               onClick={handleToggleTheme}
               aria-label={isDark ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+              title={isDark ? "Modo claro" : "Modo oscuro"}
             >
-              <span className="mvxdl-knob" />
+              {/* En claro se ve la luna (clic → oscuro); en oscuro el sol (clic → claro). Alternancia por CSS vía .dark */}
+              <svg className="mvxdl-icon-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <svg className="mvxdl-icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
             </button>
             <div ref={profileRef} style={{ position: "relative" }}>
               <button
@@ -327,7 +350,7 @@ export default function MetavixDashboardLayout({
                   fontFamily: F,
                 }}
               >
-                <div style={{ textAlign: "right", lineHeight: 1.25 }}>
+                <div className="mvxdl-usermeta" style={{ textAlign: "right", lineHeight: 1.25, whiteSpace: "nowrap" }}>
                   <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text)" }}>{userName}</div>
                   <div style={{ fontSize: 11.5, color: "var(--soft)" }}>{userRoleLabel}</div>
                 </div>
@@ -335,6 +358,7 @@ export default function MetavixDashboardLayout({
                   style={{
                     width: 38,
                     height: 38,
+                    flexShrink: 0,
                     borderRadius: "50%",
                     background: "var(--accent)",
                     color: "#03251d",
@@ -440,7 +464,7 @@ export default function MetavixDashboardLayout({
         </header>
 
         {/* contenido */}
-        <main style={{ flex: 1, padding: "34px 40px 120px", maxWidth: 1240, width: "100%" }}>
+        <main className="mvxdl-main" style={{ flex: 1, padding: "34px 40px 120px", maxWidth: 1240, width: "100%" }}>
           <div style={{ marginBottom: 26 }}>
             <h1
               style={{

@@ -58,7 +58,7 @@ export default function MetavixProgresoDia({
   const pendientes = Math.max(0, metaDiaria - medicionesHoy);
 
   return (
-    <section style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+    <section className="mvxpr-grid">
       {/* mediciones de hoy */}
       <div className="mvxpr-card" style={card}>
         <div style={head}>
