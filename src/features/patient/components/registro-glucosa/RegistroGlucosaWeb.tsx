@@ -5,7 +5,9 @@ import {
   MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
   GlucosaLectura, NuevaLectura,
   estadoRango, markerPct, resumenDia, horaInputToApi, horaActual,
+  GLUCOSA_MIN, GLUCOSA_MAX, esGlucosaValida,
 } from "../../utils/glucosa";
+import { toast } from "sonner";
 
 /**
  * RegistroGlucosaWeb — versión escritorio (2A).
@@ -128,6 +130,10 @@ export default function RegistroGlucosaWeb({
   const guardar = async () => {
     const n = parseFloat(valor);
     if (Number.isNaN(n) || !meal || guardando) return;
+    if (!esGlucosaValida(n)) {
+      toast.error(`Valor fuera de rango (${GLUCOSA_MIN}–${GLUCOSA_MAX} mg/dL).`);
+      return;
+    }
     await onGuardar({
       readingType: MEAL_TO_TYPE[meal],
       valueMgDl: n,
@@ -137,7 +143,7 @@ export default function RegistroGlucosaWeb({
     setStep(1); setValor(""); setMeal(null); setHora(horaActual()); setFoods("");
   };
 
-  const puedeGuardar = !Number.isNaN(parseFloat(valor)) && !!meal && !guardando;
+  const puedeGuardar = esGlucosaValida(parseFloat(valor)) && !!meal && !guardando;
 
   const recBadge = (
     <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", padding: "2px 9px", borderRadius: 999 }}>Recomendado</span>
@@ -183,7 +189,7 @@ export default function RegistroGlucosaWeb({
                 <p style={{ fontSize: 14, color: "var(--soft,#8a938c)", margin: 0 }}>Escribe el valor que aparece en la pantalla de tu glucómetro.</p>
                 <div style={{ maxWidth: 480, margin: "26px auto 0", textAlign: "center" }}>
                   <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 8 }}>
-                    <input className="mvxg-num" type="number" inputMode="numeric" placeholder="0" value={valor} onChange={(e) => setValor(e.target.value)}
+                    <input className="mvxg-num" type="number" inputMode="numeric" placeholder="0" min={GLUCOSA_MIN} max={GLUCOSA_MAX} value={valor} onChange={(e) => setValor(e.target.value)}
                       style={{ width: 200, fontSize: 80, fontWeight: 800, textAlign: "center", border: "none", background: "transparent", color: "var(--text,#15201b)", letterSpacing: "-.045em", caretColor: "var(--accent,#00c9a7)", padding: 0, fontFamily: F }} />
                     <span style={{ fontSize: 17, color: "var(--soft,#9aa39c)", fontWeight: 600, marginBottom: 18 }}>mg/dL</span>
                   </div>

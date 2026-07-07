@@ -103,6 +103,15 @@ const OBJETIVO_MAX = 180;
 const ESCALA_MIN = 40; // extremo izquierdo de la barra
 const ESCALA_MAX = 300; // extremo derecho de la barra
 
+/** Rango clínico válido para una lectura de glucosa capilar (mg/dL). */
+export const GLUCOSA_MIN = 20;
+export const GLUCOSA_MAX = 800;
+
+/** true si el valor está dentro del rango clínico válido (no NaN, 20–800). */
+export function esGlucosaValida(n: number): boolean {
+  return Number.isFinite(n) && n >= GLUCOSA_MIN && n <= GLUCOSA_MAX;
+}
+
 export interface EstadoRango {
   estado: "" | "bajo" | "rango" | "alto";
   label: string;

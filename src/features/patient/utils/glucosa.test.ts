@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { localTodayISO, horaActual } from "./glucosa";
+import { localTodayISO, horaActual, esGlucosaValida, GLUCOSA_MIN, GLUCOSA_MAX } from "./glucosa";
 
 describe("localTodayISO", () => {
   const RealDate = globalThis.Date;
@@ -73,5 +73,28 @@ describe("horaActual", () => {
   it("devuelve HH:MM con dos dígitos", () => {
     const h = horaActual();
     expect(h).toMatch(/^\d{2}:\d{2}$/);
+  });
+});
+
+describe("esGlucosaValida", () => {
+  it("rechaza NaN / Infinity", () => {
+    expect(esGlucosaValida(NaN)).toBe(false);
+    expect(esGlucosaValida(Infinity)).toBe(false);
+    expect(esGlucosaValida(-Infinity)).toBe(false);
+  });
+
+  it("rechaza fuera del rango clínico", () => {
+    expect(esGlucosaValida(0)).toBe(false);
+    expect(esGlucosaValida(-1)).toBe(false);
+    expect(esGlucosaValida(GLUCOSA_MIN - 0.1)).toBe(false);
+    expect(esGlucosaValida(GLUCOSA_MAX + 0.1)).toBe(false);
+    expect(esGlucosaValida(9999)).toBe(false);
+  });
+
+  it("acepta los bordes del rango", () => {
+    expect(esGlucosaValida(GLUCOSA_MIN)).toBe(true);
+    expect(esGlucosaValida(GLUCOSA_MAX)).toBe(true);
+    expect(esGlucosaValida(95)).toBe(true);
+    expect(esGlucosaValida(240)).toBe(true);
   });
 });
