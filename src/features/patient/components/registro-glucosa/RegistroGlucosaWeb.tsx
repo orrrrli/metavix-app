@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect } from "react";
+import { useGlucosaWizard } from "../../hooks/use-glucosa-wizard";
 import {
-  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
+  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON,
   GlucosaLectura, NuevaLectura,
-  estadoRango, markerPct, resumenDia, horaInputToApi, horaActual,
+  markerPct, estadoRango, horaActual,
+  GLUCOSA_MIN, GLUCOSA_MAX,
 } from "../../utils/glucosa";
 
 /**
@@ -26,6 +28,8 @@ export interface RegistroGlucosaWebProps {
   onGuardar: (lectura: NuevaLectura) => void | Promise<void>;
   /** Deshabilita el botón mientras se persiste. */
   guardando?: boolean;
+  /** Si el paciente tiene diagnóstico de diabetes (mismo umbral que el dashboard). */
+  hasDiabetes?: boolean;
 }
 
 const F = "'Sora', sans-serif";
@@ -110,34 +114,12 @@ export default function RegistroGlucosaWeb({
   fecha = "hoy",
   onGuardar,
   guardando = false,
+  hasDiabetes = false,
 }: RegistroGlucosaWebProps) {
   useStyles();
-  const [step, setStep] = useState(1);
-  const [valor, setValor] = useState("");
-  const [meal, setMeal] = useState<MealKey | null>(null);
-  const [hora, setHora] = useState("");
-  const [foods, setFoods] = useState("");
-
-  // Toma la hora actual al montar (en cliente, para evitar mismatch de hidratación).
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- init one-shot en cliente
-  useEffect(() => setHora(horaActual()), []);
-
-  const st = estadoRango(valor);
-  const { total, enRango, promedio } = useMemo(() => resumenDia(lecturas), [lecturas]);
-
-  const guardar = async () => {
-    const n = parseFloat(valor);
-    if (Number.isNaN(n) || !meal || guardando) return;
-    await onGuardar({
-      readingType: MEAL_TO_TYPE[meal],
-      valueMgDl: n,
-      time: horaInputToApi(hora),
-      foods: foods.trim() || null,
-    });
-    setStep(1); setValor(""); setMeal(null); setHora(horaActual()); setFoods("");
-  };
-
-  const puedeGuardar = !Number.isNaN(parseFloat(valor)) && !!meal && !guardando;
+  const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes });
+  const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, puedeGuardar, guardar } = w;
+  const { total, enRango, promedio } = resumen;
 
   const recBadge = (
     <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", padding: "2px 9px", borderRadius: 999 }}>Recomendado</span>
@@ -183,7 +165,7 @@ export default function RegistroGlucosaWeb({
                 <p style={{ fontSize: 14, color: "var(--soft,#8a938c)", margin: 0 }}>Escribe el valor que aparece en la pantalla de tu glucómetro.</p>
                 <div style={{ maxWidth: 480, margin: "26px auto 0", textAlign: "center" }}>
                   <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 8 }}>
-                    <input className="mvxg-num" type="number" inputMode="numeric" placeholder="0" value={valor} onChange={(e) => setValor(e.target.value)}
+                    <input className="mvxg-num" type="number" inputMode="numeric" placeholder="0" min={GLUCOSA_MIN} max={GLUCOSA_MAX} value={valor} onChange={(e) => setValor(e.target.value)}
                       style={{ width: 200, fontSize: 80, fontWeight: 800, textAlign: "center", border: "none", background: "transparent", color: "var(--text,#15201b)", letterSpacing: "-.045em", caretColor: "var(--accent,#00c9a7)", padding: 0, fontFamily: F }} />
                     <span style={{ fontSize: 17, color: "var(--soft,#9aa39c)", fontWeight: 600, marginBottom: 18 }}>mg/dL</span>
                   </div>
@@ -294,7 +276,7 @@ export default function RegistroGlucosaWeb({
               <div style={{ textAlign: "center", padding: "34px 16px", color: "var(--faint,#b0a89b)", fontSize: 13, lineHeight: 1.5 }}>Aún no hay lecturas hoy. Completa el registro y aparecerá aquí.</div>
             )}
             {lecturas.map((r) => {
-              const b = estadoRango(r.v);
+              const b = estadoRango(r.v, { hasDiabetes, readingType: r.readingType });
               return (
                 <div key={r.id} style={{ background: "var(--card,#fff)", border: "1.5px solid var(--card-bd,#efe7db)", borderRadius: 14, padding: "13px 15px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>

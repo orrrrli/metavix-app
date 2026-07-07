@@ -7,8 +7,9 @@ import { ArrowLeft } from "lucide-react";
 
 import { useAuthStore } from "@/features/auth/store";
 import { useDailyRecords, useCreateDailyRecord } from "@/features/patient/hooks/use-daily-records";
+import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
-import { GlucosaLectura, NuevaLectura, readingToLectura } from "@/features/patient/utils/glucosa";
+import { GlucosaLectura, NuevaLectura, readingToLectura, localTodayISO } from "@/features/patient/utils/glucosa";
 import RegistroGlucosaMovil from "@/features/patient/components/registro-glucosa/RegistroGlucosaMovil";
 import RegistroGlucosaWeb from "@/features/patient/components/registro-glucosa/RegistroGlucosaWeb";
 
@@ -33,7 +34,13 @@ export default function NewRecordPage() {
   const { patientId } = useAuthStore();
 
   const { data: records, isLoading } = useDailyRecords(patientId ?? "");
+  const { data: profile } = usePatientProfile(patientId ?? "");
   const { mutateAsync: crearRegistro, isPending: guardando } = useCreateDailyRecord(patientId ?? "");
+
+  // hasDiabetes lo lee el wizard para evaluar el valor contra el rango
+  // correcto desde el paso 1 (mismo umbral que el dashboard).
+  const diabetesType = profile?.diabetesType ?? "";
+  const hasDiabetes = diabetesType !== "" && diabetesType !== "None";
 
   // Lecturas de glucosa de hoy → modelo de la bitácora, ordenadas por hora.
   const lecturasHoy = useMemo<GlucosaLectura[]>(() => {
@@ -45,7 +52,7 @@ export default function NewRecordPage() {
       .sort((a, b) => a.t.localeCompare(b.t));
   }, [records]);
 
-  const todayISO = new Date().toISOString().split("T")[0];
+  const todayISO = localTodayISO();
 
   const onGuardar = async (lectura: NuevaLectura) => {
     try {
@@ -94,6 +101,7 @@ export default function NewRecordPage() {
           fecha={fecha}
           onGuardar={onGuardar}
           guardando={guardando}
+          hasDiabetes={hasDiabetes}
         />
       </div>
 
@@ -104,6 +112,7 @@ export default function NewRecordPage() {
           fecha={fecha}
           onGuardar={onGuardar}
           guardando={guardando}
+          hasDiabetes={hasDiabetes}
         />
       </div>
     </div>

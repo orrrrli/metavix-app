@@ -4,8 +4,21 @@ import { useMemo } from "react";
 import { GlucoseReadingType, DailyRecordResponse } from "@/types/daily-record";
 import { useDailyRecords } from "./use-daily-records";
 import { usePatientProfile } from "./use-patient-profile";
+import { tsDeLectura } from "./use-glucosa-resumen.helpers";
+import { rangoPara, rangoParaDefault, evaluar, EstadoClinico } from "../utils/rangos-glucosa";
 
-export type EstadoClinico = "ok" | "warn" | "bad";
+export type { EstadoClinico };
+export type RangoVentana = "7d" | "14d" | "30d";
+
+export interface PuntoSerie {
+  fecha: string; // "d/m"
+  promedio: number;
+  min: number;
+  max: number;
+  lecturas: number;
+  /** Timestamp local del inicio del día (issue #6: filtra por ventana calendario). */
+  ts: number;
+}
 
 export interface GlucosaResumen {
   /** Última lectura de glucosa del día (en mg/dL) o null si no hay */
@@ -34,32 +47,22 @@ export interface GlucosaResumen {
   totalLecturas: number;
   /** Última lectura completa del día (para mostrar detalles) */
   ultimaLectura: { valor: number; hora: string | null; tipo: GlucoseReadingType } | null;
-  /** Series para el chart: promedio diario de los últimos N días */
-  serieGrafica: Array<{ fecha: string; promedio: number; min: number; max: number; lecturas: number }>;
-  /** % del tiempo en rango (0–100), basado en los últimos 30 días */
+  /** Series para el chart: promedio diario de los últimos N días (incluye `ts`). */
+  serieGrafica: PuntoSerie[];
+  /** % del tiempo en rango en la **ventana seleccionada** (issue #5). */
   porcentajeEnRango: number;
-  /** Promedio de los últimos 30 días */
+  /** Promedio en la ventana seleccionada (issue #5). */
+  promedioVentana: number | null;
+  /** Promedio últimos 30 días (referencia estable, se conserva para subtítulos). */
   promedio30d: number | null;
   /** Hay al menos un registro */
   tieneRegistros: boolean;
   /** Cargando datos */
   loading: boolean;
-}
-
-const SUP_AYUNO_CON_DIABETES = 130;
-const SUP_AYUNO_SIN_DIABETES = 100;
-const SUP_POST_CON_DIABETES = 180;
-const SUP_POST_SIN_DIABETES = 140;
-const INF_CON_DIABETES = 80;
-const INF_SIN_DIABETES = 70;
-const META_DIARIA = 3;
-
-function isPostMeal(t: GlucoseReadingType) {
-  return (
-    t === GlucoseReadingType.PostBreakfast ||
-    t === GlucoseReadingType.PostLunch ||
-    t === GlucoseReadingType.PostDinner
-  );
+  /** Error de fetch (issue #7): distinto de "sin registros". */
+  error: boolean;
+  /** Issue #9: días consecutivos con al menos una lectura (incluye hoy si hay registro). */
+  rachaDias: number;
 }
 
 function parseDailyDate(dateStr: string): Date {
@@ -111,19 +114,17 @@ const READING_TYPE_LABEL: Record<GlucoseReadingType, string> = {
   [GlucoseReadingType.Overnight]: "de madrugada",
 };
 
-function supParaLectura(t: GlucoseReadingType, hasDiabetes: boolean) {
-  return isPostMeal(t)
-    ? (hasDiabetes ? SUP_POST_CON_DIABETES : SUP_POST_SIN_DIABETES)
-    : (hasDiabetes ? SUP_AYUNO_CON_DIABETES : SUP_AYUNO_SIN_DIABETES);
-}
+const META_DIARIA = 3;
 
-function infParaLectura(hasDiabetes: boolean) {
-  return hasDiabetes ? INF_CON_DIABETES : INF_SIN_DIABETES;
-}
+const DIAS_POR_RANGO: Record<RangoVentana, number> = { "7d": 7, "14d": 14, "30d": 30 };
 
-export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
+export function useGlucosaResumen(
+  patientId: string | null,
+  rango: RangoVentana = "7d"
+): GlucosaResumen {
   const { data: profile } = usePatientProfile(patientId ?? "");
-  const { data: records, isLoading } = useDailyRecords(patientId ?? "");
+  const { data: records, isLoading, error: queryError } = useDailyRecords(patientId ?? "");
+  const hasQueryError = !!queryError;
 
   return useMemo<GlucosaResumen>(() => {
     const empty: GlucosaResumen = {
@@ -132,7 +133,7 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
       estadoLabel: null,
       contexto: null,
       registradaHace: null,
-      rangoObjetivo: [INF_SIN_DIABETES, SUP_AYUNO_SIN_DIABETES],
+      rangoObjetivo: [70, 100], // ayuno sin diabetes, fallback inicial; se recalcula abajo si hay perfil
       proximaMedicion: null,
       medicionesHoy: 0,
       metaDiaria: META_DIARIA,
@@ -142,18 +143,24 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
       ultimaLectura: null,
       serieGrafica: [],
       porcentajeEnRango: 0,
+      promedioVentana: null,
       promedio30d: null,
       tieneRegistros: false,
       loading: isLoading,
+      error: hasQueryError,
+      rachaDias: 0,
     };
 
+    // Error de red/servidor: no confundir con "sin registros" (issue #7).
+    if (hasQueryError) return empty;
     if (!records || records.length === 0) return empty;
 
     const diabetesRaw = profile?.diabetesType ?? "None";
     const hasDiabetes = diabetesRaw !== "None" && diabetesRaw !== "";
 
-    const inf = infParaLectura(hasDiabetes);
-    const supAyuno = hasDiabetes ? SUP_AYUNO_CON_DIABETES : SUP_AYUNO_SIN_DIABETES;
+    const rangoDefecto = rangoParaDefault(hasDiabetes);
+    const inf = rangoDefecto.inf;
+    const supAyuno = rangoDefecto.sup;
 
     const now = new Date();
 
@@ -169,7 +176,7 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
         else (grupos.get(key) as { values: number[] }).values = arr;
       }
     }
-    const serieGrafica = Array.from(grupos.entries())
+    const serieGrafica: PuntoSerie[] = Array.from(grupos.entries())
       .sort((a, b) => a[1].date.getTime() - b[1].date.getTime())
       .map(([ , { values, date }]) => ({
         fecha: `${date.getDate()}/${date.getMonth() + 1}`,
@@ -177,22 +184,37 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
         min: Math.min(...values),
         max: Math.max(...values),
         lecturas: values.length,
+        ts: date.getTime(),
       }));
 
-    // % en rango y promedio (últimos 30 días)
-    const hace30 = new Date(now);
-    hace30.setDate(hace30.getDate() - 30);
-    const ultimas30 = records
-      .filter((r) => parseDailyDate(r.recordDate).getTime() >= hace30.getTime())
+    // % en rango y promedio: ventana seleccionada (issue #5) + 30d estable.
+    const dias = DIAS_POR_RANGO[rango] ?? 7;
+    const desdeVentana = new Date(now);
+    desdeVentana.setDate(desdeVentana.getDate() - dias);
+    desdeVentana.setHours(0, 0, 0, 0);
+    const desde30 = new Date(now);
+    desde30.setDate(desde30.getDate() - 30);
+    desde30.setHours(0, 0, 0, 0);
+
+    const enRango = (g: { readingType: GlucoseReadingType; valueMgDl: number }) => {
+      const r = rangoPara(g.readingType, hasDiabetes);
+      return g.valueMgDl <= r.sup && g.valueMgDl >= r.inf;
+    };
+    const enVentana = records
+      .filter((r) => parseDailyDate(r.recordDate).getTime() >= desdeVentana.getTime())
       .flatMap((r) => r.glucoseReadings);
-    const total30 = ultimas30.length;
-    const enRango30 = ultimas30.filter((g) => {
-      const lim = supParaLectura(g.readingType, hasDiabetes);
-      return g.valueMgDl <= lim && g.valueMgDl >= inf;
-    }).length;
-    const porcentajeEnRango = total30 > 0 ? Math.round((enRango30 / total30) * 100) : 0;
+    const en30 = records
+      .filter((r) => parseDailyDate(r.recordDate).getTime() >= desde30.getTime())
+      .flatMap((r) => r.glucoseReadings);
+    const totalVentana = enVentana.length;
+    const enRangoVentana = enVentana.filter(enRango).length;
+    const total30 = en30.length;
+    const porcentajeEnRango = totalVentana > 0 ? Math.round((enRangoVentana / totalVentana) * 100) : 0;
+    const promedioVentana = totalVentana > 0
+      ? Math.round(enVentana.reduce((a, b) => a + b.valueMgDl, 0) / totalVentana)
+      : null;
     const promedio30d = total30 > 0
-      ? Math.round(ultimas30.reduce((a, b) => a + b.valueMgDl, 0) / total30)
+      ? Math.round(en30.reduce((a, b) => a + b.valueMgDl, 0) / total30)
       : null;
 
     // Día de hoy
@@ -204,8 +226,8 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
     const todayReadings = todayRecords.flatMap((r) => r.glucoseReadings);
     const medicionesHoy = todayReadings.length;
     const enMetaHoy = todayReadings.filter((g) => {
-      const lim = supParaLectura(g.readingType, hasDiabetes);
-      return g.valueMgDl <= lim && g.valueMgDl >= inf;
+      const r = rangoPara(g.readingType, hasDiabetes);
+      return g.valueMgDl <= r.sup && g.valueMgDl >= r.inf;
     }).length;
 
     // Última lectura (no solo de hoy — la más reciente global con glucosa)
@@ -213,13 +235,9 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
     for (const r of records) {
       for (const g of r.glucoseReadings) allWithGlucose.push({ rec: r, g });
     }
-    allWithGlucose.sort((a, b) => {
-      const da = parseDailyDate(a.rec.recordDate);
-      const db = parseDailyDate(b.rec.recordDate);
-      const ta = a.g.time ? parseDailyDate(a.rec.recordDate) : da;
-      const tb = b.g.time ? parseDailyDate(b.rec.recordDate) : db;
-      return tb.getTime() - ta.getTime();
-    });
+    allWithGlucose.sort((a, b) =>
+      tsDeLectura(b.rec.recordDate, b.g.time) - tsDeLectura(a.rec.recordDate, a.g.time)
+    );
     const last = allWithGlucose[0] ?? null;
 
     let valor: number | null = null;
@@ -232,21 +250,10 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
 
     if (last) {
       valor = last.g.valueMgDl;
-      const limSup = supParaLectura(last.g.readingType, hasDiabetes);
-      const limInf = inf;
-      if (valor < limInf) {
-        estado = "bad";
-        estadoLabel = "Baja";
-      } else if (valor > limSup) {
-        estado = "bad";
-        estadoLabel = "Alta";
-      } else if (valor > limSup * 0.9 || valor < limInf * 1.1) {
-        estado = "warn";
-        estadoLabel = "Revisar";
-      } else {
-        estado = "ok";
-        estadoLabel = "En rango";
-      }
+      const r = rangoPara(last.g.readingType, hasDiabetes);
+      const ev = evaluar(valor, r);
+      estado = ev.estado;
+      estadoLabel = ev.label;
 
       const lastDate = parseDailyDate(last.rec.recordDate);
       const lastTime = last.g.time;
@@ -286,8 +293,34 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
         : null,
       serieGrafica,
       porcentajeEnRango,
+      promedioVentana,
       promedio30d,
       tieneRegistros: records.some((r) => r.glucoseReadings.length > 0),
+      rachaDias: calcularRacha(records, now),
     };
-  }, [records, profile, isLoading]);
+  }, [records, profile, isLoading, hasQueryError, rango]);
+}
+
+/** Cuenta días consecutivos hacia atrás con al menos una lectura de glucosa. */
+function calcularRacha(records: DailyRecordResponse[], now: Date): number {
+  const diasConLectura = new Set<string>();
+  for (const r of records) {
+    if (r.glucoseReadings.length > 0) diasConLectura.add(r.recordDate);
+  }
+  if (diasConLectura.size === 0) return 0;
+
+  const racha: number[] = [];
+  const cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  for (;;) {
+    const key = `${String(cursor.getDate()).padStart(2, "0")}/${String(cursor.getMonth() + 1).padStart(2, "0")}/${cursor.getFullYear()}`;
+    if (diasConLectura.has(key)) {
+      racha.push(1);
+      cursor.setDate(cursor.getDate() - 1);
+    } else {
+      // Si el primer día (hoy) no tiene lectura pero ayer sí, no penalizamos
+      // saltando hoy — la racha se considera "aún activa" sólo si hoy midió.
+      break;
+    }
+  }
+  return racha.length;
 }

@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
+import { useGlucosaWizard } from "../../hooks/use-glucosa-wizard";
 import {
-  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
+  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON,
   GlucosaLectura, NuevaLectura,
-  estadoRango, markerPct, resumenDia, horaInputToApi, horaActual,
+  markerPct, estadoRango, horaActual,
+  GLUCOSA_MIN, GLUCOSA_MAX, esGlucosaValida,
 } from "../../utils/glucosa";
 
 /**
@@ -26,6 +28,8 @@ export interface RegistroGlucosaMovilProps {
   onGuardar: (lectura: NuevaLectura) => void | Promise<void>;
   /** Deshabilita el botón mientras se persiste. */
   guardando?: boolean;
+  /** Si el paciente tiene diagnóstico de diabetes (mismo umbral que el dashboard). */
+  hasDiabetes?: boolean;
 }
 
 const F = "'Sora', sans-serif";
@@ -39,15 +43,12 @@ const CSS = `
 `;
 
 let injected = false;
-function useStyles() {
-  useEffect(() => {
-    if (injected || typeof document === "undefined") return;
-    const t = document.createElement("style");
-    t.setAttribute("data-mvx-glucosa-movil", "");
-    t.textContent = CSS;
-    document.head.appendChild(t);
-    injected = true;
-  }, []);
+if (typeof document !== "undefined" && !injected) {
+  const t = document.createElement("style");
+  t.setAttribute("data-mvx-glucosa-movil", "");
+  t.textContent = CSS;
+  document.head.appendChild(t);
+  injected = true;
 }
 
 const caption: React.CSSProperties = {
@@ -83,32 +84,11 @@ export default function RegistroGlucosaMovil({
   fecha = "hoy",
   onGuardar,
   guardando = false,
+  hasDiabetes = false,
 }: RegistroGlucosaMovilProps) {
-  useStyles();
-  const [step, setStep] = useState(1);
-  const [valor, setValor] = useState("");
-  const [meal, setMeal] = useState<MealKey | null>(null);
-  const [hora, setHora] = useState("");
-  const [foods, setFoods] = useState("");
-
-  // Toma la hora actual al montar (en cliente, para evitar mismatch de hidratación).
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- init one-shot en cliente
-  useEffect(() => setHora(horaActual()), []);
-
-  const st = estadoRango(valor);
-  const { total, enRango, promedio } = useMemo(() => resumenDia(lecturas), [lecturas]);
-
-  const guardar = async () => {
-    const n = parseFloat(valor);
-    if (Number.isNaN(n) || !meal || guardando) return;
-    await onGuardar({
-      readingType: MEAL_TO_TYPE[meal],
-      valueMgDl: n,
-      time: horaInputToApi(hora),
-      foods: foods.trim() || null,
-    });
-    setStep(1); setValor(""); setMeal(null); setHora(horaActual()); setFoods("");
-  };
+  const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes });
+  const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, guardar } = w;
+  const { total, enRango, promedio } = resumen;
 
   const recBadge = (
     <span style={{ fontSize: 10, fontWeight: 700, color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", padding: "2px 8px", borderRadius: 999 }}>Recomendado</span>
@@ -148,7 +128,7 @@ export default function RegistroGlucosaMovil({
             <p style={{ fontSize: 13, color: "var(--soft,#8a938c)", margin: "0 0 4px" }}>Escribe el valor de la pantalla.</p>
             <div style={{ textAlign: "center", padding: "10px 0 2px" }}>
               <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 7 }}>
-                <input className="mvxgm-num" type="number" inputMode="numeric" placeholder="0" value={valor} onChange={(e) => setValor(e.target.value)}
+                <input className="mvxgm-num" type="number" inputMode="numeric" placeholder="0" min={GLUCOSA_MIN} max={GLUCOSA_MAX} value={valor} onChange={(e) => setValor(e.target.value)}
                   style={{ width: 150, fontSize: 62, fontWeight: 800, textAlign: "center", border: "none", background: "transparent", color: "var(--text,#15201b)", letterSpacing: "-.045em", caretColor: "var(--accent,#00c9a7)", padding: 0, fontFamily: F }} />
                 <span style={{ fontSize: 15, color: "var(--soft,#9aa39c)", fontWeight: 600, marginBottom: 12 }}>mg/dL</span>
               </div>
@@ -242,8 +222,8 @@ export default function RegistroGlucosaMovil({
             <button onClick={() => setStep((s) => Math.min(3, s + 1))}
               style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "var(--btn-glow)", fontFamily: F }}>Siguiente</button>
           ) : (
-            <button onClick={guardar} disabled={guardando || Number.isNaN(parseFloat(valor)) || !meal}
-              style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: guardando ? "default" : "pointer", boxShadow: "var(--btn-glow)", fontFamily: F, opacity: (guardando || Number.isNaN(parseFloat(valor)) || !meal) ? 0.55 : 1 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
+            <button onClick={guardar} disabled={guardando || !esGlucosaValida(parseFloat(valor)) || !meal}
+              style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: guardando ? "default" : "pointer", boxShadow: "var(--btn-glow)", fontFamily: F, opacity: (guardando || !esGlucosaValida(parseFloat(valor)) || !meal) ? 0.55 : 1 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
           )}
         </div>
       </div>
@@ -259,7 +239,7 @@ export default function RegistroGlucosaMovil({
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           {lecturas.map((r) => {
-            const b = estadoRango(r.v);
+            const b = estadoRango(r.v, { hasDiabetes, readingType: r.readingType });
             return (
               <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--card,#fff)", border: "1.5px solid var(--card-bd,#eee3d4)", borderRadius: 14, padding: "12px 14px" }}>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text,#15201b)", minWidth: 42 }}>{r.t}</div>
