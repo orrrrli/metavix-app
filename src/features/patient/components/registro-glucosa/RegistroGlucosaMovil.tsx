@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React from "react";
+import { useGlucosaWizard } from "../../hooks/use-glucosa-wizard";
 import {
-  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
+  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON,
   GlucosaLectura, NuevaLectura,
-  estadoRango, markerPct, resumenDia, horaInputToApi, horaActual,
+  markerPct, estadoRango, horaActual,
   GLUCOSA_MIN, GLUCOSA_MAX, esGlucosaValida,
 } from "../../utils/glucosa";
-import { toast } from "sonner";
 
 /**
  * RegistroGlucosaMovil — versión móvil (3A).
@@ -43,15 +43,12 @@ const CSS = `
 `;
 
 let injected = false;
-function useStyles() {
-  useEffect(() => {
-    if (injected || typeof document === "undefined") return;
-    const t = document.createElement("style");
-    t.setAttribute("data-mvx-glucosa-movil", "");
-    t.textContent = CSS;
-    document.head.appendChild(t);
-    injected = true;
-  }, []);
+if (typeof document !== "undefined" && !injected) {
+  const t = document.createElement("style");
+  t.setAttribute("data-mvx-glucosa-movil", "");
+  t.textContent = CSS;
+  document.head.appendChild(t);
+  injected = true;
 }
 
 const caption: React.CSSProperties = {
@@ -89,35 +86,9 @@ export default function RegistroGlucosaMovil({
   guardando = false,
   hasDiabetes = false,
 }: RegistroGlucosaMovilProps) {
-  useStyles();
-  const [step, setStep] = useState(1);
-  const [valor, setValor] = useState("");
-  const [meal, setMeal] = useState<MealKey | null>(null);
-  const [hora, setHora] = useState("");
-  const [foods, setFoods] = useState("");
-
-  // Toma la hora actual al montar (en cliente, para evitar mismatch de hidratación).
-  // eslint-disable-next-line react-hooks/set-state-in-effect -- init one-shot en cliente
-  useEffect(() => setHora(horaActual()), []);
-
-  const st = estadoRango(valor, { hasDiabetes, readingType: meal ? MEAL_TO_TYPE[meal] : null });
-  const { total, enRango, promedio } = useMemo(() => resumenDia(lecturas, hasDiabetes), [lecturas, hasDiabetes]);
-
-  const guardar = async () => {
-    const n = parseFloat(valor);
-    if (Number.isNaN(n) || !meal || guardando) return;
-    if (!esGlucosaValida(n)) {
-      toast.error(`Valor fuera de rango (${GLUCOSA_MIN}–${GLUCOSA_MAX} mg/dL).`);
-      return;
-    }
-    await onGuardar({
-      readingType: MEAL_TO_TYPE[meal],
-      valueMgDl: n,
-      time: horaInputToApi(hora),
-      foods: foods.trim() || null,
-    });
-    setStep(1); setValor(""); setMeal(null); setHora(horaActual()); setFoods("");
-  };
+  const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes });
+  const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, guardar } = w;
+  const { total, enRango, promedio } = resumen;
 
   const recBadge = (
     <span style={{ fontSize: 10, fontWeight: 700, color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", padding: "2px 8px", borderRadius: 999 }}>Recomendado</span>

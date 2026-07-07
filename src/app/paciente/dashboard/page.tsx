@@ -16,14 +16,14 @@ import {
 } from "@/features/patient/components/dashboard";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 
-const RANGO_DAYS: Record<string, number> = { "7d": 7, "14d": 14, "30d": 30 };
+const RANGO_DAYS: Record<"7d" | "14d" | "30d", number> = { "7d": 7, "14d": 14, "30d": 30 };
 
 export default function PatientDashboard() {
   const { patientId } = useAuthStore();
   const router = useRouter();
+  const [rango, setRango] = useState<"7d" | "14d" | "30d">("7d");
   const resumen = useGlucosaResumen(patientId, rango);
   const { indicadores } = useOtrosIndicadores(patientId);
-  const [rango, setRango] = useState("7d");
 
   const handleRegistrar = () => router.push("/paciente/nuevo-registro");
   const handleHistorial = () => router.push("/paciente/historial");
@@ -122,7 +122,7 @@ export default function PatientDashboard() {
         promedio={resumen.promedioVentana ?? resumen.promedio30d ?? 0}
         porcentajeEnRango={resumen.porcentajeEnRango}
         rango={rango}
-        onRangoChange={setRango}
+        onRangoChange={(id: string) => setRango(id as "7d" | "14d" | "30d")}
       >
         {datosGrafica.length >= 2 ? (
           <ResponsiveContainer width="100%" height={300}>

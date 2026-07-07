@@ -14,10 +14,10 @@ describe("localTodayISO", () => {
     // toISOString() would yield 2026-07-07; localTodayISO must yield 2026-07-06.
     globalThis.Date = class extends RealDate {
       constructor(...args: ConstructorParameters<typeof Date>) {
-        if (args.length === 0) {
-          super("2026-07-07T02:00:00Z");
+        if (args.length) {
+          super(...(args as unknown as []));
         } else {
-          super(...args);
+          super("2026-07-07T02:00:00Z");
         }
       }
       // Mantener factory estática
@@ -28,7 +28,7 @@ describe("localTodayISO", () => {
 
     // Mockear getTimezoneOffset sólo es posible reescribiendo Date; usamos
     // TZ=env si está disponible, si no, ajustamos el offset esperado dinámicamente.
-    const offsetMin = new RealDate("2026-07-07T02:00:00Z").getTimezoneOffset();
+    const offsetMin: number = new RealDate("2026-07-07T02:00:00Z").getTimezoneOffset();
     // En UTC-6 → 360. En UTC → 0.
     if (offsetMin === 360) {
       expect(localTodayISO()).toBe("2026-07-06");
@@ -42,10 +42,10 @@ describe("localTodayISO", () => {
     // 2026-08-01T05:00:00Z == 2026-07-31T23:00:00 local in UTC-6.
     globalThis.Date = class extends RealDate {
       constructor(...args: ConstructorParameters<typeof Date>) {
-        if (args.length === 0) {
-          super("2026-08-01T05:00:00Z");
+        if (args.length) {
+          super(...(args as unknown as []));
         } else {
-          super(...args);
+          super("2026-08-01T05:00:00Z");
         }
       }
       static now() {
@@ -53,7 +53,7 @@ describe("localTodayISO", () => {
       }
     } as unknown as typeof Date;
 
-    const offsetMin = new RealDate("2026-08-01T05:00:00Z").getTimezoneOffset();
+    const offsetMin: number = new RealDate("2026-08-01T05:00:00Z").getTimezoneOffset();
     if (offsetMin === 360) {
       expect(localTodayISO()).toBe("2026-07-31");
     } else {
