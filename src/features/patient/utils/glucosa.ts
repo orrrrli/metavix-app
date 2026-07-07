@@ -114,9 +114,9 @@ export interface EstadoRango {
 export function estadoRango(v: string | number): EstadoRango {
   const n = typeof v === "number" ? v : parseFloat(v);
   if (v === "" || Number.isNaN(n)) return { estado: "", label: "", bg: "", color: "" };
-  if (n < OBJETIVO_MIN) return { estado: "bajo", label: "Baja", bg: "#fdecea", color: "#c14a2c" };
-  if (n > OBJETIVO_MAX) return { estado: "alto", label: "Alta", bg: "#fdf3e0", color: "#b6791f" };
-  return { estado: "rango", label: "En rango", bg: "#e8f7f0", color: "#1f9d6b" };
+  if (n < OBJETIVO_MIN) return { estado: "bajo", label: "Baja", bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
+  if (n > OBJETIVO_MAX) return { estado: "alto", label: "Alta", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
+  return { estado: "rango", label: "En rango", bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
 }
 
 /** Posición (0–100 %) del marcador sobre la barra de rango. */

@@ -95,6 +95,7 @@
   --bad:#dd5236; --bad-bg:#fae9e3; --info:#2f6fdb; --info-bg:#e7eefb;
   --nav-mut:#6b7670; --nav-active-bg:#e6faf6; --nav-active:#0a8c77;
   --ph:#f4f1ea; --skel:#ece6db;
+  --mvxg-field:#faf7f1; --mvxg-panel:#fcfaf6;
 }
 .dark .mvx-dash {
   --canvas:#0b1620; --sidebar:#0e1f2b; --card:#0e1f2b; --card-bd:rgba(255,255,255,.07);
@@ -104,6 +105,7 @@
   --bad:#f0795d; --bad-bg:rgba(221,82,54,.16); --info:#6fa0f0; --info-bg:rgba(47,111,219,.16);
   --nav-mut:rgba(255,255,255,.5); --nav-active-bg:rgba(0,201,167,.14); --nav-active:#2fe0c2;
   --ph:rgba(255,255,255,.04); --skel:rgba(255,255,255,.08);
+  --mvxg-field:rgba(255,255,255,.05); --mvxg-panel:rgba(255,255,255,.03);
 }
 .mvx-dash, .mvx-dash * { box-sizing:border-box; transition: background-color .45s ease, color .35s ease, border-color .45s ease; }
 
