@@ -23,6 +23,8 @@ const NAV: MetavixNavItem[] = [
 const TOOLS: MetavixNavItem[] = [
   { label: "Curvas de glucosa", href: "/paciente/herramientas/curvas-glucosa", icon: <Icon><><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></></Icon> },
   { label: "Calculadora IMC", href: "/paciente/herramientas/calculadora-imc", icon: <Icon><><path d="M12 3v6" /><path d="M5 9h14l-1.5 10.5a2 2 0 0 1-2 1.5h-7a2 2 0 0 1-2-1.5z" /></></Icon> },
+  { label: "Presión arterial", href: "/paciente/herramientas/presion-arterial", icon: <Icon><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></Icon> },
+  { label: "Laboratorio y EGO", href: "/paciente/herramientas/laboratorio", icon: <Icon><><path d="M9 3h6" /><path d="M10 3v6.5L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.5V3" /></></Icon> },
   { label: "Conversor HbA1c", href: "/paciente/herramientas/convertidor-hba1c", icon: <Icon><><path d="M9 3v6l-5 8a2 2 0 0 0 1.7 3h12.6a2 2 0 0 0 1.7-3l-5-8V3" /><path d="M8 3h8" /></></Icon> },
   { label: "Ver todas las herramientas", href: "/paciente/herramientas", icon: <Icon><><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></></Icon>, muted: true },
 ];

@@ -10,6 +10,8 @@ import {
   HeartPulse,
   Footprints,
   Target,
+  Activity,
+  TestTube,
 } from "lucide-react";
 
 interface Tool {
@@ -38,9 +40,23 @@ const TOOLS: Tool[] = [
   {
     href: "/paciente/herramientas/calculadora-imc",
     title: "Calculadora IMC",
-    description: "Calcula tu Índice de Masa Corporal y da seguimiento a tu peso saludable.",
+    description: "Calcula tu Índice de Masa Corporal y da seguimiento a tu peso y cintura.",
     Icon: Scale,
     cta: "Calcular IMC",
+  },
+  {
+    href: "/paciente/herramientas/presion-arterial",
+    title: "Presión arterial",
+    description: "Registra tu presión arterial y frecuencia cardíaca para dar seguimiento.",
+    Icon: Activity,
+    cta: "Registrar presión",
+  },
+  {
+    href: "/paciente/herramientas/laboratorio",
+    title: "Laboratorio y EGO",
+    description: "Registra resultados de laboratorio y examen general de orina (EGO).",
+    Icon: TestTube,
+    cta: "Registrar resultados",
   },
   {
     href: "/paciente/herramientas/convertidor-hba1c",
