@@ -57,6 +57,63 @@ export default function MetavixProgresoDia({
 
   const pendientes = Math.max(0, metaDiaria - medicionesHoy);
 
+  // Issue #8: derivar pills del estado real, no hardcodear texto/color.
+  const metaCompleta = medicionesHoy >= metaDiaria && metaDiaria > 0;
+  const sinMedicionesHoy = medicionesHoy === 0;
+  const ratioEnMeta = totalLecturas > 0 ? enMeta / totalLecturas : null;
+
+  type PillEstado = "ok" | "warn" | "bad" | "muted";
+  const pillFromEstado = (estado: PillEstado): React.CSSProperties => {
+    const map: Record<PillEstado, [string, string]> = {
+      ok:    ["var(--ok)",    "var(--ok-bg)"],
+      warn:  ["var(--warn)",  "var(--warn-bg)"],
+      bad:   ["var(--bad)",   "var(--bad-bg)"],
+      muted: ["var(--soft)",  "var(--ph)"],
+    };
+    const [color, bg] = map[estado];
+    return { ...pill(color, bg) };
+  };
+
+  // Lógica "horas desde la última medición"
+  // Sin horas legibles → no medido hoy. Con horas → comparar contra umbral de 4h.
+  const horasSinDato = horasDesde === "—";
+  const pillTiempoLabel = sinMedicionesHoy
+    ? "Aún sin mediciones hoy"
+    : metaCompleta
+      ? "Meta del día completa"
+      : horasSinDato
+        ? "Te toca medir pronto"
+        : "Vas bien, sigue así";
+  const pillTiempoEstado: PillEstado = sinMedicionesHoy
+    ? "muted"
+    : metaCompleta
+      ? "ok"
+      : horasSinDato
+        ? "warn"
+        : "ok";
+
+  // Lógica "dentro de tu objetivo"
+  const pillEnMetaLabel =
+    ratioEnMeta == null
+      ? "Sin lecturas para evaluar"
+      : enMeta === totalLecturas
+        ? "¡Todas en rango!"
+        : ratioEnMeta >= 0.7
+          ? "Vas muy bien hoy"
+          : ratioEnMeta >= 0.4
+            ? "Algunas fuera de rango"
+            : "Fuera de rango — revisa";
+  const pillEnMetaEstado: PillEstado =
+    ratioEnMeta == null
+      ? "muted"
+      : enMeta === totalLecturas
+        ? "ok"
+        : ratioEnMeta >= 0.7
+          ? "ok"
+          : ratioEnMeta >= 0.4
+            ? "warn"
+            : "bad";
+
   return (
     <section className="mvxpr-grid">
       {/* mediciones de hoy */}
@@ -102,7 +159,7 @@ export default function MetavixProgresoDia({
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 12 }}>
           <span style={big}>{horasDesde}</span>
         </div>
-        <span style={pill("var(--warn)", "var(--warn-bg)")}>Te toca medir pronto</span>
+        <span style={pillFromEstado(pillTiempoEstado)}>{pillTiempoLabel}</span>
       </div>
 
       {/* en meta */}
@@ -118,7 +175,7 @@ export default function MetavixProgresoDia({
           <span style={{ ...big, color: "var(--ok)" }}>{enMeta}</span>
           <span style={{ fontSize: 15, color: "var(--soft)", fontWeight: 500 }}>de {totalLecturas} lectura{totalLecturas === 1 ? "" : "s"}</span>
         </div>
-        <span style={pill("var(--ok)", "var(--ok-bg)")}>Vas muy bien hoy</span>
+        <span style={pillFromEstado(pillEnMetaEstado)}>{pillEnMetaLabel}</span>
       </div>
     </section>
   );
