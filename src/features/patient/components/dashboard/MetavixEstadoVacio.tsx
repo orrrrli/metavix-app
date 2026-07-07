@@ -94,7 +94,7 @@ export default function MetavixEstadoVacio({
           fontFamily: F,
           fontSize: 16.5,
           fontWeight: 700,
-          boxShadow: "0 14px 30px rgba(0,201,167,.36)",
+          boxShadow: "var(--btn-glow)",
         }}
       >
         <span style={{ fontSize: 21, lineHeight: 1 }}>+</span> {ctaLabel}

@@ -80,6 +80,13 @@
   70%  { box-shadow:0 14px 30px rgba(0,201,167,.42), 0 0 0 16px rgba(0,201,167,0); }
   100% { box-shadow:0 14px 30px rgba(0,201,167,.42), 0 0 0 0 rgba(0,201,167,0); }
 }
+/* En dark mode el bloom teal permanente se ve demasiado brillante: sombra
+   neutra de profundidad + un anillo de pulso más tenue que mantiene la llamada de atención. */
+@keyframes mvxFabPulseDark {
+  0%   { box-shadow:0 8px 20px rgba(0,0,0,.5), 0 0 0 0 rgba(0,201,167,.26); }
+  70%  { box-shadow:0 8px 20px rgba(0,0,0,.5), 0 0 0 14px rgba(0,201,167,0); }
+  100% { box-shadow:0 8px 20px rgba(0,0,0,.5), 0 0 0 0 rgba(0,201,167,0); }
+}
 
 @keyframes mvxulDot {
   0%,100% { opacity:1; transform:scale(1); }
@@ -96,6 +103,7 @@
   --nav-mut:#6b7670; --nav-active-bg:#e6faf6; --nav-active:#0a8c77;
   --ph:#f4f1ea; --skel:#ece6db;
   --mvxg-field:#faf7f1; --mvxg-panel:#fcfaf6;
+  --btn-glow:0 12px 26px rgba(0,201,167,.3);
 }
 .dark .mvx-dash {
   --canvas:#0b1620; --sidebar:#0e1f2b; --card:#0e1f2b; --card-bd:rgba(255,255,255,.07);
@@ -106,6 +114,7 @@
   --nav-mut:rgba(255,255,255,.5); --nav-active-bg:rgba(0,201,167,.14); --nav-active:#2fe0c2;
   --ph:rgba(255,255,255,.04); --skel:rgba(255,255,255,.08);
   --mvxg-field:rgba(255,255,255,.05); --mvxg-panel:rgba(255,255,255,.03);
+  --btn-glow:0 6px 18px rgba(0,0,0,.4);
 }
 .mvx-dash, .mvx-dash * { box-sizing:border-box; transition: background-color .45s ease, color .35s ease, border-color .45s ease; }
 
@@ -126,6 +135,7 @@
 .mvxdl-icon-moon { display:block; }
 .dark .mvx-dash .mvxdl-icon-moon { display:none; }
 .dark .mvx-dash .mvxdl-icon-sun { display:block; }
+.dark .mvx-dash .mvxdl-fab { animation-name: mvxFabPulseDark; }
 
 /* ── Sidebar responsive: sticky en desktop, drawer off-canvas en <lg ── */
 .mvxdl-sidebar {

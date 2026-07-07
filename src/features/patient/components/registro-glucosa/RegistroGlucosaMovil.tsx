@@ -240,10 +240,10 @@ export default function RegistroGlucosaMovil({
             style={{ flex: "0 0 auto", background: "transparent", color: "var(--mut,#647069)", border: "1.5px solid var(--card-bd,#e7dfd2)", borderRadius: 12, padding: "14px 20px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: F, opacity: step === 1 ? 0.45 : 1 }}>Atrás</button>
           {step < 3 ? (
             <button onClick={() => setStep((s) => Math.min(3, s + 1))}
-              style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 10px 22px rgba(0,201,167,.3)", fontFamily: F }}>Siguiente</button>
+              style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "var(--btn-glow)", fontFamily: F }}>Siguiente</button>
           ) : (
             <button onClick={guardar} disabled={guardando || Number.isNaN(parseFloat(valor)) || !meal}
-              style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: guardando ? "default" : "pointer", boxShadow: "0 10px 22px rgba(0,201,167,.3)", fontFamily: F, opacity: (guardando || Number.isNaN(parseFloat(valor)) || !meal) ? 0.55 : 1 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
+              style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: guardando ? "default" : "pointer", boxShadow: "var(--btn-glow)", fontFamily: F, opacity: (guardando || Number.isNaN(parseFloat(valor)) || !meal) ? 0.55 : 1 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
           )}
         </div>
       </div>

@@ -275,10 +275,10 @@ export default function RegistroGlucosaWeb({
               style={{ flex: "0 0 auto", background: "transparent", color: "var(--mut,#647069)", border: "1.5px solid var(--card-bd,#e7dfd2)", borderRadius: 13, padding: "15px 26px", fontSize: 14.5, fontWeight: 600, cursor: "pointer", fontFamily: F, opacity: step === 1 ? 0.45 : 1 }}>Atrás</button>
             {step < 3 ? (
               <button onClick={() => setStep((s) => Math.min(3, s + 1))} className="mvxg-cta"
-                style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "0 12px 26px rgba(0,201,167,.3)", fontFamily: F }}>Siguiente</button>
+                style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "var(--btn-glow)", fontFamily: F }}>Siguiente</button>
             ) : (
               <button onClick={guardar} className="mvxg-cta" disabled={!puedeGuardar}
-                style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: puedeGuardar ? "pointer" : "default", boxShadow: "0 12px 26px rgba(0,201,167,.3)", fontFamily: F, opacity: puedeGuardar ? 1 : 0.55 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
+                style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: puedeGuardar ? "pointer" : "default", boxShadow: "var(--btn-glow)", fontFamily: F, opacity: puedeGuardar ? 1 : 0.55 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
             )}
           </div>
         </div>

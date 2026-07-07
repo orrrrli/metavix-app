@@ -232,7 +232,7 @@ export default function MetavixUltimaLectura({
             fontFamily: F,
             fontSize: 15.5,
             fontWeight: 700,
-            boxShadow: "0 12px 26px rgba(0,201,167,.34)",
+            boxShadow: "var(--btn-glow)",
           }}
         >
           <span style={{ fontSize: 20, lineHeight: 1 }}>+</span> Registrar nueva lectura
