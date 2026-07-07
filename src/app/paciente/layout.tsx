@@ -27,6 +27,7 @@ const TOOLS: MetavixNavItem[] = [
   { label: "Presión arterial", href: "/paciente/herramientas/presion-arterial", icon: <Icon><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></Icon> },
   { label: "Laboratorio y EGO", href: "/paciente/herramientas/laboratorio", icon: <Icon><><path d="M9 3h6" /><path d="M10 3v6.5L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.5V3" /></></Icon> },
   { label: "Conversor HbA1c", href: "/paciente/herramientas/convertidor-hba1c", icon: <Icon><><path d="M9 3v6l-5 8a2 2 0 0 0 1.7 3h12.6a2 2 0 0 0 1.7-3l-5-8V3" /><path d="M8 3h8" /></></Icon> },
+  { label: "Agendar cita", href: "/paciente/contacto/agendar", icon: <Icon><><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></></Icon>, muted: true },
   { label: "Ver todas las herramientas", href: "/paciente/herramientas", icon: <Icon><><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></></Icon>, muted: true },
 ];
 
