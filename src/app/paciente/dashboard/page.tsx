@@ -21,13 +21,18 @@ const RANGO_DAYS: Record<string, number> = { "7d": 7, "14d": 14, "30d": 30 };
 export default function PatientDashboard() {
   const { patientId } = useAuthStore();
   const router = useRouter();
-  const resumen = useGlucosaResumen(patientId);
+  const resumen = useGlucosaResumen(patientId, rango);
   const { indicadores } = useOtrosIndicadores(patientId);
   const [rango, setRango] = useState("7d");
 
   const handleRegistrar = () => router.push("/paciente/nuevo-registro");
   const handleHistorial = () => router.push("/paciente/historial");
   const handleEstadoVacioRegistrar = handleRegistrar;
+  const handleReintentar = () => {
+    // Invalida el query del hook para forzar refetch. Usamos window.location
+    // para simplicidad — el hook no expone refetch y un reload limpia caché.
+    if (typeof window !== "undefined") window.location.reload();
+  };
 
   const indicadoresConClick = useMemo(
     () => indicadores.map((ind) => ({
@@ -37,15 +42,50 @@ export default function PatientDashboard() {
     [indicadores, router]
   );
 
+  // Issue #6: filtrar por ventana calendario, no por número de puntos.
+  // Quien registra cada 3 días pidiendo "7 días" no debe ver 21 días.
   const datosGrafica = useMemo(() => {
     const dias = RANGO_DAYS[rango] ?? 7;
-    return resumen.serieGrafica.slice(-dias);
+    const desde = new Date();
+    desde.setDate(desde.getDate() - dias + 1);
+    desde.setHours(0, 0, 0, 0);
+    return resumen.serieGrafica.filter((p) => p.ts >= desde.getTime());
   }, [rango, resumen.serieGrafica]);
 
   if (resumen.loading) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center">
         <GooeyLoader />
+      </div>
+    );
+  }
+
+  // Issue #7: error de fetch NO debe mostrarse como "sin registros".
+  if (resumen.error) {
+    return (
+      <div
+        className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center"
+        style={{ color: "var(--mut)" }}
+      >
+        <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
+          No pudimos cargar tus registros.
+        </p>
+        <p style={{ fontSize: 13.5, margin: 0 }}>
+          Revisa tu conexión o vuelve a intentarlo en un momento.
+        </p>
+        <button
+          onClick={handleReintentar}
+          className="mt-1 rounded-xl px-5 py-2 text-sm font-semibold transition-colors"
+          style={{
+            background: "var(--accent)",
+            color: "#03251d",
+            fontFamily: "'Sora', sans-serif",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          Reintentar
+        </button>
       </div>
     );
   }
@@ -79,7 +119,7 @@ export default function PatientDashboard() {
       />
 
       <MetavixTendenciaCard
-        promedio={resumen.promedio30d ?? 0}
+        promedio={resumen.promedioVentana ?? resumen.promedio30d ?? 0}
         porcentajeEnRango={resumen.porcentajeEnRango}
         rango={rango}
         onRangoChange={setRango}
