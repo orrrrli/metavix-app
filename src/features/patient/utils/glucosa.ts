@@ -1,4 +1,7 @@
 import { GlucoseReadingType, GlucoseReadingResponse } from "@/types/daily-record";
+import { rangoPara, evaluar, type EstadoClinico, type RangoPorLectura } from "./rangos-glucosa";
+
+export type { EstadoClinico, RangoPorLectura };
 
 /**
  * Modelo de UI + helpers para el wizard de registro de glucosa
@@ -6,8 +9,8 @@ import { GlucoseReadingType, GlucoseReadingResponse } from "@/types/daily-record
  *
  * Cada `MealKey` mapea 1:1 a un `GlucoseReadingType` del backend, de modo que
  * el wizard captura vocabulario en español y lo traduce al enum del API al
- * guardar. El rango objetivo (70–180 mg/dL) sigue el estándar ADA de
- * "tiempo en rango" y coincide con las barras visuales del componente.
+ * guardar. Los rangos por tipo de comida viven en `rangos-glucosa.ts` y se
+ * comparten con el dashboard.
  */
 
 // ── Momentos de medición ───────────────────────────────────────────
@@ -83,6 +86,8 @@ export interface GlucosaLectura {
   t: string; // hora corta "07:30" (o "—" si no hay)
   label: string; // etiqueta del momento
   v: number; // mg/dL
+  /** Tipo de comida del backend (necesario para evaluar contra el rango correcto). */
+  readingType: GlucoseReadingType;
 }
 
 /** Payload que emite el wizard al guardar (mapea a `GlucoseReadingRequest`). */
@@ -98,8 +103,6 @@ export const GLUCOSA_SEED: GlucosaLectura[] = [];
 
 // ── Rango clínico y helpers visuales ───────────────────────────────
 
-const OBJETIVO_MIN = 70;
-const OBJETIVO_MAX = 180;
 const ESCALA_MIN = 40; // extremo izquierdo de la barra
 const ESCALA_MAX = 300; // extremo derecho de la barra
 
@@ -119,13 +122,26 @@ export interface EstadoRango {
   color: string;
 }
 
-/** Clasifica un valor vs el rango objetivo. Cadena vacía / NaN → estado neutro. */
-export function estadoRango(v: string | number): EstadoRango {
+/**
+ * Clasifica un valor vs el rango objetivo. Si se conoce `hasDiabetes` y
+ * `readingType`, usa los rangos por tipo de comida de `rangos-glucosa.ts`
+ * (misma fuente que el dashboard). Si no, cae a ayuno + diabetes (caso más
+ * común durante el paso 1 del wizard, antes de elegir el momento).
+ *
+ * Cadena vacía / NaN → estado neutro.
+ */
+export function estadoRango(
+  v: string | number,
+  opts: { hasDiabetes?: boolean; readingType?: import("@/types/daily-record").GlucoseReadingType | null } = {}
+): EstadoRango {
   const n = typeof v === "number" ? v : parseFloat(v);
   if (v === "" || Number.isNaN(n)) return { estado: "", label: "", bg: "", color: "" };
-  if (n < OBJETIVO_MIN) return { estado: "bajo", label: "Baja", bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
-  if (n > OBJETIVO_MAX) return { estado: "alto", label: "Alta", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
-  return { estado: "rango", label: "En rango", bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
+  const rango = rangoPara(opts.readingType ?? null, opts.hasDiabetes ?? false);
+  const ev = evaluar(n, rango);
+  if (ev.estado === "ok") return { estado: "rango", label: "En rango", bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
+  if (ev.estado === "warn") return { estado: "rango", label: "Revisar", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
+  if (ev.label === "Baja") return { estado: "bajo", label: "Baja", bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
+  return { estado: "alto", label: "Alta", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
 }
 
 /** Posición (0–100 %) del marcador sobre la barra de rango. */
@@ -142,10 +158,13 @@ export interface ResumenDia {
   promedio: number | string;
 }
 
-/** Totales del día para las tarjetas de resumen. */
-export function resumenDia(lecturas: GlucosaLectura[]): ResumenDia {
+/** Totales del día para las tarjetas de resumen (usa rangos por lectura). */
+export function resumenDia(lecturas: GlucosaLectura[], hasDiabetes = false): ResumenDia {
   const total = lecturas.length;
-  const enRango = lecturas.filter((l) => l.v >= OBJETIVO_MIN && l.v <= OBJETIVO_MAX).length;
+  const enRango = lecturas.filter((l) => {
+    const r = rangoPara(l.readingType, hasDiabetes);
+    return l.v >= r.inf && l.v <= r.sup;
+  }).length;
   const promedio =
     total > 0 ? Math.round(lecturas.reduce((a, b) => a + b.v, 0) / total) : "—";
   return { total, enRango, promedio };
@@ -166,6 +185,7 @@ export function readingToLectura(r: GlucoseReadingResponse): GlucosaLectura {
     t: formatHoraCorta(r.time),
     label: readingTypeLabel(r.readingType),
     v: r.valueMgDl,
+    readingType: r.readingType,
   };
 }
 

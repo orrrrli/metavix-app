@@ -28,6 +28,8 @@ export interface RegistroGlucosaWebProps {
   onGuardar: (lectura: NuevaLectura) => void | Promise<void>;
   /** Deshabilita el botón mientras se persiste. */
   guardando?: boolean;
+  /** Si el paciente tiene diagnóstico de diabetes (mismo umbral que el dashboard). */
+  hasDiabetes?: boolean;
 }
 
 const F = "'Sora', sans-serif";
@@ -112,6 +114,7 @@ export default function RegistroGlucosaWeb({
   fecha = "hoy",
   onGuardar,
   guardando = false,
+  hasDiabetes = false,
 }: RegistroGlucosaWebProps) {
   useStyles();
   const [step, setStep] = useState(1);
@@ -124,8 +127,8 @@ export default function RegistroGlucosaWeb({
   // eslint-disable-next-line react-hooks/set-state-in-effect -- init one-shot en cliente
   useEffect(() => setHora(horaActual()), []);
 
-  const st = estadoRango(valor);
-  const { total, enRango, promedio } = useMemo(() => resumenDia(lecturas), [lecturas]);
+  const st = estadoRango(valor, { hasDiabetes, readingType: meal ? MEAL_TO_TYPE[meal] : null });
+  const { total, enRango, promedio } = useMemo(() => resumenDia(lecturas, hasDiabetes), [lecturas, hasDiabetes]);
 
   const guardar = async () => {
     const n = parseFloat(valor);
@@ -300,7 +303,7 @@ export default function RegistroGlucosaWeb({
               <div style={{ textAlign: "center", padding: "34px 16px", color: "var(--faint,#b0a89b)", fontSize: 13, lineHeight: 1.5 }}>Aún no hay lecturas hoy. Completa el registro y aparecerá aquí.</div>
             )}
             {lecturas.map((r) => {
-              const b = estadoRango(r.v);
+              const b = estadoRango(r.v, { hasDiabetes, readingType: r.readingType });
               return (
                 <div key={r.id} style={{ background: "var(--card,#fff)", border: "1.5px solid var(--card-bd,#efe7db)", borderRadius: 14, padding: "13px 15px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>

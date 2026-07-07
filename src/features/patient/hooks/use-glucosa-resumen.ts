@@ -5,8 +5,9 @@ import { GlucoseReadingType, DailyRecordResponse } from "@/types/daily-record";
 import { useDailyRecords } from "./use-daily-records";
 import { usePatientProfile } from "./use-patient-profile";
 import { tsDeLectura } from "./use-glucosa-resumen.helpers";
+import { rangoPara, rangoParaDefault, evaluar, EstadoClinico } from "../utils/rangos-glucosa";
 
-export type EstadoClinico = "ok" | "warn" | "bad";
+export type { EstadoClinico };
 
 export interface GlucosaResumen {
   /** Última lectura de glucosa del día (en mg/dL) o null si no hay */
@@ -45,22 +46,6 @@ export interface GlucosaResumen {
   tieneRegistros: boolean;
   /** Cargando datos */
   loading: boolean;
-}
-
-const SUP_AYUNO_CON_DIABETES = 130;
-const SUP_AYUNO_SIN_DIABETES = 100;
-const SUP_POST_CON_DIABETES = 180;
-const SUP_POST_SIN_DIABETES = 140;
-const INF_CON_DIABETES = 80;
-const INF_SIN_DIABETES = 70;
-const META_DIARIA = 3;
-
-function isPostMeal(t: GlucoseReadingType) {
-  return (
-    t === GlucoseReadingType.PostBreakfast ||
-    t === GlucoseReadingType.PostLunch ||
-    t === GlucoseReadingType.PostDinner
-  );
 }
 
 function parseDailyDate(dateStr: string): Date {
@@ -112,15 +97,7 @@ const READING_TYPE_LABEL: Record<GlucoseReadingType, string> = {
   [GlucoseReadingType.Overnight]: "de madrugada",
 };
 
-function supParaLectura(t: GlucoseReadingType, hasDiabetes: boolean) {
-  return isPostMeal(t)
-    ? (hasDiabetes ? SUP_POST_CON_DIABETES : SUP_POST_SIN_DIABETES)
-    : (hasDiabetes ? SUP_AYUNO_CON_DIABETES : SUP_AYUNO_SIN_DIABETES);
-}
-
-function infParaLectura(hasDiabetes: boolean) {
-  return hasDiabetes ? INF_CON_DIABETES : INF_SIN_DIABETES;
-}
+const META_DIARIA = 3;
 
 export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
   const { data: profile } = usePatientProfile(patientId ?? "");
@@ -133,7 +110,7 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
       estadoLabel: null,
       contexto: null,
       registradaHace: null,
-      rangoObjetivo: [INF_SIN_DIABETES, SUP_AYUNO_SIN_DIABETES],
+      rangoObjetivo: [70, 100], // ayuno sin diabetes, fallback inicial; se recalcula abajo si hay perfil
       proximaMedicion: null,
       medicionesHoy: 0,
       metaDiaria: META_DIARIA,
@@ -153,8 +130,9 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
     const diabetesRaw = profile?.diabetesType ?? "None";
     const hasDiabetes = diabetesRaw !== "None" && diabetesRaw !== "";
 
-    const inf = infParaLectura(hasDiabetes);
-    const supAyuno = hasDiabetes ? SUP_AYUNO_CON_DIABETES : SUP_AYUNO_SIN_DIABETES;
+    const rangoDefecto = rangoParaDefault(hasDiabetes);
+    const inf = rangoDefecto.inf;
+    const supAyuno = rangoDefecto.sup;
 
     const now = new Date();
 
@@ -188,8 +166,8 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
       .flatMap((r) => r.glucoseReadings);
     const total30 = ultimas30.length;
     const enRango30 = ultimas30.filter((g) => {
-      const lim = supParaLectura(g.readingType, hasDiabetes);
-      return g.valueMgDl <= lim && g.valueMgDl >= inf;
+      const r = rangoPara(g.readingType, hasDiabetes);
+      return g.valueMgDl <= r.sup && g.valueMgDl >= r.inf;
     }).length;
     const porcentajeEnRango = total30 > 0 ? Math.round((enRango30 / total30) * 100) : 0;
     const promedio30d = total30 > 0
@@ -205,8 +183,8 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
     const todayReadings = todayRecords.flatMap((r) => r.glucoseReadings);
     const medicionesHoy = todayReadings.length;
     const enMetaHoy = todayReadings.filter((g) => {
-      const lim = supParaLectura(g.readingType, hasDiabetes);
-      return g.valueMgDl <= lim && g.valueMgDl >= inf;
+      const r = rangoPara(g.readingType, hasDiabetes);
+      return g.valueMgDl <= r.sup && g.valueMgDl >= r.inf;
     }).length;
 
     // Última lectura (no solo de hoy — la más reciente global con glucosa)
@@ -229,21 +207,10 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
 
     if (last) {
       valor = last.g.valueMgDl;
-      const limSup = supParaLectura(last.g.readingType, hasDiabetes);
-      const limInf = inf;
-      if (valor < limInf) {
-        estado = "bad";
-        estadoLabel = "Baja";
-      } else if (valor > limSup) {
-        estado = "bad";
-        estadoLabel = "Alta";
-      } else if (valor > limSup * 0.9 || valor < limInf * 1.1) {
-        estado = "warn";
-        estadoLabel = "Revisar";
-      } else {
-        estado = "ok";
-        estadoLabel = "En rango";
-      }
+      const r = rangoPara(last.g.readingType, hasDiabetes);
+      const ev = evaluar(valor, r);
+      estado = ev.estado;
+      estadoLabel = ev.label;
 
       const lastDate = parseDailyDate(last.rec.recordDate);
       const lastTime = last.g.time;
