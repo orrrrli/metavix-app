@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { useAuthStore } from "@/features/auth/store";
 import { useDailyRecords, useCreateDailyRecord } from "@/features/patient/hooks/use-daily-records";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
-import { GlucosaLectura, NuevaLectura, readingToLectura } from "@/features/patient/utils/glucosa";
+import { GlucosaLectura, NuevaLectura, readingToLectura, localTodayISO } from "@/features/patient/utils/glucosa";
 import RegistroGlucosaMovil from "@/features/patient/components/registro-glucosa/RegistroGlucosaMovil";
 import RegistroGlucosaWeb from "@/features/patient/components/registro-glucosa/RegistroGlucosaWeb";
 
@@ -45,7 +45,7 @@ export default function NewRecordPage() {
       .sort((a, b) => a.t.localeCompare(b.t));
   }, [records]);
 
-  const todayISO = new Date().toISOString().split("T")[0];
+  const todayISO = localTodayISO();
 
   const onGuardar = async (lectura: NuevaLectura) => {
     try {

@@ -173,3 +173,17 @@ export function horaActual(): string {
   const mm = String(now.getMinutes()).padStart(2, "0");
   return `${hh}:${mm}`;
 }
+
+/**
+ * Fecha de hoy en formato "YYYY-MM-DD" usando la zona horaria **local** del
+ * navegador. No usar `toISOString().split("T")[0]`: eso devuelve UTC y, en
+ * husos negativos (México UTC-6), guarda el día siguiente para lecturas
+ * registradas por la tarde.
+ */
+export function localTodayISO(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
