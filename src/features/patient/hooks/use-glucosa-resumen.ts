@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { GlucoseReadingType, DailyRecordResponse } from "@/types/daily-record";
 import { useDailyRecords } from "./use-daily-records";
 import { usePatientProfile } from "./use-patient-profile";
+import { tsDeLectura } from "./use-glucosa-resumen.helpers";
 
 export type EstadoClinico = "ok" | "warn" | "bad";
 
@@ -213,13 +214,9 @@ export function useGlucosaResumen(patientId: string | null): GlucosaResumen {
     for (const r of records) {
       for (const g of r.glucoseReadings) allWithGlucose.push({ rec: r, g });
     }
-    allWithGlucose.sort((a, b) => {
-      const da = parseDailyDate(a.rec.recordDate);
-      const db = parseDailyDate(b.rec.recordDate);
-      const ta = a.g.time ? parseDailyDate(a.rec.recordDate) : da;
-      const tb = b.g.time ? parseDailyDate(b.rec.recordDate) : db;
-      return tb.getTime() - ta.getTime();
-    });
+    allWithGlucose.sort((a, b) =>
+      tsDeLectura(b.rec.recordDate, b.g.time) - tsDeLectura(a.rec.recordDate, a.g.time)
+    );
     const last = allWithGlucose[0] ?? null;
 
     let valor: number | null = null;
