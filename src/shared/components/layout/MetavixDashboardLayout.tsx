@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
+import { NavigationLoader } from "@/shared/components/ui/navigation-loader";
 
 /**
  * MetavixDashboardLayout — marco del dashboard con identidad Metavix:
@@ -465,23 +466,25 @@ export default function MetavixDashboardLayout({
 
         {/* contenido */}
         <main className="mvxdl-main" style={{ flex: 1, padding: "34px 40px 120px", maxWidth: 1240, width: "100%" }}>
-          <div style={{ marginBottom: 26 }}>
-            <h1
-              style={{
-                fontSize: 34,
-                fontWeight: 800,
-                color: "var(--text)",
-                letterSpacing: "-0.03em",
-                margin: "0 0 4px",
-              }}
-            >
-              {saludo}
-            </h1>
-            <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
-              {subSaludo}
-            </p>
-          </div>
-          {children}
+          <NavigationLoader>
+            <div style={{ marginBottom: 26 }}>
+              <h1
+                style={{
+                  fontSize: 34,
+                  fontWeight: 800,
+                  color: "var(--text)",
+                  letterSpacing: "-0.03em",
+                  margin: "0 0 4px",
+                }}
+              >
+                {saludo}
+              </h1>
+              <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
+                {subSaludo}
+              </p>
+            </div>
+            {children}
+          </NavigationLoader>
         </main>
       </div>
 
