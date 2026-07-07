@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store";
 import MetavixDashboardLayout, { type MetavixNavItem } from "@/shared/components/layout/MetavixDashboardLayout";
 
@@ -30,6 +30,10 @@ const TOOLS: MetavixNavItem[] = [
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   const { role, _hasHydrated, fullName, logout } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // El FAB de "Registrar nueva lectura" sobra dentro de la propia pantalla de registro.
+  const hideCta = pathname === "/paciente/nuevo-registro";
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -67,7 +71,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       toolsItems={TOOLS}
       profileHref="/paciente/perfil"
       onLogout={logout}
-      cta={{
+      cta={hideCta ? undefined : {
         label: "Registrar nueva lectura",
         onClick: () => router.push("/paciente/nuevo-registro"),
       }}
