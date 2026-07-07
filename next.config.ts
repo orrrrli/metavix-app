@@ -16,6 +16,12 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Fija la raíz de Turbopack a este proyecto. Sin esto, Next detecta el
+  // lockfile del monorepo padre (/dev/metavix) y ancla ahí el file-watcher,
+  // lo que dejaba de recompilar globals.css al editarlo (CSS obsoleto servido).
+  turbopack: {
+    root: __dirname,
+  },
   async headers() {
     return [
       {

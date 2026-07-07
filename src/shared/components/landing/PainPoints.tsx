@@ -1,60 +1,46 @@
 "use client";
 
-import { motion } from "framer-motion";
+import React from "react";
+import { useLandingStyles } from "./useLandingStyles";
 
-const painPoints = [
-  "Llegar a la consulta y no recordar cuánto te marcó la glucosa la semana pasada.",
-  "Tener los registros regados en papelitos, cuadernos o fotos del celular.",
-  "Visitar a un nuevo médico y no poder mostrarle tu historial completo.",
-  "No saber si tu presión de hoy está bien o si deberías preocuparte.",
+const F = "'Sora', sans-serif";
+
+const PROBLEMS = [
+  "No recordar tus últimos resultados durante una consulta.",
+  "Tener tus registros dispersos en papel, fotos y varias apps.",
+  "No saber si una medición está dentro de un rango saludable.",
+  "Empezar con un nuevo médico sin tu historial clínico a mano.",
 ];
 
 export function PainPoints() {
+  useLandingStyles();
+
+  const eyebrow: React.CSSProperties = {
+    fontFamily: F, fontSize: 11, fontWeight: 700, color: "var(--accent)",
+    letterSpacing: "0.12em", textTransform: "uppercase",
+  };
+
   return (
-    <section className="py-24 bg-white">
-      <div className="container mx-auto px-4 max-w-3xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground">
-            ¿Te ha pasado alguna vez...?
-          </h2>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="bg-muted rounded-2xl p-8 mb-6 border border-border/50"
-        >
-          <ul className="space-y-4">
-            {painPoints.map((point, index) => (
-              <li key={index} className="flex items-start gap-3 text-muted-foreground">
-                <span className="mt-2 size-2 rounded-full bg-primary/60 shrink-0" />
-                {point}
-              </li>
-            ))}
-          </ul>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-primary/10 border border-primary/20 rounded-2xl p-8 text-center"
-        >
-          <h3 className="text-xl font-bold text-primary mb-3">Para eso existe Metavix.</h3>
-          <p className="text-muted-foreground">
-            Un lugar seguro donde tus mediciones viven ordenadas, con gráficas claras y alertas
-            que te avisan cuando algo merece atención.
-          </p>
-        </motion.div>
+    <section className="mvx-home" style={{ padding: "104px 56px", background: "var(--panel)", borderTop: "1.5px solid var(--divider)" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+        <span style={eyebrow}>El problema</span>
+        <h2 style={{ fontFamily: F, fontSize: 44, fontWeight: 800, lineHeight: 1.08, color: "var(--text)", letterSpacing: "-0.03em", margin: "14px 0 56px", maxWidth: 620 }}>
+          ¿Te ha pasado alguna vez?
+        </h2>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 18 }}>
+          {PROBLEMS.map((p, i) => (
+            <div key={i} className="mvx-card" style={{ background: "var(--card)", border: "1.5px solid var(--card-border)", borderRadius: 16, display: "flex", alignItems: "flex-start", gap: 16, padding: "26px 28px" }}>
+              <span style={{ fontFamily: F, fontSize: 13, fontWeight: 800, color: "var(--accent)", flexShrink: 0, width: 24 }}>
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <p style={{ fontFamily: F, fontSize: 16, lineHeight: 1.55, color: "var(--text-mut)", margin: 0 }}>{p}</p>
+            </div>
+          ))}
+        </div>
+        <p style={{ fontFamily: F, fontSize: 18, lineHeight: 1.6, color: "var(--text)", margin: "48px 0 0", maxWidth: 640, fontWeight: 500 }}>
+          Metavix organiza toda tu información para que{" "}
+          <span style={{ color: "var(--accent)", fontWeight: 700 }}>siempre esté lista cuando la necesites.</span>
+        </p>
       </div>
     </section>
   );

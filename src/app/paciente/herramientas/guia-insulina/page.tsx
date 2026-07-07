@@ -4,11 +4,11 @@ export default function InsulinGuidePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-display font-bold text-foreground">Guía de Insulina DM1</h2>
-        <p className="text-muted-foreground mt-1">Calculadora de dosis, educación y registro de glucosa postprandial.</p>
+        <h2 className="text-3xl font-display font-bold" style={{ color: 'var(--text)' }}>Guía de Insulina DM1</h2>
+        <p className="mt-1" style={{ color: 'var(--mut)' }}>Calculadora de dosis, educación y registro de glucosa postprandial.</p>
       </div>
 
-      <div className="bg-background">
+      <div>
         <InsulinaDM1 />
       </div>
     </div>

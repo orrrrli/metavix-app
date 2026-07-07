@@ -1,79 +1,44 @@
 "use client";
 
-import { motion } from "framer-motion";
-import Image from "next/image";
+import React from "react";
+import { useLandingStyles } from "./useLandingStyles";
 
-const steps = [
-  {
-    number: "01",
-    title: "Entra desde la web",
-    description:
-      "Disponible gratis desde cualquier navegador. Sin costo. Sin complicaciones.",
-  },
-  {
-    number: "02",
-    title: "Registra tus mediciones del día",
-    description:
-      "Ingresa tu glucosa, presión, peso y más en menos de 2 minutos. Metavix guarda todo automáticamente en la nube.",
-  },
-  {
-    number: "03",
-    title: "Lleva tu historial a cada consulta",
-    description:
-      "Muéstrale a tu médico tus registros completos con gráficas. O comparte el acceso directo para que lo consulte en tiempo real.",
-  },
+const F = "'Sora', sans-serif";
+
+const STEPS = [
+  { title: "Crea tu cuenta", desc: "Accede gratis desde cualquier navegador." },
+  { title: "Registra tus mediciones", desc: "Captura tus datos en menos de dos minutos." },
+  { title: "Consulta tu historial", desc: "Comparte tus registros y gráficas con tu médico en cualquier momento." },
 ];
 
 export function HowItWorks() {
+  useLandingStyles();
+
+  const eyebrow: React.CSSProperties = {
+    fontFamily: F, fontSize: 11, fontWeight: 700, color: "var(--accent)",
+    letterSpacing: "0.12em", textTransform: "uppercase",
+  };
+
   return (
-    <section className="py-24 bg-background relative overflow-hidden">
-      <div className="container mx-auto px-4">
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <h2 className="text-3xl md:text-5xl font-display font-bold text-foreground mb-6">
-            Así de fácil funciona
+    <section id="como" className="mvx-home" style={{ padding: "104px 56px", background: "var(--bg)" }}>
+      <div style={{ maxWidth: 1080, margin: "0 auto" }}>
+        <div style={{ marginBottom: 60 }}>
+          <span style={eyebrow}>Cómo funciona</span>
+          <h2 style={{ fontFamily: F, fontSize: 44, fontWeight: 800, lineHeight: 1.08, color: "var(--text)", letterSpacing: "-0.03em", margin: "14px 0 0", maxWidth: 620 }}>
+            Tres pasos para llevar el control de tu salud.
           </h2>
-          <p className="text-lg text-muted-foreground">Tres pasos. Sin complicaciones.</p>
         </div>
-
-        <div className="relative max-w-5xl mx-auto">
-          <div className="hidden md:block absolute top-8 left-0 right-0 h-0.5 bg-border -translate-y-1/2 z-0" />
-
-          <div className="grid md:grid-cols-3 gap-8 md:gap-12 relative z-10">
-            {steps.map((step, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.2 }}
-                className="relative bg-background md:bg-transparent"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="size-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-2xl font-bold mb-6 shadow-xl shadow-primary/20 ring-8 ring-background">
-                    {step.number}
-                  </div>
-                  <h3 className="text-xl font-bold text-foreground mb-4">{step.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{step.description}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 22 }}>
+          {STEPS.map((s, i) => (
+            <div key={i} style={{ padding: "32px 30px", borderTop: "3px solid var(--accent)", background: "var(--panel)", borderRadius: "0 0 16px 16px" }}>
+              <div style={{ fontFamily: F, fontSize: 46, fontWeight: 800, color: "var(--accent)", lineHeight: 1, letterSpacing: "-0.04em", marginBottom: 18 }}>
+                {i + 1}
+              </div>
+              <h3 style={{ fontFamily: F, fontSize: 19, fontWeight: 700, color: "var(--text)", margin: "0 0 8px", letterSpacing: "-0.02em" }}>{s.title}</h3>
+              <p style={{ fontFamily: F, fontSize: 15, lineHeight: 1.6, color: "var(--text-mut)", margin: 0 }}>{s.desc}</p>
+            </div>
+          ))}
         </div>
-
-        <motion.div
-          className="mt-20 max-w-4xl mx-auto relative aspect-[4/3] sm:aspect-[16/9] md:aspect-[21/9] rounded-2xl overflow-hidden shadow-2xl border border-border/50 bg-white"
-          initial={{ opacity: 0, y: 40 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7 }}
-        >
-          <Image
-            src="/images/laptop.jpg"
-            alt="Metavix Dashboard Interface"
-            fill
-            className="object-cover object-center"
-          />
-        </motion.div>
       </div>
     </section>
   );

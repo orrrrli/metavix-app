@@ -95,8 +95,11 @@ export function FilaRegistro({ registro, tipoDiabetes }: FilaRegistroProps) {
   };
 
   return (
-    <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-      <td className="p-4 align-middle whitespace-nowrap text-sm font-medium">
+    <tr
+      className="transition-colors"
+      style={{ borderBottom: '1px solid var(--bd)' }}
+    >
+      <td className="p-4 align-middle whitespace-nowrap text-sm font-medium" style={{ color: 'var(--text)' }}>
         {fechaFormat}
       </td>
       <td className="p-4 align-middle">
@@ -106,52 +109,52 @@ export function FilaRegistro({ registro, tipoDiabetes }: FilaRegistroProps) {
         {registro.glucosas_comidas && registro.glucosas_comidas.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {registro.glucosas_comidas.map((g, idx) => {
-              // Glucosas comidas suelen ser postprandiales. Si es "antes_*" podríamos usar metas de ayuno, 
+              // Glucosas comidas suelen ser postprandiales. Si es "antes_*" podríamos usar metas de ayuno,
               // pero la instrucción indica una sola meta postprandial genérica o seguir la lógica simplificada.
               // Asumiremos que si es "antes" usamos la de ayuno, y si es "despues" la postprandial.
               const isAyuno = g.tipo.includes('antes') || g.tipo === 'ayuno' || g.tipo === 'madrugada';
-              const estadoComida = isAyuno 
+              const estadoComida = isAyuno
                 ? estadoValor(g.valor, metaAyuno.min, metaAyuno.max)
                 : estadoValorMaximo(g.valor, metaPost);
-              
+
               const label = TIPO_COMIDA_ABBR[g.tipo] || g.tipo;
               return (
-                <BadgeValor 
-                  key={idx} 
-                  valor={g.valor} 
-                  estado={estadoComida} 
-                  label={label} 
+                <BadgeValor
+                  key={idx}
+                  valor={g.valor}
+                  estado={estadoComida}
+                  label={label}
                 />
               );
             })}
           </div>
         ) : (
-          <span className="text-muted-foreground text-sm">—</span>
+          <span className="text-sm" style={{ color: 'var(--mut)' }}>—</span>
         )}
       </td>
       <td className="p-4 align-middle">
         {registro.presion_sistolica && registro.presion_diastolica ? (
-          <BadgeValor 
-            valor={`${registro.presion_sistolica}/${registro.presion_diastolica}`} 
-            estado={estadoSistolica} 
+          <BadgeValor
+            valor={`${registro.presion_sistolica}/${registro.presion_diastolica}`}
+            estado={estadoSistolica}
           />
         ) : (
-          <span className="text-muted-foreground text-sm">—</span>
+          <span className="text-sm" style={{ color: 'var(--mut)' }}>—</span>
         )}
       </td>
-      <td className="p-4 align-middle text-sm text-center">
+      <td className="p-4 align-middle text-sm text-center" style={{ color: 'var(--text)' }}>
         {registro.frecuencia_cardiaca || '—'}
       </td>
-      <td className="p-4 align-middle text-sm text-center">
+      <td className="p-4 align-middle text-sm text-center" style={{ color: 'var(--text)' }}>
         {registro.peso || '—'}
       </td>
-      <td className="p-4 align-middle text-sm text-center">
+      <td className="p-4 align-middle text-sm text-center" style={{ color: 'var(--text)' }}>
         {registro.cintura || '—'}
       </td>
       <td className="p-4 align-middle">
         <BadgeValor valor={registro.hba1c} estado={estadoHbA1c} suffix="%" />
       </td>
-      <td className="p-4 align-middle text-sm text-center">
+      <td className="p-4 align-middle text-sm text-center" style={{ color: 'var(--text)' }}>
         {registro.colesterol_total || '—'}
       </td>
       <td className="p-4 align-middle">
@@ -160,13 +163,13 @@ export function FilaRegistro({ registro, tipoDiabetes }: FilaRegistroProps) {
       <td className="p-4 align-middle">
         <BadgeValor valor={registro.colesterol_hdl} estado={estHDL} />
       </td>
-      <td className="p-4 align-middle text-sm text-center">
+      <td className="p-4 align-middle text-sm text-center" style={{ color: 'var(--text)' }}>
         {registro.trigliceridos || '—'}
       </td>
-      <td className="p-4 align-middle text-sm text-center">
+      <td className="p-4 align-middle text-sm text-center" style={{ color: 'var(--text)' }}>
         {registro.creatinina || '—'}
       </td>
-      <td className="p-4 align-middle text-sm max-w-[200px] truncate" title={registro.notas}>
+      <td className="p-4 align-middle text-sm max-w-[200px] truncate" style={{ color: 'var(--text)' }} title={registro.notas}>
         {truncarNotas(registro.notas)}
       </td>
     </tr>

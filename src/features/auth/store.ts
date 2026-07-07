@@ -51,8 +51,17 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'ram-med-auth',
+      partialize: (state) => ({
+        role:      state.role,
+        userId:    state.userId,
+        patientId: state.patientId,
+        doctorId:  state.doctorId,
+        fullName:  state.fullName,
+        email:     state.email,
+      }),
       onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
+        // Always mark hydrated, even when state is undefined (rehydration error)
+        (state ?? useAuthStore.getState()).setHasHydrated(true);
       },
     }
   )

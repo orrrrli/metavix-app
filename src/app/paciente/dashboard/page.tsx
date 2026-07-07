@@ -1,176 +1,48 @@
 "use client";
 
-import { useMemo } from "react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { ArrowRight } from "lucide-react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { useAuthStore } from "@/features/auth/store";
-import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
-import { usePatientResumen } from "@/features/patient/hooks/use-patient-resumen";
-import { useDailyRecords } from "@/features/patient/hooks/use-daily-records";
-import { useLabRecords } from "@/features/patient/hooks/use-lab-records";
-import { DailyRecordResponse, GlucoseReadingType } from "@/types/daily-record";
-import { LabRecordResponse } from "@/types/lab-record";
-import { HealthRecordDto, GlucoseReading, DiabetesType } from "@/features/patient/types";
-import { CHART_DEFINITIONS, getStatus } from "@/features/patient/chart-config";
-import { MiniChartCard } from "@/shared/components/charts/MiniChartCard";
+import { useGlucosaResumen } from "@/features/patient/hooks/use-glucosa-resumen";
+import { useOtrosIndicadores } from "@/features/patient/hooks/use-otros-indicadores";
+import {
+  MetavixEstadoVacio,
+  MetavixOtrosIndicadores,
+  MetavixProgresoDia,
+  MetavixTendenciaCard,
+  MetavixUltimaLectura,
+} from "@/features/patient/components/dashboard";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
-import { Button } from "@/shared/components/ui/button";
 
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split('/');
-  return new Date(Number(year), Number(month) - 1, Number(day));
-}
-
-function mapReadingTypeToTipo(type: GlucoseReadingType): string {
-  switch (type) {
-    case GlucoseReadingType.Fasting:       return 'ayuno';
-    case GlucoseReadingType.PostBreakfast: return 'despues_desayuno';
-    case GlucoseReadingType.PreLunch:      return 'antes_comida';
-    case GlucoseReadingType.PostLunch:     return 'despues_comida';
-    case GlucoseReadingType.PreDinner:     return 'antes_cena';
-    case GlucoseReadingType.PostDinner:    return 'despues_cena';
-    case GlucoseReadingType.Snack:         return 'despues_colacion';
-    case GlucoseReadingType.Overnight:     return 'madrugada';
-    default:                               return 'ayuno';
-  }
-}
-
-function mapDiabetesType(apiType: string): DiabetesType {
-  switch (apiType) {
-    case 'tipo_1':      return 'Tipo 1';
-    case 'tipo_2':      return 'Tipo 2';
-    case 'prediabetes': return 'Prediabetes';
-    default:            return 'Ninguna';
-  }
-}
-
-function mapDailyToRecord(r: DailyRecordResponse, heightCm: number | null): HealthRecordDto {
-  const weightKg = r.weightKg !== null ? Number(r.weightKg) : null;
-  const imc = weightKg !== null && heightCm !== null
-    ? Math.round((weightKg / Math.pow(heightCm / 100, 2)) * 10) / 10
-    : null;
-
-  return {
-    id: r.id,
-    patientId: r.patientId,
-    timestamp: parseDailyDate(r.recordDate).toISOString(),
-    glucosas_comidas: r.glucoseReadings.map((g): GlucoseReading => ({
-      tipo: mapReadingTypeToTipo(g.readingType),
-      valor: g.valueMgDl,
-      hora: g.time,
-      alimentos: g.foods,
-    })),
-    presion_sistolica: r.systolicPressure,
-    presion_diastolica: r.diastolicPressure,
-    frecuencia_cardiaca: r.heartRate,
-    peso: weightKg,
-    cintura: r.waistCm,
-    imc,
-    hba1c: null,
-    colesterol_total: null,
-    colesterol_ldl: null,
-    colesterol_hdl: null,
-    trigliceridos: null,
-    bun: null,
-    creatinina: null,
-    ego_proteinas: null,
-    ego_glucosa: null,
-    notas: r.notes,
-  };
-}
-
-function mapLabToRecord(r: LabRecordResponse): HealthRecordDto {
-  return {
-    id: r.id,
-    patientId: r.patientId,
-    timestamp: parseDailyDate(r.sampleDate).toISOString(),
-    glucosas_comidas: [],
-    presion_sistolica: null,
-    presion_diastolica: null,
-    frecuencia_cardiaca: null,
-    peso: null,
-    cintura: null,
-    imc: null,
-    hba1c: r.hba1c !== null ? Number(r.hba1c) : null,
-    colesterol_total: r.totalCholesterol !== null ? Number(r.totalCholesterol) : null,
-    colesterol_ldl: r.ldl !== null ? Number(r.ldl) : null,
-    colesterol_hdl: r.hdl !== null ? Number(r.hdl) : null,
-    trigliceridos: r.triglycerides !== null ? Number(r.triglycerides) : null,
-    bun: r.bun !== null ? Number(r.bun) : null,
-    creatinina: r.creatinine !== null ? Number(r.creatinine) : null,
-    ego_proteinas: r.egoProteins,
-    ego_glucosa: r.egoGlucose,
-    notas: r.notes,
-  };
-}
+const RANGO_DAYS: Record<string, number> = { "7d": 7, "14d": 14, "30d": 30 };
 
 export default function PatientDashboard() {
-  const { patientId, fullName } = useAuthStore();
-  const firstName = fullName?.split(' ')[0] ?? 'Paciente';
+  const { patientId } = useAuthStore();
+  const router = useRouter();
+  const resumen = useGlucosaResumen(patientId);
+  const { indicadores } = useOtrosIndicadores(patientId);
+  const [rango, setRango] = useState("7d");
 
-  const {
-    data: profile,
-    isLoading: loadingProfile,
-  } = usePatientProfile(patientId ?? '');
+  const handleRegistrar = () => router.push("/paciente/nuevo-registro");
+  const handleHistorial = () => router.push("/paciente/historial");
+  const handleEstadoVacioRegistrar = handleRegistrar;
 
-  const heightCm = profile?.heightCm ?? null;
-
-  const {
-    data: resumen,
-    isLoading: loadingResumen,
-    isError: errorResumen,
-  } = usePatientResumen(patientId ?? '');
-
-  const {
-    data: dailyRecords,
-    isLoading: loadingDaily,
-    isError: errorDaily,
-  } = useDailyRecords(patientId ?? '');
-
-  const {
-    data: labRecords,
-    isLoading: loadingLab,
-    isError: errorLab,
-  } = useLabRecords(patientId ?? '');
-
-  const allRecords = useMemo<HealthRecordDto[]>(() => {
-    const daily = (dailyRecords ?? []).map(r => mapDailyToRecord(r, heightCm));
-    const lab = (labRecords ?? []).map(mapLabToRecord);
-    return [...daily, ...lab].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-  }, [dailyRecords, labRecords, heightCm]);
-
-  const diabetesType = mapDiabetesType(resumen?.perfil.tipoDiabetes ?? 'none');
-  const hasDiabetes = diabetesType !== 'Ninguna';
-
-  // Most recent daily record that has glucose readings
-  const todayRecord = useMemo(
-    () => (dailyRecords ?? []).find(r => r.glucoseReadings.length > 0),
-    [dailyRecords]
+  const indicadoresConClick = useMemo(
+    () => indicadores.map((ind) => ({
+      ...ind,
+      onClick: ind.href ? () => router.push(ind.href as string) : undefined,
+    })),
+    [indicadores, router]
   );
-  const todayReadings = todayRecord?.glucoseReadings ?? [];
-  const todayValues = todayReadings.map(g => g.valueMgDl);
-  const todayAvg = todayValues.length > 0 ? Math.round(todayValues.reduce((a, b) => a + b, 0) / todayValues.length) : null;
-  const todayMax = todayValues.length > 0 ? Math.max(...todayValues) : null;
-  const todayMin = todayValues.length > 0 ? Math.min(...todayValues) : null;
 
-  const supAyuno = hasDiabetes ? 130 : 100;
-  const supPost  = hasDiabetes ? 180 : 140;
-  const infMin   = hasDiabetes ? 80 : 70;
-  const enMeta = todayReadings.filter(g => {
-    const isPost = g.readingType === GlucoseReadingType.PostBreakfast ||
-                   g.readingType === GlucoseReadingType.PostLunch ||
-                   g.readingType === GlucoseReadingType.PostDinner;
-    const lim = isPost ? supPost : supAyuno;
-    return g.valueMgDl <= lim && g.valueMgDl >= infMin;
-  }).length;
+  const datosGrafica = useMemo(() => {
+    const dias = RANGO_DAYS[rango] ?? 7;
+    return resumen.serieGrafica.slice(-dias);
+  }, [rango, resumen.serieGrafica]);
 
-  if (loadingResumen || loadingDaily || loadingLab || loadingProfile) {
+  if (resumen.loading) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center">
         <GooeyLoader />
@@ -178,92 +50,124 @@ export default function PatientDashboard() {
     );
   }
 
-  if (errorResumen || errorDaily || errorLab) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <p className="text-destructive text-sm">Error al cargar el dashboard. Intenta de nuevo.</p>
-      </div>
-    );
+  if (!resumen.tieneRegistros) {
+    return <MetavixEstadoVacio onRegistrar={handleEstadoVacioRegistrar} />;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-3xl font-display font-bold tracking-tight text-foreground">
-            Bienvenido(a), {firstName}
-          </h2>
-          <p className="text-muted-foreground">Aquí está tu resumen clínico del día de hoy.</p>
-        </div>
-        <Link href="/paciente/nuevo-registro">
-          <Button size="lg" className="shadow-sm">Registrar Nueva Lectura</Button>
-        </Link>
-      </div>
+    <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
+      {resumen.valor !== null && resumen.estado && resumen.estadoLabel && resumen.contexto && resumen.registradaHace && (
+        <MetavixUltimaLectura
+          valor={resumen.valor}
+          estado={resumen.estado}
+          estadoLabel={resumen.estadoLabel}
+          contexto={resumen.contexto}
+          registradaHace={resumen.registradaHace}
+          rangoObjetivo={resumen.rangoObjetivo}
+          proximaMedicion={resumen.proximaMedicion ?? "Cuando puedas — te toca una nueva lectura"}
+          onRegistrar={handleRegistrar}
+          onHistorial={handleHistorial}
+        />
+      )}
 
-      {/* Glucose Curves of the Day */}
-      <Card className="shadow-sm border-primary/20 bg-primary/[0.02]">
-        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-          <div className="space-y-1">
-            <CardTitle>Curvas de glucosa del día</CardTitle>
-            <CardDescription>
-              {todayRecord
-                ? format(parseDailyDate(todayRecord.recordDate), "EEEE, d 'de' MMMM", { locale: es })
-                : "Sin registros hoy"}
-            </CardDescription>
+      <MetavixProgresoDia
+        medicionesHoy={resumen.medicionesHoy}
+        metaDiaria={resumen.metaDiaria}
+        horasDesde={resumen.horasDesde}
+        enMeta={resumen.enMeta}
+        totalLecturas={resumen.totalLecturas}
+      />
+
+      <MetavixTendenciaCard
+        promedio={resumen.promedio30d ?? 0}
+        porcentajeEnRango={resumen.porcentajeEnRango}
+        rango={rango}
+        onRangoChange={setRango}
+      >
+        {datosGrafica.length >= 2 ? (
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={datosGrafica} margin={{ top: 10, right: 16, bottom: 0, left: -10 }}>
+              <defs>
+                <linearGradient id="mvx-glucosa-grad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="var(--accent)" stopOpacity={0.4} />
+                  <stop offset="95%" stopColor="var(--accent)" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--bd)" />
+              <XAxis
+                dataKey="fecha"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "var(--soft)" }}
+                dy={8}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 11, fill: "var(--soft)" }}
+                dx={-8}
+                domain={["dataMin - 20", "dataMax + 20"]}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const d = payload[0].payload as { fecha: string; promedio: number; min: number; max: number; lecturas: number };
+                  return (
+                    <div
+                      style={{
+                        borderRadius: 10,
+                        border: "1.5px solid var(--card-bd)",
+                        background: "var(--card)",
+                        boxShadow: "0 8px 20px rgba(20,40,30,.12)",
+                        fontSize: 12,
+                        padding: "8px 12px",
+                        color: "var(--text)",
+                      }}
+                    >
+                      <p style={{ fontWeight: 700, marginBottom: 4 }}>{d.fecha}</p>
+                      <p>
+                        Promedio:{" "}
+                        <span style={{ fontWeight: 600, color: "var(--accent)" }}>{d.promedio} mg/dL</span>
+                      </p>
+                      <p style={{ color: "var(--mut)" }}>Mín: {d.min} · Máx: {d.max}</p>
+                      <p style={{ color: "var(--mut)" }}>Mediciones: {d.lecturas}</p>
+                    </div>
+                  );
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="promedio"
+                stroke="var(--accent)"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#mvx-glucosa-grad)"
+                dot={{ r: 3, strokeWidth: 0, fill: "var(--accent)" }}
+                activeDot={{ r: 5, strokeWidth: 0, fill: "var(--accent)" }}
+                connectNulls
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div
+            style={{
+              height: 300,
+              borderRadius: 14,
+              background: "var(--ph)",
+              border: "1.5px dashed var(--bd)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--soft)",
+              fontSize: 13,
+            }}
+          >
+            Aún no hay suficientes días para mostrar tu tendencia.
           </div>
-          <Link href="/paciente/herramientas/curvas-glucosa">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary">
-              Ver gráfica completa <ArrowRight className="size-4 ml-2" />
-            </Button>
-          </Link>
-        </CardHeader>
-        <CardContent>
-          {todayValues.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-              <div className="text-center p-3 bg-background rounded-lg border">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Mediciones</p>
-                <p className="text-2xl font-bold text-primary mt-1">{todayValues.length}</p>
-              </div>
-              <div className="text-center p-3 bg-background rounded-lg border">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Promedio</p>
-                <p className="text-2xl font-bold mt-1">{todayAvg} <span className="text-xs font-normal">mg/dL</span></p>
-              </div>
-              <div className="text-center p-3 bg-background rounded-lg border">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Máxima</p>
-                <p className="text-2xl font-bold text-destructive mt-1">{todayMax}</p>
-              </div>
-              <div className="text-center p-3 bg-background rounded-lg border">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">Mínima</p>
-                <p className="text-2xl font-bold text-blue-600 mt-1">{todayMin}</p>
-              </div>
-              <div className="text-center p-3 bg-background rounded-lg border">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider">En meta</p>
-                <p className="text-2xl font-bold text-emerald-600 mt-1">{enMeta}/{todayValues.length}</p>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground py-4 text-center">
-              No hay mediciones de glucosa recientes.{" "}
-              <Link href="/paciente/nuevo-registro" className="text-primary underline">Registrar ahora</Link>
-            </p>
-          )}
-        </CardContent>
-      </Card>
+        )}
+      </MetavixTendenciaCard>
 
-      {/* Clinical Indicator Mini Charts */}
-      <div>
-        <h3 className="text-lg font-semibold text-foreground mb-4">Indicadores clínicos</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CHART_DEFINITIONS.map(config => (
-            <MiniChartCard
-              key={config.id}
-              config={config}
-              records={allRecords}
-              diabetesType={diabetesType}
-            />
-          ))}
-        </div>
-      </div>
+      <MetavixOtrosIndicadores indicadores={indicadoresConClick} />
     </div>
   );
 }

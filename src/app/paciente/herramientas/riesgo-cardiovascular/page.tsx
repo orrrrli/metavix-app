@@ -4,8 +4,8 @@ export default function CardioRiskPage() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
       <div>
-        <h2 className="text-3xl font-display font-bold text-foreground">Evaluación de Riesgo Cardiovascular</h2>
-        <p className="text-muted-foreground mt-1">Calcula tu nivel de riesgo basado en factores demográficos, clínicos y de estilo de vida.</p>
+        <h2 className="text-3xl font-display font-bold" style={{ color: 'var(--text)' }}>Evaluación de Riesgo Cardiovascular</h2>
+        <p className="mt-1" style={{ color: 'var(--mut)' }}>Calcula tu nivel de riesgo basado en factores demográficos, clínicos y de estilo de vida.</p>
       </div>
 
       <div className="mt-8">
