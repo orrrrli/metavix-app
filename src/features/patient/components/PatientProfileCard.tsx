@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, MetavixButton, MetavixInput, 
 import { usePatientProfile, useUpdatePatientProfile } from '@/features/patient/hooks/use-patient-profile';
 import { useAuthStore } from '@/features/auth/store';
 import { PregnancyBanner } from '@/features/patient/components/PregnancyBanner';
+import { ScheduledPregnancyBanner } from '@/features/patient/components/ScheduledPregnancyBanner';
 
 const DIABETES_LABELS: Record<string, string> = {
   None: 'Sin diabetes',
@@ -140,6 +141,7 @@ export function PatientProfileCard() {
           onDismiss={() => setBannerDismissed(true)}
         />
       )}
+      <ScheduledPregnancyBanner isPregnant={profile.isPregnant} pregnancyStartDate={profile.pregnancyStartDate} />
 
       {/* Profile header */}
       <Card>
