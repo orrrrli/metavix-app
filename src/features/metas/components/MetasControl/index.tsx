@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { useAuthStore } from "@/features/auth/store";
 import { useLabRecords } from "@/features/patient/hooks/use-lab-records";
@@ -140,6 +140,16 @@ export function MetasControl() {
           />
         ))}
       </div>
+
+      {profile?.isPregnant && (
+        <div className="mt-4 flex items-start gap-3 p-3 bg-violet-50/50 rounded-lg">
+          <Info className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
+          <p className="text-violet-900">
+            Se activaron las metas clínicas de embarazo. Las metas personalizadas anteriores quedan
+            inactivas mientras IsPregnant = true.
+          </p>
+        </div>
+      )}
 
       <div className="mt-10 flex justify-center">
         <Button
