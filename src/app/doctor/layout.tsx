@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store";
 import MetavixDashboardLayout, { type MetavixNavItem } from "@/shared/components/layout/MetavixDashboardLayout";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
 
 function Icon({ children, size = 19 }: { children: ReactNode; size?: number }) {
   return (
@@ -54,6 +55,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
       navItems={NAV}
       profileHref="/doctor/perfil"
       onLogout={logout}
+      notificationsSlot={<NotificationBell />}
     >
       {children}
     </MetavixDashboardLayout>
