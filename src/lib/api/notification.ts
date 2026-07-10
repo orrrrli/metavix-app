@@ -11,3 +11,11 @@ export async function getMyNotifications(): Promise<NotificationResponse[]> {
   const body = await res.json();
   return body.data;
 }
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  const res = await fetch(`${API}/notifications/${notificationId}/read`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[markNotificationRead] ${res.status}`);
+}
