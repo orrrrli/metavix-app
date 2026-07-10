@@ -21,7 +21,7 @@ export function ScheduledPregnancyBanner({ isPregnant, pregnancyStartDate }: Sch
   const formattedDate = format(startDate, "d 'de' MMMM, yyyy", { locale: es });
 
   return (
-    <Card style={{ borderColor: 'var(--info)' }}>
+    <Card style={{ borderColor: 'var(--info)', padding: 20 }}>
       <CardContent className="py-3">
         <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
           Embarazo programado para el {formattedDate}. Las metas se activarán en esa fecha.

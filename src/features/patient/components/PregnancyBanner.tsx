@@ -31,17 +31,29 @@ export function PregnancyBanner({
   if (daysUntilDue >= 0) return null;
 
   return (
-    <Card style={{ borderColor: 'var(--warn)' }}>
+    <Card style={{ borderColor: 'var(--warn)', padding: 20 }}>
       <CardContent className="py-3">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
             Embarazo probablemente finalizado. ¿Confirmar desactivación?
           </p>
-          <div className="flex gap-2">
-            <MetavixButton variant="ghost" size="sm" onClick={onDismiss} disabled={isConfirming}>
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-2 sm:flex-none w-full sm:w-auto">
+            <MetavixButton
+              variant="ghost"
+              size="sm"
+              onClick={onDismiss}
+              disabled={isConfirming}
+              className="w-full sm:w-auto whitespace-nowrap"
+            >
               Mantener activo
             </MetavixButton>
-            <MetavixButton variant="primary" size="sm" onClick={onConfirmDeactivation} disabled={isConfirming}>
+            <MetavixButton
+              variant="primary"
+              size="sm"
+              onClick={onConfirmDeactivation}
+              disabled={isConfirming}
+              className="w-full sm:w-auto whitespace-nowrap"
+            >
               Confirmar desactivación
             </MetavixButton>
           </div>
