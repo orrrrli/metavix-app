@@ -51,6 +51,7 @@ export interface MetavixDashboardLayoutProps {
   greetingPrefix?: string;
   subSaludo?: React.ReactNode;
   accent?: string;
+  notificationsSlot?: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -131,6 +132,7 @@ export default function MetavixDashboardLayout({
   greetingPrefix = "Hola, ",
   subSaludo,
   accent = "#00c9a7",
+  notificationsSlot,
   children,
 }: MetavixDashboardLayoutProps) {
   const { theme, setTheme } = useTheme();
@@ -312,6 +314,7 @@ export default function MetavixDashboardLayout({
           </button>
           <span style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>{title}</span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 20 }}>
+            {notificationsSlot}
             <button
               className="mvxdl-toggle"
               onClick={handleToggleTheme}

@@ -4,6 +4,8 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store";
 import MetavixDashboardLayout, { type MetavixNavItem } from "@/shared/components/layout/MetavixDashboardLayout";
+import { NotificationBell } from "@/features/notifications/components/NotificationBell";
+import { useMarkNotificationRead, useMyNotifications } from "@/features/notifications/hooks/use-notifications";
 
 function Icon({ children, size = 19 }: { children: ReactNode; size?: number }) {
   return (
@@ -21,6 +23,8 @@ const NAV: MetavixNavItem[] = [
 export default function DoctorLayout({ children }: { children: React.ReactNode }) {
   const { role, _hasHydrated, fullName, logout } = useAuthStore();
   const router = useRouter();
+  const { data: notifications } = useMyNotifications();
+  const { mutate: markNotificationRead } = useMarkNotificationRead();
 
   useEffect(() => {
     if (!_hasHydrated) return;
@@ -54,6 +58,7 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
       navItems={NAV}
       profileHref="/doctor/perfil"
       onLogout={logout}
+      notificationsSlot={<NotificationBell notifications={notifications} onNotificationClick={markNotificationRead} />}
     >
       {children}
     </MetavixDashboardLayout>
