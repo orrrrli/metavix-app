@@ -128,6 +128,30 @@ export function MetasControl() {
 
   return (
     <div className="max-w-4xl mx-auto pb-12 animate-in fade-in duration-500">
+      {profile?.isPregnant && (
+        <div
+          role="status"
+          className="mb-6 flex items-start gap-3 p-4 rounded-lg border-2"
+          style={{ background: 'var(--info-bg)', borderColor: 'var(--info)' }}
+        >
+          <div
+            className="flex items-center justify-center size-9 rounded-full shrink-0"
+            style={{ background: 'var(--info)' }}
+          >
+            <Info className="size-5" style={{ color: '#fff' }} aria-hidden="true" />
+          </div>
+          <div className="flex-1 pt-0.5">
+            <p className="text-base font-semibold" style={{ color: 'var(--text)' }}>
+              Estás en modo embarazo
+            </p>
+            <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>
+              Las metas clínicas que ves están ajustadas para el embarazo. Las metas personalizadas
+              que tenías antes quedan en pausa y se reactivarán cuando se desactive el embarazo.
+            </p>
+          </div>
+        </div>
+      )}
+
       <p className="text-lg mb-8" style={{ color: "var(--mut)" }}>
         Tus últimos resultados disponibles han sido cargados automáticamente. Los parámetros sin datos no cuentan con registros recientes.
       </p>
@@ -143,19 +167,6 @@ export function MetasControl() {
           />
         ))}
       </div>
-
-      {profile?.isPregnant && (
-        <div
-          className="mt-4 flex items-start gap-3 p-3 rounded-lg"
-          style={{ background: "var(--info-bg)" }}
-        >
-          <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "var(--info)" }} />
-          <p style={{ color: "var(--text)" }}>
-            Se activaron las metas clínicas de embarazo. Las metas personalizadas anteriores quedan
-            inactivas mientras IsPregnant = true.
-          </p>
-        </div>
-      )}
 
       <div className="mt-10 flex justify-center">
         <Button
