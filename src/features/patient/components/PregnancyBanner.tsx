@@ -1,7 +1,8 @@
 'use client';
 
-import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { differenceInCalendarDays } from 'date-fns';
 import { Card, CardContent, MetavixButton } from '@/shared/components/ui/metavix';
+import { parseApiDate } from '@/features/patient/utils/parse-api-date';
 
 export interface PregnancyBannerProps {
   isPregnant: boolean;
@@ -20,12 +21,18 @@ export function PregnancyBanner({
 }: PregnancyBannerProps) {
   if (!isPregnant || !pregnancyDueDate) return null;
 
-  const daysUntilDue = differenceInCalendarDays(parseISO(pregnancyDueDate), new Date());
+  // La API envía la fecha como "dd/MM/yyyy"; parseISO no la resolvía → NaN y el
+  // banner se mostraba siempre. Si no podemos parsear la fecha, no mostramos nada.
+  const dueDate = parseApiDate(pregnancyDueDate);
+  if (!dueDate) return null;
+
+  // Sólo cuando la fecha de parto ya pasó (daysUntilDue < 0).
+  const daysUntilDue = differenceInCalendarDays(dueDate, new Date());
   if (daysUntilDue >= 0) return null;
 
   return (
     <Card style={{ borderColor: 'var(--warn)' }}>
-      <CardContent>
+      <CardContent className="py-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
             Embarazo probablemente finalizado. ¿Confirmar desactivación?

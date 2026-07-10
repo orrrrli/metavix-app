@@ -1,4 +1,9 @@
-import { CreateDailyRecordRequest, DailyRecordResponse, DailyRecordSnapshotResponse } from '@/types/daily-record';
+import {
+  CreateDailyRecordRequest,
+  DailyRecordResponse,
+  DailyRecordSnapshotResponse,
+  normalizeDailyRecord,
+} from '@/types/daily-record';
 import { CreateLabRecordRequest, LabRecordResponse } from '@/types/lab-record';
 import { DoctorOption, LinkedDoctorResponse, SendLinkRequestBody, LinkRequestResponse } from '@/types/link-request';
 import { PatientResumenResponse } from '@/types/patient-resumen';
@@ -75,7 +80,8 @@ export async function getDailyRecords(patientId: string): Promise<DailyRecordRes
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`[getDailyRecords] ${res.status}`);
   const body = await res.json();
-  return body.data;
+  const data: DailyRecordResponse[] = body.data ?? [];
+  return data.map(normalizeDailyRecord);
 }
 
 export async function getDailyRecordsInRange(
@@ -90,7 +96,8 @@ export async function getDailyRecordsInRange(
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`[getDailyRecordsInRange] ${res.status}`);
   const body = await res.json();
-  return body.data;
+  const data: DailyRecordResponse[] = body.data ?? [];
+  return data.map(normalizeDailyRecord);
 }
 
 export async function getDailyRecordById(
@@ -102,7 +109,7 @@ export async function getDailyRecordById(
   });
   if (!res.ok) throw new Error(`[getDailyRecordById] ${res.status}`);
   const body = await res.json();
-  return body.data;
+  return normalizeDailyRecord(body.data);
 }
 
 export async function createDailyRecord(
@@ -117,7 +124,7 @@ export async function createDailyRecord(
   });
   if (!res.ok) throw new Error(`[createDailyRecord] ${res.status}`);
   const body = await res.json();
-  return body.data;
+  return normalizeDailyRecord(body.data);
 }
 
 export async function getDailyRecordSnapshot(
