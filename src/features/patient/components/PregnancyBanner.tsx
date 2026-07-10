@@ -21,7 +21,7 @@ export function PregnancyBanner({
   if (!isPregnant || !pregnancyDueDate) return null;
 
   const daysUntilDue = differenceInCalendarDays(parseISO(pregnancyDueDate), new Date());
-  if (daysUntilDue > 14) return null;
+  if (daysUntilDue >= 0) return null;
 
   return (
     <Card style={{ borderColor: 'var(--warn)' }}>
