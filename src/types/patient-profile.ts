@@ -8,6 +8,8 @@ export interface PatientProfileResponse {
   heightCm: number | null;
   gender: string | null;   // "Male" | "Female" | null
   isPregnant: boolean;
+  pregnancyStartDate: string | null; // "YYYY-MM-DD"
+  pregnancyDueDate: string | null;   // "YYYY-MM-DD"
   diabetesType: string;    // "None" | "Type1" | "Type2" | "Prediabetes"
   medicalRecordNumber: string;
   createdAt: string;       // ISO 8601

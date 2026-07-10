@@ -11,6 +11,8 @@ import { Pencil, Check, Phone, Ruler, Baby, Mail, Calendar, Activity, Hash, Venu
 import { Card, CardContent, CardHeader, CardTitle, MetavixButton, MetavixInput, MetavixLabel, MetavixBadge } from '@/shared/components/ui/metavix';
 import { usePatientProfile, useUpdatePatientProfile } from '@/features/patient/hooks/use-patient-profile';
 import { useAuthStore } from '@/features/auth/store';
+import { PregnancyBanner } from '@/features/patient/components/PregnancyBanner';
+import { ScheduledPregnancyBanner } from '@/features/patient/components/ScheduledPregnancyBanner';
 
 const DIABETES_LABELS: Record<string, string> = {
   None: 'Sin diabetes',
@@ -49,6 +51,7 @@ function Muted({ children }: { children: ReactNode }) {
 export function PatientProfileCard() {
   const { patientId } = useAuthStore();
   const [editing, setEditing] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const { data: profile, isLoading, isError } = usePatientProfile(patientId ?? '');
   const { mutate: updateProfile, isPending } = useUpdatePatientProfile(patientId ?? '');
@@ -126,6 +129,20 @@ export function PatientProfileCard() {
 
   return (
     <div className="w-full max-w-2xl space-y-4">
+      {!bannerDismissed && (
+        <PregnancyBanner
+          isPregnant={profile.isPregnant}
+          pregnancyDueDate={profile.pregnancyDueDate}
+          isConfirming={isPending}
+          onConfirmDeactivation={() => updateProfile({ isPregnant: false }, {
+            onSuccess: () => toast.success('Embarazo desactivado.'),
+            onError: () => toast.error('No se pudo desactivar el embarazo. Intenta de nuevo.'),
+          })}
+          onDismiss={() => setBannerDismissed(true)}
+        />
+      )}
+      <ScheduledPregnancyBanner isPregnant={profile.isPregnant} pregnancyStartDate={profile.pregnancyStartDate} />
+
       {/* Profile header */}
       <Card>
         <CardContent>
