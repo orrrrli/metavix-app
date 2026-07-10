@@ -12,6 +12,37 @@ export enum GlucoseReadingType {
   Overnight = 7,
 }
 
+/**
+ * La API serializa `GlucoseReadingType` como **string** (JsonStringEnumConverter),
+ * p.ej. `"Fasting"`. El frontend usa un enum numérico, así que todos los lookups
+ * (`RANGO_CON_DIABETES[t]`) y comparaciones (`=== GlucoseReadingType.Fasting`)
+ * esperan un número. Este normalizador se aplica en la capa de fetch para que el
+ * resto del código reciba siempre el valor numérico. Desconocido → ayuno (default).
+ */
+export function normalizeReadingType(t: unknown): GlucoseReadingType {
+  if (typeof t === "number" && Number.isInteger(t)) {
+    return t >= GlucoseReadingType.Fasting && t <= GlucoseReadingType.Overnight
+      ? (t as GlucoseReadingType)
+      : GlucoseReadingType.Fasting;
+  }
+  if (typeof t === "string") {
+    const n = (GlucoseReadingType as Record<string, unknown>)[t];
+    if (typeof n === "number") return n as GlucoseReadingType;
+  }
+  return GlucoseReadingType.Fasting;
+}
+
+/** Normaliza `readingType` en cada lectura de glucosa de un registro diario. */
+export function normalizeDailyRecord(rec: DailyRecordResponse): DailyRecordResponse {
+  return {
+    ...rec,
+    glucoseReadings: rec.glucoseReadings.map((g) => ({
+      ...g,
+      readingType: normalizeReadingType(g.readingType),
+    })),
+  };
+}
+
 export interface GlucoseReadingRequest {
   readingType: GlucoseReadingType;
   valueMgDl: number;

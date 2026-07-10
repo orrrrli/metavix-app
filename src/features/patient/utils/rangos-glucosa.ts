@@ -46,9 +46,13 @@ const RANGO_SIN_DIABETES: Record<GlucoseReadingType, RangoPorLectura> = {
 /** Ayuno es el caso por defecto cuando el wizard aún no eligió tipo de comida. */
 export const RANGO_AYUNO_POR_DEFECTO = GlucoseReadingType.Fasting;
 
-export function rangoPara(t: GlucoseReadingType | null, hasDiabetes: boolean): RangoPorLectura {
+export function rangoPara(t: GlucoseReadingType | string | number | null, hasDiabetes: boolean): RangoPorLectura {
   if (t == null) return rangoAyuno(hasDiabetes);
-  return hasDiabetes ? RANGO_CON_DIABETES[t] : RANGO_SIN_DIABETES[t];
+  const tabla = hasDiabetes ? RANGO_CON_DIABETES : RANGO_SIN_DIABETES;
+  const r = tabla[t as GlucoseReadingType];
+  // Defensivo: si `t` es un string enum de la API (p.ej. "Fasting") o un valor
+  // desconocido, la tabla numérica no lo resuelve → cae al default de ayuno.
+  return r ?? rangoAyuno(hasDiabetes);
 }
 
 function rangoAyuno(hasDiabetes: boolean): RangoPorLectura {
