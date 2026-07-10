@@ -16,7 +16,7 @@ import { GlucoseReadingType } from "@/types/daily-record";
 import { GoalStatus } from "@/types/goal-evaluation";
 
 const DEFAULT_EVALUACIONES: Record<string, EvaluacionMeta> = PARAMETROS_META.reduce(
-  (acc, p) => ({ ...acc, [p.id]: { estado: "sin_dato", color: "bg-muted-foreground/30" } }),
+  (acc, p) => ({ ...acc, [p.id]: { estado: "sin_dato", color: "var(--ph)" } }),
   {} as Record<string, EvaluacionMeta>,
 );
 
@@ -27,10 +27,10 @@ function parseApiDate(dateStr: string): Date {
 
 function mapGoalStatus(status: GoalStatus): EvaluacionMeta {
   switch (status) {
-    case "InRange":    return { estado: "en_meta",    color: "bg-emerald-500" };
-    case "AtRisk":     return { estado: "cuidado",    color: "bg-amber-500" };
-    case "OutOfRange": return { estado: "fuera_meta", color: "bg-red-500" };
-    case "NoData":     return { estado: "sin_dato",   color: "bg-muted-foreground/30" };
+    case "InRange":    return { estado: "en_meta",    color: "var(--ok)" };
+    case "AtRisk":     return { estado: "cuidado",    color: "var(--warn)" };
+    case "OutOfRange": return { estado: "fuera_meta", color: "var(--bad)" };
+    case "NoData":     return { estado: "sin_dato",   color: "var(--ph)" };
   }
 }
 
@@ -96,7 +96,7 @@ export function MetasControl() {
         const item = result.items.find((i) => i.parameterId === param.id);
         newEvaluaciones[param.id] = item
           ? mapGoalStatus(item.status)
-          : { estado: "sin_dato", color: "bg-muted-foreground/30" };
+          : { estado: "sin_dato", color: "var(--ph)" };
       });
       setEvaluaciones(newEvaluaciones);
       setMostrarResumen(true);
@@ -116,7 +116,10 @@ export function MetasControl() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+      <div
+        className="flex flex-col items-center justify-center py-20"
+        style={{ color: "var(--mut)" }}
+      >
         <Loader2 className="h-8 w-8 animate-spin mb-4" />
         <p>Cargando tus datos clínicos...</p>
       </div>
@@ -125,7 +128,7 @@ export function MetasControl() {
 
   return (
     <div className="max-w-4xl mx-auto pb-12 animate-in fade-in duration-500">
-      <p className="text-lg text-muted-foreground mb-8">
+      <p className="text-lg mb-8" style={{ color: "var(--mut)" }}>
         Tus últimos resultados disponibles han sido cargados automáticamente. Los parámetros sin datos no cuentan con registros recientes.
       </p>
 
@@ -142,9 +145,12 @@ export function MetasControl() {
       </div>
 
       {profile?.isPregnant && (
-        <div className="mt-4 flex items-start gap-3 p-3 bg-violet-50/50 rounded-lg">
-          <Info className="w-5 h-5 text-violet-600 shrink-0 mt-0.5" />
-          <p className="text-violet-900">
+        <div
+          className="mt-4 flex items-start gap-3 p-3 rounded-lg"
+          style={{ background: "var(--info-bg)" }}
+        >
+          <Info className="w-5 h-5 shrink-0 mt-0.5" style={{ color: "var(--info)" }} />
+          <p style={{ color: "var(--text)" }}>
             Se activaron las metas clínicas de embarazo. Las metas personalizadas anteriores quedan
             inactivas mientras IsPregnant = true.
           </p>
@@ -164,7 +170,10 @@ export function MetasControl() {
 
       {mostrarResumen && <ResumenControl resultados={resultadosFormateados} />}
 
-      <div className="mt-12 pt-6 border-t text-center text-sm text-muted-foreground">
+      <div
+        className="mt-12 pt-6 border-t text-center text-sm"
+        style={{ borderColor: "var(--bd)", color: "var(--mut)" }}
+      >
         <p>Valores de referencia basados en los estándares de atención médica de la ADA (Standards of Care 2026).</p>
       </div>
     </div>
