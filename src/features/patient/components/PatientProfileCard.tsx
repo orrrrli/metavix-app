@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { format, parseISO } from 'date-fns';
+import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { Pencil, Check, Phone, Ruler, Baby, Mail, Calendar, Activity, Hash, Venus, Mars } from 'lucide-react';
@@ -13,6 +13,7 @@ import { usePatientProfile, useUpdatePatientProfile } from '@/features/patient/h
 import { useAuthStore } from '@/features/auth/store';
 import { PregnancyBanner } from '@/features/patient/components/PregnancyBanner';
 import { ScheduledPregnancyBanner } from '@/features/patient/components/ScheduledPregnancyBanner';
+import { parseApiDate } from '@/features/patient/utils/parse-api-date';
 
 const DIABETES_LABELS: Record<string, string> = {
   None: 'Sin diabetes',
@@ -25,9 +26,27 @@ const profileSchema = z.object({
   heightCm: z.string().optional(),
   phone: z.string().max(20).optional(),
   isPregnant: z.boolean(),
+  pregnancyStartDate: z.string().optional(),
+  pregnancyDueDate: z.string().optional(),
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
+
+/**
+ * Convierte la fecha que llega de la API ("dd/MM/yyyy") al formato que espera
+ * un input HTML5 `type="date"` ("yyyy-MM-dd"). Devuelve '' si no hay fecha válida,
+ * para que el input quede vacío en lugar de mostrar un valor roto.
+ */
+function toInputDate(value: string | null | undefined): string {
+  const d = parseApiDate(value ?? null);
+  return d ? format(d, 'yyyy-MM-dd') : '';
+}
+
+/** Fecha legible ("d de MMMM, yyyy") o <Muted>No registrada</Muted> si falta/no parsea. */
+function FechaOPlaceholder({ value }: { value: string | null | undefined }) {
+  const d = parseApiDate(value ?? null);
+  return d ? <>{format(d, "d 'de' MMMM, yyyy", { locale: es })}</> : <Muted>No registrada</Muted>;
+}
 
 function ProfileRow({ icon, label, value, last }: { icon: ReactNode; label: string; value: ReactNode; last?: boolean }) {
   return (
@@ -67,6 +86,8 @@ export function PatientProfileCard() {
       heightCm: profile?.heightCm?.toString() ?? '',
       phone: profile?.phone ?? '',
       isPregnant: profile?.isPregnant ?? false,
+      pregnancyStartDate: toInputDate(profile?.pregnancyStartDate),
+      pregnancyDueDate: toInputDate(profile?.pregnancyDueDate),
     });
     setEditing(true);
   };
@@ -81,6 +102,9 @@ export function PatientProfileCard() {
       ...(data.heightCm !== '' && data.heightCm !== undefined && { heightCm: Number(data.heightCm) }),
       ...(data.phone !== '' && data.phone !== undefined && { phone: data.phone }),
       isPregnant: data.isPregnant,
+      // El input type="date" ya entrega "yyyy-MM-dd", que la API acepta.
+      ...(data.pregnancyStartDate !== '' && data.pregnancyStartDate !== undefined && { pregnancyStartDate: data.pregnancyStartDate }),
+      ...(data.pregnancyDueDate !== '' && data.pregnancyDueDate !== undefined && { pregnancyDueDate: data.pregnancyDueDate }),
     };
 
     updateProfile(payload, {
@@ -117,10 +141,7 @@ export function PatientProfileCard() {
   const fullName = `${profile.firstName ?? ''} ${profile.lastName ?? ''}`.trim() || '—';
   const initials = [profile.firstName?.[0], profile.lastName?.[0]].filter(Boolean).join('').toUpperCase() || '?';
 
-  const parseSafe = (value: string): Date | null => {
-    const d = parseISO(value);
-    return isNaN(d.getTime()) ? null : d;
-  };
+  const parseSafe = (value: string): Date | null => parseApiDate(value);
 
   const dobDate = parseSafe(profile.dateOfBirth);
   const createdDate = parseSafe(profile.createdAt);
@@ -282,6 +303,33 @@ export function PatientProfileCard() {
                 </button>
               </div>
 
+              {isPregnantValue && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <MetavixLabel htmlFor="pregnancyStartDate">
+                      <Calendar className="inline size-3.5 mr-1 mb-0.5" />
+                      Inicio de embarazo
+                    </MetavixLabel>
+                    <MetavixInput
+                      id="pregnancyStartDate"
+                      type="date"
+                      {...register('pregnancyStartDate')}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <MetavixLabel htmlFor="pregnancyDueDate">
+                      <Calendar className="inline size-3.5 mr-1 mb-0.5" />
+                      Fecha probable de parto
+                    </MetavixLabel>
+                    <MetavixInput
+                      id="pregnancyDueDate"
+                      type="date"
+                      {...register('pregnancyDueDate')}
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="flex gap-3 pt-1">
                 <MetavixButton type="button" variant="ghost" className="flex-1" onClick={handleCancel} disabled={isPending}>
                   Cancelar
@@ -312,8 +360,23 @@ export function PatientProfileCard() {
                     {profile.isPregnant ? 'Sí' : 'No'}
                   </MetavixBadge>
                 }
-                last
+                last={!profile.isPregnant}
               />
+              {profile.isPregnant && (
+                <>
+                  <ProfileRow
+                    icon={<Calendar className="size-4" />}
+                    label="Inicio de embarazo"
+                    value={<FechaOPlaceholder value={profile.pregnancyStartDate} />}
+                  />
+                  <ProfileRow
+                    icon={<Calendar className="size-4" />}
+                    label="Fecha probable de parto"
+                    value={<FechaOPlaceholder value={profile.pregnancyDueDate} />}
+                    last
+                  />
+                </>
+              )}
             </dl>
           )}
         </CardContent>
