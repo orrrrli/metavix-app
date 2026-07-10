@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -74,11 +74,11 @@ export function PatientProfileCard() {
   const { data: profile, isLoading, isError } = usePatientProfile(patientId ?? '');
   const { mutate: updateProfile, isPending } = useUpdatePatientProfile(patientId ?? '');
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ProfileFormData>({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
   });
 
-  const isPregnantValue = watch('isPregnant');
+  const isPregnantValue = useWatch({ control, name: 'isPregnant' }) ?? false;
 
   const handleEdit = (): void => {
     reset({
