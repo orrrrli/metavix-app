@@ -37,11 +37,23 @@ export function PregnancyBanner({
           <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
             Embarazo probablemente finalizado. ¿Confirmar desactivación?
           </p>
-          <div className="flex gap-2">
-            <MetavixButton variant="ghost" size="sm" onClick={onDismiss} disabled={isConfirming}>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <MetavixButton
+              variant="ghost"
+              size="sm"
+              onClick={onDismiss}
+              disabled={isConfirming}
+              className="flex-1 sm:flex-none whitespace-nowrap"
+            >
               Mantener activo
             </MetavixButton>
-            <MetavixButton variant="primary" size="sm" onClick={onConfirmDeactivation} disabled={isConfirming}>
+            <MetavixButton
+              variant="primary"
+              size="sm"
+              onClick={onConfirmDeactivation}
+              disabled={isConfirming}
+              className="flex-1 sm:flex-none whitespace-nowrap"
+            >
               Confirmar desactivación
             </MetavixButton>
           </div>
