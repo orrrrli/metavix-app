@@ -127,7 +127,15 @@ export function PatientProfileCard() {
 
   return (
     <div className="w-full max-w-2xl space-y-4">
-      <PregnancyBanner isPregnant={profile.isPregnant} pregnancyDueDate={profile.pregnancyDueDate} />
+      <PregnancyBanner
+        isPregnant={profile.isPregnant}
+        pregnancyDueDate={profile.pregnancyDueDate}
+        isConfirming={isPending}
+        onConfirmDeactivation={() => updateProfile({ isPregnant: false }, {
+          onSuccess: () => toast.success('Embarazo desactivado.'),
+          onError: () => toast.error('No se pudo desactivar el embarazo. Intenta de nuevo.'),
+        })}
+      />
 
       {/* Profile header */}
       <Card>
