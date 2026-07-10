@@ -50,6 +50,7 @@ function Muted({ children }: { children: ReactNode }) {
 export function PatientProfileCard() {
   const { patientId } = useAuthStore();
   const [editing, setEditing] = useState(false);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   const { data: profile, isLoading, isError } = usePatientProfile(patientId ?? '');
   const { mutate: updateProfile, isPending } = useUpdatePatientProfile(patientId ?? '');
@@ -127,15 +128,18 @@ export function PatientProfileCard() {
 
   return (
     <div className="w-full max-w-2xl space-y-4">
-      <PregnancyBanner
-        isPregnant={profile.isPregnant}
-        pregnancyDueDate={profile.pregnancyDueDate}
-        isConfirming={isPending}
-        onConfirmDeactivation={() => updateProfile({ isPregnant: false }, {
-          onSuccess: () => toast.success('Embarazo desactivado.'),
-          onError: () => toast.error('No se pudo desactivar el embarazo. Intenta de nuevo.'),
-        })}
-      />
+      {!bannerDismissed && (
+        <PregnancyBanner
+          isPregnant={profile.isPregnant}
+          pregnancyDueDate={profile.pregnancyDueDate}
+          isConfirming={isPending}
+          onConfirmDeactivation={() => updateProfile({ isPregnant: false }, {
+            onSuccess: () => toast.success('Embarazo desactivado.'),
+            onError: () => toast.error('No se pudo desactivar el embarazo. Intenta de nuevo.'),
+          })}
+          onDismiss={() => setBannerDismissed(true)}
+        />
+      )}
 
       {/* Profile header */}
       <Card>
