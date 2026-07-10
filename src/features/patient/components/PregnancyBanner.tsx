@@ -31,7 +31,7 @@ export function PregnancyBanner({
   if (daysUntilDue >= 0) return null;
 
   return (
-    <Card style={{ borderColor: 'var(--warn)' }}>
+    <Card style={{ borderColor: 'var(--warn)', padding: 20 }}>
       <CardContent className="py-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>
