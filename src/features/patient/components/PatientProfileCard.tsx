@@ -11,6 +11,7 @@ import { Pencil, Check, Phone, Ruler, Baby, Mail, Calendar, Activity, Hash, Venu
 import { Card, CardContent, CardHeader, CardTitle, MetavixButton, MetavixInput, MetavixLabel, MetavixBadge } from '@/shared/components/ui/metavix';
 import { usePatientProfile, useUpdatePatientProfile } from '@/features/patient/hooks/use-patient-profile';
 import { useAuthStore } from '@/features/auth/store';
+import { PregnancyBanner } from '@/features/patient/components/PregnancyBanner';
 
 const DIABETES_LABELS: Record<string, string> = {
   None: 'Sin diabetes',
@@ -126,6 +127,8 @@ export function PatientProfileCard() {
 
   return (
     <div className="w-full max-w-2xl space-y-4">
+      <PregnancyBanner isPregnant={profile.isPregnant} pregnancyDueDate={profile.pregnancyDueDate} />
+
       {/* Profile header */}
       <Card>
         <CardContent>
