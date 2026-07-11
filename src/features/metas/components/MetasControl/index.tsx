@@ -81,13 +81,14 @@ export function MetasControl() {
     (a, b) => parseApiDate(b.sampleDate).getTime() - parseApiDate(a.sampleDate).getTime(),
   );
 
-  // T5: derived read-only values — no manual input
+  // T5: derived read-only values — no manual input. Las keys coinciden con
+  // `PARAMETROS_META[i].id` (alineado con los `parameterId` que emite el backend).
   const valores: Record<string, string> = {
-    hba1c:  sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
-    glucosa: fastingGlucose?.toString() ?? "",
-    pas:    latestSBP?.toString() ?? "",
-    ldl:    sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
-    imc:    imc !== null ? imc.toFixed(1) : "",
+    hba1c:          sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
+    fasting_glucose: fastingGlucose?.toString() ?? "",
+    systolic_bp:    latestSBP?.toString() ?? "",
+    ldl_primary:    sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
+    bmi:            imc !== null ? imc.toFixed(1) : "",
   };
 
   // T6: call evaluation API; T7: map GoalStatus → EvaluacionMeta
@@ -112,9 +113,19 @@ export function MetasControl() {
     }
   };
 
+  // `valores` sólo pre-popula 5 de los 16 parámetros (T5); el resto se
+  // muestra "sin datos" hasta evaluar. Tras evaluar, `evalResult.items` trae
+  // el `valueUsed` real que el backend usó para los 16 parámetros — lo
+  // priorizamos para que el semáforo y el valor mostrado nunca queden
+  // desalineados (evita mostrar "Sin datos" con un semáforo en color).
+  const valoresEvaluados: Record<string, string> = {};
+  evalResult?.items.forEach((item) => {
+    valoresEvaluados[item.parameterId] = item.valueUsed?.toString() ?? "";
+  });
+
   const resultadosFormateados = PARAMETROS_META.map((param) => ({
     param,
-    valor: valores[param.id] ?? "",
+    valor: valoresEvaluados[param.id] ?? valores[param.id] ?? "",
     evaluacion: evaluaciones[param.id],
   }));
 
@@ -165,7 +176,7 @@ export function MetasControl() {
           <ParametroMeta
             key={param.id}
             param={param}
-            valor={valores[param.id] ?? ""}
+            valor={valoresEvaluados[param.id] ?? valores[param.id] ?? ""}
             colorActual={evaluaciones[param.id].color}
             readOnly
           />
