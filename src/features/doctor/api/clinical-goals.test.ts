@@ -50,6 +50,20 @@ describe('clinical-goals API client', () => {
       expect(result).toEqual(data);
     });
 
+    it('devuelve [] cuando body.data.goals está vacío', async () => {
+      // Sin metas personalizadas, el backend responde `{ data: { goals: [] } }`.
+      // El cliente debe devolver [] (no `{ goals: [] }`) para que `.map`
+      // funcione en el editor.
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ data: { goals: [] } }),
+      });
+      const { getClinicalGoals } = await import('./clinical-goals');
+      const result = await getClinicalGoals('doc-1', 'pat-1');
+      expect(result).toEqual([]);
+    });
+
     it('lanza error en status no-ok y no-404', async () => {
       global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
       const { getClinicalGoals } = await import('./clinical-goals');
@@ -59,7 +73,7 @@ describe('clinical-goals API client', () => {
     });
 
     it('usa la URL y credenciales correctas', async () => {
-      const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: [] }) });
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: { goals: [] } }) });
       global.fetch = fetchMock;
       const { getClinicalGoals } = await import('./clinical-goals');
       await getClinicalGoals('doc-1', 'pat-1');
