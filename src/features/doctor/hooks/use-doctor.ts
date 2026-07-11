@@ -11,6 +11,7 @@ import {
   acceptLinkRequest,
   rejectLinkRequest,
   unlinkPatient,
+  getMrnSuggestion,
 } from '@/lib/api/doctor';
 import { useAuthStore } from '@/features/auth/store';
 
