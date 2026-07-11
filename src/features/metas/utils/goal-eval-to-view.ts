@@ -1,8 +1,29 @@
 import { PARAMETROS_META } from '../data/parametros';
-import type { GoalEvaluationResponse } from '@/types/goal-evaluation';
+import type { GoalEvaluationResponse, NoDataReason } from '@/types/goal-evaluation';
 import type { GoalEvaluationItemView } from '../components/GoalEvaluationCard';
 
 const CATALOG_BY_ID = new Map(PARAMETROS_META.map((p) => [p.id, p]));
+
+/**
+ * Traduce un `NoDataReason` del backend al texto en español que se muestra al
+ * paciente en el chip. Exportado para unit testing sin jsdom.
+ *
+ *   - "not-evaluated-in-pregnancy"        → "No se evalúa en el embarazo"
+ *   - "requires-specialist-evaluation"     → "Requiere evaluación con especialista"
+ *   - "no-recent-data"                     → "Sin datos recientes"
+ *   - null / undefined                     → null (sin razón que mostrar)
+ */
+export function formatNoDataReason(reason: NoDataReason | null | undefined): string | null {
+  if (!reason) return null;
+  switch (reason) {
+    case 'not-evaluated-in-pregnancy':
+      return 'No se evalúa en el embarazo';
+    case 'requires-specialist-evaluation':
+      return 'Requiere evaluación con especialista';
+    case 'no-recent-data':
+      return 'Sin datos recientes';
+  }
+}
 
 /**
  * Convierte la respuesta cruda del endpoint POST /goal-evaluations en la
@@ -12,9 +33,9 @@ const CATALOG_BY_ID = new Map(PARAMETROS_META.map((p) => [p.id, p]));
  * al catálogo del backend antes de sincronizar el frontend), usa el id crudo
  * como nombre y deja la unidad vacía para que el chip aún se renderice.
  *
- * La respuesta de la API puede incluir un campo `reason` por item (no en el
- * tipo compartido aún); lo leemos de forma defensiva por si el backend ya lo
- * emite.
+ * El campo `reason` (presente solo en items con `status === "NoData"`) se
+ * traduce al texto en español correspondiente — el chip muestra texto, no
+ * códigos.
  */
 export function goalEvalToViews(response: GoalEvaluationResponse): GoalEvaluationItemView[] {
   return response.items.map((item) => {
@@ -25,7 +46,7 @@ export function goalEvalToViews(response: GoalEvaluationResponse): GoalEvaluatio
       unit: catalog?.unidad ?? '',
       value: item.valueUsed,
       status: item.status,
-      reason: (item as { reason?: string | null }).reason ?? null,
+      reason: formatNoDataReason(item.reason ?? null),
     };
   });
 }

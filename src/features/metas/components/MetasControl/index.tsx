@@ -81,13 +81,14 @@ export function MetasControl() {
     (a, b) => parseApiDate(b.sampleDate).getTime() - parseApiDate(a.sampleDate).getTime(),
   );
 
-  // T5: derived read-only values — no manual input
+  // T5: derived read-only values — no manual input. Las keys coinciden con
+  // `PARAMETROS_META[i].id` (alineado con los `parameterId` que emite el backend).
   const valores: Record<string, string> = {
-    hba1c:  sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
-    glucosa: fastingGlucose?.toString() ?? "",
-    pas:    latestSBP?.toString() ?? "",
-    ldl:    sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
-    imc:    imc !== null ? imc.toFixed(1) : "",
+    hba1c:          sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
+    fasting_glucose: fastingGlucose?.toString() ?? "",
+    systolic_bp:    latestSBP?.toString() ?? "",
+    ldl_primary:    sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
+    bmi:            imc !== null ? imc.toFixed(1) : "",
   };
 
   // T6: call evaluation API; T7: map GoalStatus → EvaluacionMeta
