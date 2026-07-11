@@ -18,7 +18,9 @@ export async function getClinicalGoals(
   if (res.status === 404) return [];
   if (!res.ok) throw new Error(`[getClinicalGoals] ${res.status}`);
   const body = await res.json();
-  return body.data ?? [];
+  // El backend wrappea como { data: ClinicalGoalsResult } donde
+  // ClinicalGoalsResult = { goals: ClinicalGoal[] } — extraemos la lista.
+  return body.data?.goals ?? [];
 }
 
 /**

@@ -43,7 +43,7 @@ describe('clinical-goals API client', () => {
       global.fetch = vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
-        json: async () => ({ data }),
+        json: async () => ({ data: { goals: data } }),
       });
       const { getClinicalGoals } = await import('./clinical-goals');
       const result = await getClinicalGoals('doc-1', 'pat-1');
