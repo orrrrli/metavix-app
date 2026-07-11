@@ -30,7 +30,7 @@ export function TablaAlimentos() {
             <TableRow key={idx}>
               <TableCell className="font-medium">{item.alimento}</TableCell>
               <TableCell>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-transparent font-normal">
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:hover:bg-blue-900/50 border-transparent font-normal">
                   {item.porcion}
                 </Badge>
               </TableCell>

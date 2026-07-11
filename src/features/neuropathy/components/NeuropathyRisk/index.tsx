@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
+import { statusCalloutClasses } from "@/shared/utils/status-colors";
 import { SintomaCheck } from "../SintomaCheck";
 import { ResultadoNeuropatia } from "../ResultadoNeuropatia";
-import { 
-  SINTOMAS_NEUROPATIA, 
-  interpretarNeuropatia, 
-  InterpretacionNeuropatia, 
+import {
+  SINTOMAS_NEUROPATIA,
+  interpretarNeuropatia,
+  InterpretacionNeuropatia,
   SintomaNeuropatia
 } from "../../data/sintomas";
 
@@ -54,8 +55,8 @@ export function NeuropathyRisk() {
       
       <div className="bg-card border rounded-xl p-6 sm:p-10 shadow-sm">
         
-        <div className="mb-8 border-l-4 border-orange-500 bg-orange-50 p-4 rounded-r-lg">
-          <p className="text-orange-900 font-medium text-sm sm:text-base leading-relaxed">
+        <div className={`mb-8 border-l-4 p-4 rounded-r-lg ${statusCalloutClasses("warning")}`}>
+          <p className="font-medium text-sm sm:text-base leading-relaxed">
             La neuropatía diabética afecta hasta el 50% de las personas con diabetes. Muchos casos no se detectan porque los síntomas se consideran normales con la edad. Este cuestionario le ayuda a identificarlos.
           </p>
         </div>
