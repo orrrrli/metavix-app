@@ -17,7 +17,7 @@ const response: GoalEvaluationResponse = {
 
 describe('goalEvalToViews', () => {
   it('resolves name and unit from the catalog for known parameterIds', () => {
-    const views = goalEvalToViews(response);
+    const views = goalEvalToViews(response, false);
     expect(views[0]).toMatchObject({ name: 'HbA1c', unit: '%', status: 'InRange' });
     expect(views[1]).toMatchObject({ name: 'Glucosa en ayuno', unit: 'mg/dL', status: 'AtRisk' });
     expect(views[2]).toMatchObject({ name: 'Presión arterial sistólica', unit: 'mmHg', status: 'OutOfRange' });
@@ -25,16 +25,31 @@ describe('goalEvalToViews', () => {
   });
 
   it('forwards a null value through unchanged', () => {
-    const views = goalEvalToViews(response);
+    const views = goalEvalToViews(response, false);
     expect(views[3].value).toBeNull();
     expect(views[3].status).toBe('NoData');
   });
 
   it('falls back to raw parameterId and empty unit for unknown ids', () => {
-    const views = goalEvalToViews(response);
+    const views = goalEvalToViews(response, false);
     const unknown = views[5];
     expect(unknown.name).toBe('unknown_future_param');
     expect(unknown.unit).toBe('');
+  });
+
+  it('derives a pregnancy clinical note per-item when isPregnant is true', () => {
+    const views = goalEvalToViews(response, true);
+    // systolic_bp, status OutOfRange -> RF-005 note applies
+    expect(views[2].note).toBe(
+      'En embarazo, la PA elevada puede indicar preeclampsia. Confirmar con especialista.',
+    );
+    // hba1c has no pregnancy note in the RF-005..RF-016 table
+    expect(views[0].note).toBeNull();
+  });
+
+  it('leaves note as null when isPregnant is false', () => {
+    const views = goalEvalToViews(response, false);
+    expect(views[2].note).toBeNull();
   });
 
   it('translates a NoData reason to Spanish user-facing text', () => {
@@ -58,19 +73,21 @@ describe('goalEvalToViews', () => {
         },
       ],
     };
-    const views = goalEvalToViews(withReason);
+    const views = goalEvalToViews(withReason, false);
     expect(views[0].reason).toBe('No se evalúa en el embarazo');
     expect(views[1].reason).toBe('Requiere evaluación con especialista');
   });
 
   it('leaves reason as null when the API does not include it', () => {
-    const views = goalEvalToViews(response);
+    const views = goalEvalToViews(response, false);
     expect(views[0].reason).toBeNull();
     expect(views[3].reason).toBeNull();
   });
 
   it('returns an empty array when the response has no items', () => {
-    expect(goalEvalToViews({ evaluationId: 'x', evaluatedAt: '2026-07-10T15:00:00Z', items: [] })).toEqual([]);
+    expect(
+      goalEvalToViews({ evaluationId: 'x', evaluatedAt: '2026-07-10T15:00:00Z', items: [] }, false),
+    ).toEqual([]);
   });
 });
 

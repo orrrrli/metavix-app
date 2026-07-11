@@ -14,6 +14,8 @@ export interface GoalEvaluationItemView {
   value: number | null;
   status: GoalStatus;
   reason?: string | null;
+  /** Nota clínica contextual (ej. advertencias por embarazo). Ver clinical-notes.ts. */
+  note?: string | null;
 }
 
 export interface GoalEvaluationCardProps {
@@ -66,6 +68,7 @@ export function GoalEvaluationCard({
                 value={item.value}
                 unit={item.unit}
                 reason={item.reason}
+                note={item.note}
               />
             ))}
           </div>

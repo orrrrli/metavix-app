@@ -1,6 +1,7 @@
 import { PARAMETROS_META } from '../data/parametros';
 import type { GoalEvaluationResponse, NoDataReason } from '@/types/goal-evaluation';
 import type { GoalEvaluationItemView } from '../components/GoalEvaluationCard';
+import { getParameterNote } from './clinical-notes';
 
 const CATALOG_BY_ID = new Map(PARAMETROS_META.map((p) => [p.id, p]));
 
@@ -36,8 +37,15 @@ export function formatNoDataReason(reason: NoDataReason | null | undefined): str
  * El campo `reason` (presente solo en items con `status === "NoData"`) se
  * traduce al texto en español correspondiente — el chip muestra texto, no
  * códigos.
+ *
+ * `isPregnant` se usa para derivar la nota clínica de cada parámetro
+ * (tabla "Por parámetro" RF-005..RF-016, ver clinical-notes.ts) en tiempo
+ * de render — la nota no viene del backend ni se persiste.
  */
-export function goalEvalToViews(response: GoalEvaluationResponse): GoalEvaluationItemView[] {
+export function goalEvalToViews(
+  response: GoalEvaluationResponse,
+  isPregnant: boolean,
+): GoalEvaluationItemView[] {
   return response.items.map((item) => {
     const catalog = CATALOG_BY_ID.get(item.parameterId);
     return {
@@ -47,6 +55,7 @@ export function goalEvalToViews(response: GoalEvaluationResponse): GoalEvaluatio
       value: item.valueUsed,
       status: item.status,
       reason: formatNoDataReason(item.reason ?? null),
+      note: getParameterNote({ parameterId: item.parameterId, status: item.status, isPregnant }),
     };
   });
 }

@@ -199,7 +199,7 @@ export function MetasControl() {
       {evalResult && (
         <div className="mt-8">
           <GoalEvaluationCard
-            items={goalEvalToViews(evalResult)}
+            items={goalEvalToViews(evalResult, Boolean(profile?.isPregnant))}
             evaluatedAt={evalResult.evaluatedAt}
           />
         </div>
