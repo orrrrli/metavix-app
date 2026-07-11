@@ -5,7 +5,7 @@ import {
   normalizeDailyRecord,
 } from '@/types/daily-record';
 import { CreateLabRecordRequest, LabRecordResponse } from '@/types/lab-record';
-import { DoctorOption, LinkedDoctorResponse, SendLinkRequestBody, LinkRequestResponse } from '@/types/link-request';
+import { DoctorOption, LinkedDoctorResponse, SendLinkRequestBody, LinkRequestResponse, SentPendingRequestResponse } from '@/types/link-request';
 import { PatientResumenResponse } from '@/types/patient-resumen';
 import { UpsertInsulinProfileRequest, InsulinProfileResponse, CreateInsulinRecordRequest, InsulinRecordResponse } from '@/types/insulin-dm1';
 import { PatientProfileResponse, UpdatePatientProfileRequest } from '@/types/patient-profile';
@@ -36,6 +36,16 @@ export async function getLinkedDoctors(patientId: string): Promise<LinkedDoctorR
 }
 
 // === Link Requests ===
+
+export async function getPendingSentRequests(patientId: string): Promise<SentPendingRequestResponse[]> {
+  const res = await fetch(`${API}/patient/${patientId}/get-pending-requests`, {
+    credentials: 'include',
+  });
+  if (res.status === 404) return [];
+  if (!res.ok) throw new Error(`[getPendingSentRequests] ${res.status}`);
+  const body = await res.json();
+  return body.data;
+}
 
 export async function sendLinkRequest(data: SendLinkRequestBody): Promise<LinkRequestResponse> {
   const res = await fetch(`${API}/patient/requests-link`, {

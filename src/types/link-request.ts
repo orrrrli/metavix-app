@@ -16,6 +16,15 @@ export interface LinkedDoctorResponse {
   linkedAt: string; // ISO 8601
 }
 
+export interface SentPendingRequestResponse {
+  requestId: string;
+  doctorId: string;
+  doctorFirstName: string;
+  doctorPaternalLastName: string;
+  speciality: string;
+  createdAt: string; // ISO 8601
+}
+
 export interface SendLinkRequestBody {
   patientId: string;
   doctorId: string;

@@ -3,32 +3,34 @@
 import { useState } from "react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
-import { Stethoscope, Search, UserCheck, UserMinus, Send, Link2Off } from "lucide-react";
+import { Stethoscope, Search, UserCheck, UserMinus, Send, Link2Off, Clock, XCircle } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/store";
 import {
   useAllDoctors,
   useLinkedDoctors,
+  usePendingSentRequests,
   useSendLinkRequest,
   useRevokeLinkRequest,
 } from "@/features/patient/hooks/use-link-requests";
-import { DoctorOption, LinkedDoctorResponse } from "@/types/link-request";
+import { DoctorOption, LinkedDoctorResponse, SentPendingRequestResponse } from "@/types/link-request";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, MetavixButton, MetavixInput, MetavixBadge } from "@/shared/components/ui/metavix";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 
 export default function DoctoresPage(): React.ReactElement {
   const { patientId } = useAuthStore();
   const [search, setSearch] = useState("");
-  const [pendingDoctorIds, setPendingDoctorIds] = useState<Set<string>>(new Set());
 
   const { data: linkedDoctors = [], isLoading: loadingLinked } = useLinkedDoctors(patientId ?? "");
   const { data: allDoctors = [], isLoading: loadingAll } = useAllDoctors();
+  const { data: pendingSentRequests = [], isLoading: loadingPending } = usePendingSentRequests(patientId ?? "");
 
   const { mutate: sendRequest, isPending: sending } = useSendLinkRequest(patientId ?? "");
   const { mutate: revokeLink, isPending: revoking } = useRevokeLinkRequest(patientId ?? "");
 
   const linkedDoctorIds = new Set(linkedDoctors.map((d) => d.doctorId));
+  const pendingDoctorIds = new Set(pendingSentRequests.map((r) => r.doctorId));
 
   const availableDoctors: DoctorOption[] = allDoctors.filter(
     (d) => !linkedDoctorIds.has(d.id) && !pendingDoctorIds.has(d.id)
@@ -48,8 +50,9 @@ export default function DoctoresPage(): React.ReactElement {
       { patientId, doctorId: doctor.id },
       {
         onSuccess: () => {
-          setPendingDoctorIds((prev) => new Set(prev).add(doctor.id));
-          toast.success(`Solicitud enviada al Dr. ${doctor.paternalLastName}`);
+          toast.success(`Solicitud enviada al Dr. ${doctor.paternalLastName}`, {
+            description: "El médico debe aceptarla para tener acceso a tu expediente.",
+          });
         },
         onError: (err) => {
           const msg = err.message.includes("409")
@@ -68,7 +71,14 @@ export default function DoctoresPage(): React.ReactElement {
     });
   }
 
-  if (loadingLinked || loadingAll) {
+  function handleCancelPending(request: SentPendingRequestResponse): void {
+    revokeLink(request.requestId, {
+      onSuccess: () => toast.success(`Solicitud a Dr. ${request.doctorPaternalLastName} cancelada`),
+      onError: () => toast.error("No se pudo cancelar la solicitud"),
+    });
+  }
+
+  if (loadingLinked || loadingAll || loadingPending) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <GooeyLoader />
@@ -154,6 +164,62 @@ export default function DoctoresPage(): React.ReactElement {
         </CardContent>
       </Card>
 
+      {/* Pending sent requests */}
+      {pendingSentRequests.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              <span className="flex items-center gap-2">
+                <Clock className="size-5" style={{ color: 'var(--warn, #d97706)' }} />
+                Solicitudes pendientes
+              </span>
+            </CardTitle>
+            <CardDescription>
+              Esperando a que el médico acepte la vinculación.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {pendingSentRequests.map((request) => (
+                <div
+                  key={request.requestId}
+                  className="flex items-center justify-between p-4 rounded-xl gap-4"
+                  style={{ border: '1px solid var(--card-bd)', background: 'var(--ph)' }}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="size-10 rounded-full flex items-center justify-center shrink-0"
+                      style={{ background: 'var(--ph)' }}
+                    >
+                      <Stethoscope className="size-5" style={{ color: 'var(--mut)' }} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate" style={{ color: 'var(--text)' }}>
+                        Dr. {request.doctorFirstName} {request.doctorPaternalLastName}
+                      </p>
+                      <p className="text-sm truncate" style={{ color: 'var(--mut)' }}>{request.speciality}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <MetavixBadge variant="warn" className="text-xs hidden sm:inline-flex">Pendiente</MetavixBadge>
+                    <MetavixButton
+                      variant="ghost"
+                      size="sm"
+                      disabled={revoking}
+                      onClick={() => handleCancelPending(request)}
+                      style={{ color: 'var(--bad)' }}
+                    >
+                      <XCircle className="size-4 mr-1" />
+                      Cancelar
+                    </MetavixButton>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Doctor search + link request */}
       <Card>
         <CardHeader>
@@ -229,32 +295,6 @@ export default function DoctoresPage(): React.ReactElement {
           )}
         </CardContent>
       </Card>
-
-      {/* Pending requests (local state) */}
-      {pendingDoctorIds.size > 0 && (
-        <Card style={{ border: '1px solid var(--nav-active)', background: 'var(--nav-active-bg)' }}>
-          <CardHeader>
-            <CardTitle style={{ fontSize: 14, color: 'var(--nav-active)' }}>
-              Solicitudes enviadas esta sesión
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {allDoctors
-                .filter((d) => pendingDoctorIds.has(d.id))
-                .map((d) => (
-                  <div key={d.id} className="flex items-center gap-2 text-sm" style={{ color: 'var(--mut)' }}>
-                    <MetavixBadge variant="warn" className="text-xs">Pendiente</MetavixBadge>
-                    <span>Dr. {d.firstName} {d.paternalLastName} — {d.speciality}</span>
-                  </div>
-                ))}
-            </div>
-            <p className="text-xs mt-3" style={{ color: 'var(--mut)' }}>
-              El médico debe aceptar la solicitud para que tenga acceso a tu expediente.
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
