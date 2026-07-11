@@ -2,6 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Activity, Stethoscope, Phone, Syringe, Target, Info } from "lucide-react";
 import { InsulinProfileResponse } from "@/types/insulin-dm1";
 
+// ponytail: gradient and on-brand text colors are intentionally fixed
+// (not theme-aware) — the card is a brand surface, contrast holds in both modes.
+// Promote to CSS variables + .dark overrides when a dark brand variant is designed.
+const BRAND_GRADIENT = "bg-gradient-to-br from-[#0c2d6e] to-[#1346a0]";
+
 interface TarjetaPerfilProps {
   perfil: InsulinProfileResponse | null;
 }
@@ -9,7 +14,7 @@ interface TarjetaPerfilProps {
 export function TarjetaPerfil({ perfil }: TarjetaPerfilProps) {
   if (!perfil) {
     return (
-      <Card className="bg-gradient-to-br from-[#0c2d6e] to-[#1346a0] text-white shadow-md">
+      <Card className={`${BRAND_GRADIENT} text-white shadow-md`}>
         <CardContent className="p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
           <Info className="h-8 w-8 mb-3 opacity-80" />
           <h3 className="text-xl font-display font-medium mb-1">Perfil no configurado</h3>
@@ -20,7 +25,7 @@ export function TarjetaPerfil({ perfil }: TarjetaPerfilProps) {
   }
 
   return (
-    <Card className="bg-gradient-to-br from-[#0c2d6e] to-[#1346a0] text-white shadow-md overflow-hidden relative">
+    <Card className={`${BRAND_GRADIENT} text-white shadow-md overflow-hidden relative`}>
       <div className="absolute top-0 right-0 p-16 opacity-5 pointer-events-none">
         <Activity className="w-64 h-64" />
       </div>

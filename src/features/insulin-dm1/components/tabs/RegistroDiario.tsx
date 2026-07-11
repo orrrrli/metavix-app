@@ -227,7 +227,7 @@ export function RegistroDiario({ patientId }: RegistroDiarioProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(r.id)}
-                          className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                          className="h-8 w-8 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:text-red-400 dark:hover:bg-red-950/30"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
