@@ -17,18 +17,24 @@ describe('acceptRequestSchema', () => {
       const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026-999999' });
       expect(r.success).toBe(true);
     });
+
+    it('acepta cadena vacía (backend auto-asignará)', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: '' });
+      expect(r.success).toBe(true);
+    });
+
+    it('acepta undefined (backend auto-asignará)', () => {
+      const r = acceptRequestSchema.safeParse({});
+      expect(r.success).toBe(true);
+    });
+
+    it('acepta solo espacios (se trimean y queda vacío)', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: '   ' });
+      expect(r.success).toBe(true);
+    });
   });
 
   describe('casos inválidos', () => {
-    it('rechaza cadena vacía', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: '' });
-      expect(r.success).toBe(false);
-      if (!r.success) {
-        const messages = r.error.issues.map((i) => i.message);
-        expect(messages).toContain('El número de historia clínica es requerido');
-      }
-    });
-
     it('rechaza formato sin prefijo MRN-', () => {
       const r = acceptRequestSchema.safeParse({ medicalRecordNumber: '2026-000001' });
       expect(r.success).toBe(false);
