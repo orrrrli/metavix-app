@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
@@ -12,7 +12,6 @@ import { Card, CardContent, CardHeader, CardTitle, MetavixButton, MetavixInput, 
 import { usePatientProfile, useUpdatePatientProfile } from '@/features/patient/hooks/use-patient-profile';
 import { useAuthStore } from '@/features/auth/store';
 import { PregnancyBanner } from '@/features/patient/components/PregnancyBanner';
-import { ScheduledPregnancyBanner } from '@/features/patient/components/ScheduledPregnancyBanner';
 import { parseApiDate } from '@/features/patient/utils/parse-api-date';
 
 const DIABETES_LABELS: Record<string, string> = {
@@ -75,11 +74,11 @@ export function PatientProfileCard() {
   const { data: profile, isLoading, isError } = usePatientProfile(patientId ?? '');
   const { mutate: updateProfile, isPending } = useUpdatePatientProfile(patientId ?? '');
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<ProfileFormData>({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<ProfileFormData>({
     resolver: zodResolver(profileSchema),
   });
 
-  const isPregnantValue = watch('isPregnant');
+  const isPregnantValue = useWatch({ control, name: 'isPregnant' }) ?? false;
 
   const handleEdit = (): void => {
     reset({
@@ -162,7 +161,6 @@ export function PatientProfileCard() {
           onDismiss={() => setBannerDismissed(true)}
         />
       )}
-      <ScheduledPregnancyBanner isPregnant={profile.isPregnant} pregnancyStartDate={profile.pregnancyStartDate} />
 
       {/* Profile header */}
       <Card>
