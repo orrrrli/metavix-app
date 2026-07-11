@@ -109,10 +109,18 @@ export async function getPendingLinkRequests(doctorId: string): Promise<PendingL
   return body.data;
 }
 
-export async function acceptLinkRequest(requestId: string): Promise<DoctorLinkRequestResponse> {
+export async function acceptLinkRequest({
+  requestId,
+  medicalRecordNumber,
+}: {
+  requestId: string;
+  medicalRecordNumber: string;
+}): Promise<DoctorLinkRequestResponse> {
   const res = await fetch(`${API}/doctor/requests/${requestId}/accept`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
+    body: JSON.stringify({ medicalRecordNumber }),
   });
   if (!res.ok) throw new Error(`[acceptLinkRequest] ${res.status}`);
   const body = await res.json();

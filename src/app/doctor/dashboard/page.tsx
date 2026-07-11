@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, X } from "lucide-react";
 
@@ -17,37 +17,98 @@ import { Input } from "@/shared/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
+import { AcceptLinkRequestDialog } from "@/features/doctor/components/AcceptLinkRequestDialog";
+
+/** Regex matching the canonical MRN format `MRN-AAAA-NNNNNN`. */
+const MRN_REGEX = /^MRN-(\d{4})-(\d{6})$/;
+
+/**
+ * Computes the next suggested MRN for a given year, by scanning the
+ * currently-loaded patient list and adding 1 to the highest sequence
+ * for that year. Returns `MRN-{year}-000001` when none exist yet.
+ *
+ * Client-side only — the doctor's submitted value is authoritative
+ * after format + uniqueness validation. The unique index on the
+ * `Patients.MedicalRecordNumber` column is the actual backstop.
+ */
+function suggestNextMrn(patients: LinkedPatientResponse[], year: number): string {
+  let max = 0;
+  for (const p of patients) {
+    const m = p.medicalRecordNumber?.match(MRN_REGEX);
+    if (!m) continue;
+    const mrnYear = Number(m[1]);
+    const seq = Number(m[2]);
+    if (mrnYear === year && seq > max) max = seq;
+  }
+  return `MRN-${String(year).padStart(4, "0")}-${String(max + 1).padStart(6, "0")}`;
+}
 
 export default function DoctorDashboard(): React.ReactElement {
-  const { doctorId } = useAuthStore();
+  const { doctorId, _hasHydrated } = useAuthStore();
   const [search, setSearch] = useState("");
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  const { data: myProfile } = useMyDoctorProfile();
-  const showVerificationBanner =
-    !bannerDismissed &&
-    myProfile !== undefined &&
-    !myProfile.isVerified &&
-    myProfile.licenseNumber !== "";
+  // State for the MRN-assignment dialog. `null` = dialog closed.
+  const [pendingAccept, setPendingAccept] = useState<{
+    requestId: string;
+    patientName: string;
+  } | null>(null);
 
+  const { data: myProfile } = useMyDoctorProfile();
   const { data: patients = [], isLoading: loadingPatients } = useLinkedPatients(doctorId ?? "");
   const { data: pendingRequests = [], isLoading: loadingRequests } = usePendingLinkRequests(doctorId ?? "");
 
   const { mutate: accept, isPending: accepting } = useAcceptLinkRequest(doctorId ?? "");
   const { mutate: reject, isPending: rejecting } = useRejectLinkRequest(doctorId ?? "");
 
+  // Compute the suggested MRN lazily — only when a dialog is open.
+  // This avoids re-running the scan on every render.
+  const suggestedMrn = useMemo(() => {
+    if (!pendingAccept) return "";
+    return suggestNextMrn(patients, new Date().getFullYear());
+  }, [pendingAccept, patients]);
+
+  // Wait for Zustand store rehydration before firing doctor-scoped queries.
+  if (!_hasHydrated) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <GooeyLoader />
+      </div>
+    );
+  }
+
+  const showVerificationBanner =
+    !bannerDismissed &&
+    myProfile !== undefined &&
+    !myProfile.isVerified &&
+    myProfile.licenseNumber !== "";
+
   const filteredPatients: LinkedPatientResponse[] = search
     ? patients.filter(p =>
         `${p.name} ${p.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
-        p.medicalRecordNumber.toLowerCase().includes(search.toLowerCase())
+        (p.medicalRecordNumber ?? "").toLowerCase().includes(search.toLowerCase())
       )
     : patients;
 
-  function handleAccept(requestId: string, patientName: string): void {
-    accept(requestId, {
-      onSuccess: () => toast.success(`Solicitud de ${patientName} aceptada`),
-      onError: () => toast.error("No se pudo aceptar la solicitud"),
-    });
+  function openAcceptDialog(requestId: string, patientName: string): void {
+    setPendingAccept({ requestId, patientName });
+  }
+
+  function handleConfirmAccept(mrn: string): void {
+    if (!pendingAccept) return;
+    const { requestId, patientName } = pendingAccept;
+    accept(
+      { requestId, medicalRecordNumber: mrn },
+      {
+        onSuccess: () => {
+          toast.success(`Solicitud de ${patientName} aceptada`);
+          setPendingAccept(null);
+        },
+        onError: () => {
+          toast.error("No se pudo aceptar la solicitud. Verifica el MRN e inténtalo de nuevo.");
+        },
+      }
+    );
   }
 
   function handleReject(requestId: string, patientName: string): void {
@@ -152,7 +213,7 @@ export default function DoctorDashboard(): React.ReactElement {
                     <Button
                       size="sm"
                       disabled={accepting}
-                      onClick={() => handleAccept(req.requestId, `${req.patientFirstName} ${req.patientLastName}`)}
+                      onClick={() => openAcceptDialog(req.requestId, `${req.patientFirstName} ${req.patientLastName}`)}
                     >
                       <CheckCircle className="size-4 mr-1" />
                       Aceptar
@@ -204,27 +265,47 @@ export default function DoctorDashboard(): React.ReactElement {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredPatients.map((patient) => (
-                    <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50">
-                      <TableCell className="font-medium">
-                        {patient.name} {patient.lastName}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{patient.medicalRecordNumber}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Link href={`/doctor/patients/${patient.medicalRecordNumber}`}>
-                          <Button variant="ghost" size="sm">Ver Perfil</Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                  filteredPatients.map((patient) => {
+                    const mrn = patient.medicalRecordNumber?.trim();
+                    const profileHref = mrn ? `/doctor/patients/${mrn}` : "#";
+                    return (
+                      <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50">
+                        <TableCell className="font-medium">
+                          {patient.name} {patient.lastName}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{patient.medicalRecordNumber || "—"}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Link
+                            href={profileHref}
+                            onClick={(e) => {
+                              if (profileHref === "#") e.preventDefault();
+                            }}
+                          >
+                            <Button variant="ghost" size="sm" disabled={profileHref === "#"}>
+                              Ver Perfil
+                            </Button>
+                          </Link>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
           </div>
         </CardContent>
       </Card>
+
+      <AcceptLinkRequestDialog
+        open={pendingAccept !== null}
+        patientName={pendingAccept?.patientName ?? ""}
+        suggestedMrn={suggestedMrn}
+        isSubmitting={accepting}
+        onConfirm={handleConfirmAccept}
+        onClose={() => setPendingAccept(null)}
+      />
     </div>
   );
 }

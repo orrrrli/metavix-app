@@ -63,7 +63,20 @@ interface Props {
 
 export default function PatientDetailView({ params }: Props): React.ReactElement {
   const { mrn } = use(params);
-  const { doctorId } = useAuthStore();
+  const { doctorId, _hasHydrated } = useAuthStore();
+
+  // Wait for the Zustand store to rehydrate from localStorage before firing
+  // any doctor-scoped queries. Without this, on hard-reload the store is
+  // `null` for doctorId on first render → queries fire with empty ids →
+  // backend's :guid route constraint rejects with 404 and React Query
+  // retries in a tight loop.
+  if (!_hasHydrated) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <GooeyLoader />
+      </div>
+    );
+  }
 
   const { data: patients = [], isLoading: loadingPatients } = useLinkedPatients(doctorId ?? "");
   const patient = patients.find(p => p.medicalRecordNumber === mrn);
