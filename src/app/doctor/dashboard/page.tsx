@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { AlertTriangle, X } from "lucide-react";
 
@@ -9,7 +9,14 @@ import { Search, Users, Bell, CheckCircle, XCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/store";
-import { useLinkedPatients, usePendingLinkRequests, useAcceptLinkRequest, useRejectLinkRequest, useMyDoctorProfile } from "@/features/doctor/hooks/use-doctor";
+import {
+  useLinkedPatients,
+  usePendingLinkRequests,
+  useAcceptLinkRequest,
+  useRejectLinkRequest,
+  useMyDoctorProfile,
+  useMrnSuggestion,
+} from "@/features/doctor/hooks/use-doctor";
 import { LinkedPatientResponse } from "@/types/doctor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -18,30 +25,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/shared/components/ui/badge";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 import { AcceptLinkRequestDialog } from "@/features/doctor/components/AcceptLinkRequestDialog";
-
-/** Regex matching the canonical MRN format `MRN-AAAA-NNNNNN`. */
-const MRN_REGEX = /^MRN-(\d{4})-(\d{6})$/;
-
-/**
- * Computes the next suggested MRN for a given year, by scanning the
- * currently-loaded patient list and adding 1 to the highest sequence
- * for that year. Returns `MRN-{year}-000001` when none exist yet.
- *
- * Client-side only — the doctor's submitted value is authoritative
- * after format + uniqueness validation. The unique index on the
- * `Patients.MedicalRecordNumber` column is the actual backstop.
- */
-function suggestNextMrn(patients: LinkedPatientResponse[], year: number): string {
-  let max = 0;
-  for (const p of patients) {
-    const m = p.medicalRecordNumber?.match(MRN_REGEX);
-    if (!m) continue;
-    const mrnYear = Number(m[1]);
-    const seq = Number(m[2]);
-    if (mrnYear === year && seq > max) max = seq;
-  }
-  return `MRN-${String(year).padStart(4, "0")}-${String(max + 1).padStart(6, "0")}`;
-}
 
 export default function DoctorDashboard(): React.ReactElement {
   const { doctorId, _hasHydrated } = useAuthStore();
@@ -61,12 +44,11 @@ export default function DoctorDashboard(): React.ReactElement {
   const { mutate: accept, isPending: accepting } = useAcceptLinkRequest(doctorId ?? "");
   const { mutate: reject, isPending: rejecting } = useRejectLinkRequest(doctorId ?? "");
 
-  // Compute the suggested MRN lazily — only when a dialog is open.
-  // This avoids re-running the scan on every render.
-  const suggestedMrn = useMemo(() => {
-    if (!pendingAccept) return "";
-    return suggestNextMrn(patients, new Date().getFullYear());
-  }, [pendingAccept, patients]);
+  // Only ask the backend for an MRN suggestion while the dialog is open.
+  // The hook is enabled lazily so we don't fire the request on page load.
+  const { data: suggestedMrn = "" } = useMrnSuggestion(
+    pendingAccept ? new Date().getFullYear() : undefined,
+  );
 
   // Wait for Zustand store rehydration before firing doctor-scoped queries.
   if (!_hasHydrated) {

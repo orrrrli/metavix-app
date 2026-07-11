@@ -11,6 +11,7 @@ import {
   acceptLinkRequest,
   rejectLinkRequest,
   unlinkPatient,
+  getMrnSuggestion,
 } from '@/lib/api/doctor';
 import { useAuthStore } from '@/features/auth/store';
 
@@ -120,12 +121,19 @@ export function useUpdateDoctorProfile() {
 export function useAcceptLinkRequest(doctorId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { requestId: string; medicalRecordNumber: string }) =>
+    mutationFn: (input: { requestId: string; medicalRecordNumber?: string }) =>
       acceptLinkRequest(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-requests', doctorId] });
       queryClient.invalidateQueries({ queryKey: ['linked-patients', doctorId] });
     },
+  });
+}
+
+export function useMrnSuggestion(year?: number) {
+  return useQuery({
+    queryKey: ['mrn-suggestion', year ?? 'current'],
+    queryFn: () => getMrnSuggestion(year),
   });
 }
 

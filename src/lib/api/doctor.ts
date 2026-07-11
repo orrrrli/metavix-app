@@ -114,17 +114,27 @@ export async function acceptLinkRequest({
   medicalRecordNumber,
 }: {
   requestId: string;
-  medicalRecordNumber: string;
+  medicalRecordNumber?: string;
 }): Promise<DoctorLinkRequestResponse> {
   const res = await fetch(`${API}/doctor/requests/${requestId}/accept`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ medicalRecordNumber }),
+    body: JSON.stringify({ medicalRecordNumber: medicalRecordNumber ?? null }),
   });
   if (!res.ok) throw new Error(`[acceptLinkRequest] ${res.status}`);
   const body = await res.json();
   return body.data;
+}
+
+export async function getMrnSuggestion(year?: number): Promise<string> {
+  const qs = year ? `?year=${year}` : '';
+  const res = await fetch(`${API}/doctor/mrn-suggestion${qs}`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`[getMrnSuggestion] ${res.status}`);
+  const body = await res.json();
+  return body.data?.mrn ?? '';
 }
 
 export async function rejectLinkRequest(requestId: string): Promise<DoctorLinkRequestResponse> {

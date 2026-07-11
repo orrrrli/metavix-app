@@ -73,7 +73,10 @@ export function AcceptLinkRequestDialog({
   }, [open, suggestedMrn, reset]);
 
   const handleValid = (values: AcceptRequestFormValues) => {
-    onConfirm(values.medicalRecordNumber);
+    // Pass through undefined when the doctor clears the field — the parent
+    // sends null to the backend, which triggers auto-assignment.
+    const mrn = values.medicalRecordNumber?.trim();
+    onConfirm(mrn && mrn.length > 0 ? mrn : "");
   };
 
   const handleInvalid = () => {
