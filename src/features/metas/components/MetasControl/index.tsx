@@ -113,9 +113,19 @@ export function MetasControl() {
     }
   };
 
+  // `valores` sólo pre-popula 5 de los 16 parámetros (T5); el resto se
+  // muestra "sin datos" hasta evaluar. Tras evaluar, `evalResult.items` trae
+  // el `valueUsed` real que el backend usó para los 16 parámetros — lo
+  // priorizamos para que el semáforo y el valor mostrado nunca queden
+  // desalineados (evita mostrar "Sin datos" con un semáforo en color).
+  const valoresEvaluados: Record<string, string> = {};
+  evalResult?.items.forEach((item) => {
+    valoresEvaluados[item.parameterId] = item.valueUsed?.toString() ?? "";
+  });
+
   const resultadosFormateados = PARAMETROS_META.map((param) => ({
     param,
-    valor: valores[param.id] ?? "",
+    valor: valoresEvaluados[param.id] ?? valores[param.id] ?? "",
     evaluacion: evaluaciones[param.id],
   }));
 
@@ -166,7 +176,7 @@ export function MetasControl() {
           <ParametroMeta
             key={param.id}
             param={param}
-            valor={valores[param.id] ?? ""}
+            valor={valoresEvaluados[param.id] ?? valores[param.id] ?? ""}
             colorActual={evaluaciones[param.id].color}
             readOnly
           />
