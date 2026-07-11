@@ -34,8 +34,8 @@ export const TEXTOS_CLINICOS: Record<string, string> = {
 };
 
 export function obtenerNivelRiesgo(puntaje: number) {
-  if (puntaje <= 3) return { nivel: "Riesgo bajo", color: "text-emerald-700 bg-emerald-100 border-emerald-300" };
-  if (puntaje <= 7) return { nivel: "Riesgo moderado", color: "text-amber-700 bg-amber-100 border-amber-300" };
-  if (puntaje <= 12) return { nivel: "Riesgo alto", color: "text-orange-700 bg-orange-100 border-orange-300" };
-  return { nivel: "Riesgo muy alto", color: "text-red-800 bg-red-200 border-red-400" };
+  if (puntaje <= 3) return { nivel: "Riesgo bajo", color: "text-emerald-700 bg-emerald-100 border-emerald-300 dark:text-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-700" };
+  if (puntaje <= 7) return { nivel: "Riesgo moderado", color: "text-amber-700 bg-amber-100 border-amber-300 dark:text-amber-200 dark:bg-amber-900/30 dark:border-amber-700" };
+  if (puntaje <= 12) return { nivel: "Riesgo alto", color: "text-orange-700 bg-orange-100 border-orange-300 dark:text-orange-200 dark:bg-orange-900/30 dark:border-orange-700" };
+  return { nivel: "Riesgo muy alto", color: "text-red-800 bg-red-200 border-red-400 dark:text-red-200 dark:bg-red-900/30 dark:border-red-700" };
 }

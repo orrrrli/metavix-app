@@ -2,6 +2,7 @@ import { parse, format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { cn } from "@/shared/utils/index";
+import { imcLevel, statusBadgeClasses } from "@/shared/utils/status-colors";
 
 export interface ImcEntry {
   id: string;
@@ -15,15 +16,6 @@ export interface ImcEntry {
 interface HistorialIMCProps {
   historial: ImcEntry[];
 }
-
-const getBadgeColor = (cat: string): string => {
-  if (cat === "Bajo peso") return "text-amber-700 bg-amber-100";
-  if (cat === "Normal") return "text-emerald-700 bg-emerald-100";
-  if (cat === "Sobrepeso") return "text-orange-700 bg-orange-100";
-  if (cat.includes("grado I")) return "text-red-600 bg-red-100";
-  if (cat.includes("grado II")) return "text-red-700 bg-red-100";
-  return "text-red-800 bg-red-200";
-};
 
 export function HistorialIMC({ historial }: HistorialIMCProps) {
   if (historial.length === 0) {
@@ -61,7 +53,7 @@ export function HistorialIMC({ historial }: HistorialIMCProps) {
                   <TableCell>{r.estatura_cm} cm</TableCell>
                   <TableCell className="font-bold">{r.imc.toFixed(1)}</TableCell>
                   <TableCell>
-                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold", getBadgeColor(r.categoria))}>
+                    <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold border", statusBadgeClasses(imcLevel(r.categoria)))}>
                       {r.categoria}
                     </span>
                   </TableCell>

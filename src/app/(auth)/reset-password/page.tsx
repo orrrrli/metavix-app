@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { ArrowLeft, Eye, EyeOff, Loader2, ShieldCheck, AlertCircle } from 'lucide-react';
 import { resetPassword } from '@/lib/api/auth';
 import AuthFloatingInput from '@/shared/components/auth/AuthFloatingInput';
+import { Button } from '@/shared/components/ui/button';
 
 const schema = z
   .object({
@@ -51,11 +52,11 @@ function ResetPasswordForm(): React.ReactElement {
 
   if (!token) {
     return (
-      <div className="max-w-md w-full text-center space-y-6 p-8 bg-white rounded-2xl shadow-lg border border-black/5">
-        <AlertCircle className="size-12 text-red-400 mx-auto" />
-        <h1 className="text-2xl font-bold text-[#101010]">Enlace inválido</h1>
-        <p className="text-sm text-black/45">Este enlace de restablecimiento no es válido.</p>
-        <Link href="/forgot-password" className="text-sm font-semibold text-teal-500 underline underline-offset-4">
+      <div className="max-w-md w-full text-center space-y-6 p-8 bg-card text-card-foreground rounded-2xl shadow-lg border border-border">
+        <AlertCircle className="size-12 text-red-400 dark:text-red-300 mx-auto" />
+        <h1 className="text-2xl font-bold text-foreground">Enlace inválido</h1>
+        <p className="text-sm text-muted-foreground">Este enlace de restablecimiento no es válido.</p>
+        <Link href="/forgot-password" className="text-sm font-semibold text-primary underline underline-offset-4">
           Solicitar uno nuevo
         </Link>
       </div>
@@ -64,12 +65,12 @@ function ResetPasswordForm(): React.ReactElement {
 
   if (done) {
     return (
-      <div className="max-w-md w-full text-center space-y-6 p-8 bg-white rounded-2xl shadow-lg border border-black/5">
-        <div className="inline-flex items-center justify-center p-4 bg-teal-50 rounded-full">
-          <ShieldCheck className="size-10 text-teal-500" />
+      <div className="max-w-md w-full text-center space-y-6 p-8 bg-card text-card-foreground rounded-2xl shadow-lg border border-border">
+        <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full">
+          <ShieldCheck className="size-10 text-primary" />
         </div>
-        <h1 className="text-2xl font-bold text-[#101010]">Contraseña actualizada</h1>
-        <p className="text-sm text-black/45">
+        <h1 className="text-2xl font-bold text-foreground">Contraseña actualizada</h1>
+        <p className="text-sm text-muted-foreground">
           Tu contraseña fue restablecida correctamente. Redirigiendo al inicio de sesión...
         </p>
       </div>
@@ -77,31 +78,20 @@ function ResetPasswordForm(): React.ReactElement {
   }
 
   return (
-    <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-lg border border-black/5">
+    <div className="max-w-md w-full p-8 bg-card text-card-foreground rounded-2xl shadow-lg border border-border">
       <Link
         href="/login"
-        className="inline-flex items-center gap-1.5 text-sm text-black/40 hover:text-black/70 transition-colors mb-8"
+        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
       >
         <ArrowLeft size={14} />
         Volver
       </Link>
 
-      <h1 className="text-2xl font-bold text-[#101010] mb-2">Nueva contraseña</h1>
-      <p className="text-sm text-black/45 mb-8">Elige una contraseña segura de al menos 8 caracteres.</p>
+      <h1 className="text-2xl font-bold text-foreground mb-2">Nueva contraseña</h1>
+      <p className="text-sm text-muted-foreground mb-8">Elige una contraseña segura de al menos 8 caracteres.</p>
 
       {apiError && (
-        <div
-          style={{
-            padding: '10px 14px',
-            borderRadius: '10px',
-            fontSize: '0.875rem',
-            fontWeight: 500,
-            background: 'rgba(247,45,45,0.08)',
-            color: '#d42020',
-            border: '1px solid rgba(247,45,45,0.2)',
-            marginBottom: '16px',
-          }}
-        >
+        <div className="rounded-lg bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-200 border border-red-200 dark:border-red-900/50 px-3.5 py-2.5 text-sm font-medium mb-4">
           {apiError}
         </div>
       )}
@@ -123,7 +113,7 @@ function ResetPasswordForm(): React.ReactElement {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  style={{ background: 'rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer', color: 'rgba(0,0,0,0.45)', display: 'flex', padding: '5px', borderRadius: '6px' }}
+                  className="bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-none cursor-pointer flex p-1.5 rounded-md"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -148,7 +138,7 @@ function ResetPasswordForm(): React.ReactElement {
                 <button
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
-                  style={{ background: 'rgba(0,0,0,0.05)', border: 'none', cursor: 'pointer', color: 'rgba(0,0,0,0.45)', display: 'flex', padding: '5px', borderRadius: '6px' }}
+                  className="bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-none cursor-pointer flex p-1.5 rounded-md"
                 >
                   {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -157,32 +147,17 @@ function ResetPasswordForm(): React.ReactElement {
           )}
         />
 
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting}
-          style={{
-            width: '100%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            padding: '13px 24px',
-            fontSize: '1rem',
-            fontWeight: 700,
-            color: 'white',
-            background: isSubmitting ? '#00BFA580' : '#00BFA5',
-            border: 'none',
-            borderRadius: '9999px',
-            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            transition: 'background 0.2s ease',
-          }}
+          className="w-full h-12 text-base"
         >
           {isSubmitting ? (
-            <><Loader2 size={16} className="animate-spin" />Guardando...</>
+            <><Loader2 size={16} className="animate-spin mr-2" />Guardando...</>
           ) : (
             'Restablecer contraseña'
           )}
-        </button>
+        </Button>
       </form>
     </div>
   );
@@ -190,8 +165,8 @@ function ResetPasswordForm(): React.ReactElement {
 
 export default function ResetPasswordPage(): React.ReactElement {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f2f2f2] p-4">
-      <Suspense fallback={<div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-lg" />}>
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 dark:bg-background p-4">
+      <Suspense fallback={<div className="max-w-md w-full p-8 bg-card rounded-2xl shadow-lg border border-border" />}>
         <ResetPasswordForm />
       </Suspense>
     </div>

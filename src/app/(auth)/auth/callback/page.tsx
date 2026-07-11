@@ -74,9 +74,9 @@ function OAuthCallbackInner(): React.ReactElement {
   }, [params, router, setSession]);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#f2f2f2]">
-      <Loader2 className="size-8 animate-spin text-teal-500" />
-      <p className="text-sm text-black/40">Completando inicio de sesión...</p>
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-muted/40 dark:bg-background">
+      <Loader2 className="size-8 animate-spin text-primary" />
+      <p className="text-sm text-muted-foreground">Completando inicio de sesión...</p>
     </div>
   );
 }
@@ -84,8 +84,8 @@ function OAuthCallbackInner(): React.ReactElement {
 export default function AuthCallbackPage(): React.ReactElement {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f2f2]">
-        <Loader2 className="size-8 animate-spin text-teal-500" />
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 dark:bg-background">
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     }>
       <OAuthCallbackInner />

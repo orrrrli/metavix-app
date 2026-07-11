@@ -176,7 +176,7 @@ export default function GlucoseCurvesPage() {
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Mínima</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-600">{minimo ?? "--"} <span className="text-sm font-normal">mg/dL</span></div>
+              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{minimo ?? "--"} <span className="text-sm font-normal">mg/dL</span></div>
             </CardContent>
           </Card>
           <Card className="shadow-sm">

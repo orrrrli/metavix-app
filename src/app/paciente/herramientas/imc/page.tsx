@@ -210,9 +210,9 @@ export default function BmiTrendPage() {
 
       {/* Height null CTA */}
       {!heightCm && (
-        <Card className="shadow-sm border-amber-200 bg-amber-50">
+        <Card className="shadow-sm border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/30">
           <CardContent className="pt-6">
-            <p className="text-sm text-amber-800">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
               Necesitas registrar tu estatura para calcular el IMC.{" "}
               <Link
                 href="/paciente/herramientas/calculadora-imc"
@@ -320,7 +320,7 @@ export default function BmiTrendPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-600">{minBmi ?? "--"}</div>
+            <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">{minBmi ?? "--"}</div>
           </CardContent>
         </Card>
         <Card className="shadow-sm">

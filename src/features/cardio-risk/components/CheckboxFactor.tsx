@@ -17,7 +17,7 @@ export function CheckboxFactor({ id, label, seleccionado, onToggle }: CheckboxFa
         "flex items-center text-left p-4 rounded-xl border-2 transition-all duration-200 select-none",
         seleccionado 
           ? "border-primary bg-primary/5 text-primary" 
-          : "border-muted bg-white text-foreground hover:border-primary/40 hover:bg-muted/30"
+          : "border-muted bg-card text-foreground hover:border-primary/40 hover:bg-muted/30"
       )}
     >
       <div className={cn(

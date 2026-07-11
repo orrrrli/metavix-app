@@ -143,7 +143,7 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
             <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Droplet className="size-5 text-blue-500" />
+                  <Droplet className="size-5 text-blue-500 dark:text-blue-400" />
                   Tendencias de Glucosa
                 </CardTitle>
                 <CardDescription>Ayunas vs Posprandial</CardDescription>
@@ -170,7 +170,7 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
             <Card className="shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <HeartPulse className="size-5 text-rose-500" />
+                  <HeartPulse className="size-5 text-rose-500 dark:text-rose-400" />
                   Cardiovascular
                 </CardTitle>
                 <CardDescription>Sistólica, Diastólica y Frecuencia Cardíaca</CardDescription>

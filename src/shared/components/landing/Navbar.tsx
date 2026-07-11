@@ -17,7 +17,7 @@ export function Navbar() {
 
   return (
     <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-6xl">
-      <div className="bg-white/70 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-2xl">
+      <div className="bg-white/70 dark:bg-card/75 backdrop-blur-xl border border-white/40 dark:border-border/60 shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] rounded-2xl">
         <div className="px-6 h-16 flex items-center justify-between">
           <Link
             href="/"
@@ -35,7 +35,7 @@ export function Navbar() {
               <Link
                 key={link.name}
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-black/5 px-4 py-2 rounded-full transition-all"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 px-4 py-2 rounded-full transition-all"
               >
                 {link.name}
               </Link>
@@ -58,7 +58,7 @@ export function Navbar() {
             </Link>
             <button
               onClick={() => setOpen(!open)}
-              className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl hover:bg-black/5 transition-colors"
+              className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
               aria-label={open ? "Cerrar menú" : "Abrir menú"}
             >
               {open ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -68,13 +68,13 @@ export function Navbar() {
 
         {/* Mobile Menu */}
         {open && (
-          <div className="md:hidden border-t border-white/40 px-4 pb-4 pt-3 flex flex-col gap-1">
+          <div className="md:hidden border-t border-white/40 dark:border-border/60 px-4 pb-4 pt-3 flex flex-col gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-black/5 px-4 py-3 rounded-xl transition-all"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/10 px-4 py-3 rounded-xl transition-all"
               >
                 {link.name}
               </Link>

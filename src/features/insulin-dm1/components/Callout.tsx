@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/shared/utils/index";
+import { statusCalloutClasses, statusCalloutIconClasses } from "@/shared/utils/status-colors";
 
 type CalloutVariant = "info" | "success" | "warning" | "danger";
 
@@ -12,24 +13,24 @@ interface CalloutProps {
 
 const variantStyles: Record<CalloutVariant, { container: string; icon: React.ReactNode; iconClass: string }> = {
   info: {
-    container: "border-blue-500 bg-blue-50 text-blue-900",
+    container: statusCalloutClasses("info"),
     icon: <Info className="h-4 w-4" />,
-    iconClass: "text-blue-500",
+    iconClass: statusCalloutIconClasses("info"),
   },
   success: {
-    container: "border-emerald-500 bg-emerald-50 text-emerald-900",
+    container: statusCalloutClasses("success"),
     icon: <CheckCircle2 className="h-4 w-4" />,
-    iconClass: "text-emerald-500",
+    iconClass: statusCalloutIconClasses("success"),
   },
   warning: {
-    container: "border-amber-500 bg-amber-50 text-amber-900",
+    container: statusCalloutClasses("warning"),
     icon: <AlertTriangle className="h-4 w-4" />,
-    iconClass: "text-amber-500",
+    iconClass: statusCalloutIconClasses("warning"),
   },
   danger: {
-    container: "border-red-500 bg-red-50 text-red-900",
+    container: statusCalloutClasses("danger"),
     icon: <AlertCircle className="h-4 w-4" />,
-    iconClass: "text-red-500",
+    iconClass: statusCalloutIconClasses("danger"),
   },
 };
 

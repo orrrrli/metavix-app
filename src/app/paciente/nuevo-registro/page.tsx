@@ -95,7 +95,7 @@ export default function NewRecordPage() {
       </button>
 
       {/* Móvil */}
-      <div className="lg:hidden -mx-4 sm:mx-0 sm:overflow-hidden sm:rounded-3xl sm:border sm:border-[#eee3d4]">
+      <div className="lg:hidden -mx-4 sm:mx-0 sm:overflow-hidden sm:rounded-3xl sm:border sm:border-border">
         <RegistroGlucosaMovil
           lecturas={lecturasHoy}
           fecha={fecha}

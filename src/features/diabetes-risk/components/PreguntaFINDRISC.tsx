@@ -38,9 +38,9 @@ export function PreguntaFINDRISC({
                 onClick={() => onSelect(opcion.puntos)}
                 className={cn(
                   "w-full text-left px-4 py-4 rounded-xl border-2 transition-all duration-200 font-medium",
-                  isSelected 
-                    ? "border-primary bg-primary/5 text-primary" 
-                    : "border-muted bg-white text-muted-foreground hover:border-primary/40 hover:bg-muted/30"
+                  isSelected
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-muted bg-card text-muted-foreground hover:border-primary/40 hover:bg-muted/30"
                 )}
               >
                 <div className="flex items-center gap-3">

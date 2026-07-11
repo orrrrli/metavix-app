@@ -1,6 +1,7 @@
 import { AlertTriangle, HeartPulse } from "lucide-react";
 import { cn } from "@/shared/utils/index";
 import { TEXTOS_CLINICOS } from "../data/factores";
+import { statusCalloutClasses, statusCalloutIconClasses } from "@/shared/utils/status-colors";
 
 interface ResultadoRiesgoCVProps {
   puntaje: number;
@@ -13,7 +14,7 @@ export function ResultadoRiesgoCV({ puntaje, nivel, color, factoresEncontrados }
   return (
     <div id="resultado-cardio" className="space-y-8 animate-in slide-in-from-bottom-8 duration-700 mt-12 pt-8 border-t-2">
       <div className="bg-card border rounded-xl p-8 sm:p-12 shadow-md">
-        
+
         <div className="text-center mb-10">
           <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold mb-2">
             Tu Riesgo Cardiovascular Estimado
@@ -36,9 +37,9 @@ export function ResultadoRiesgoCV({ puntaje, nivel, color, factoresEncontrados }
 
         <div className="space-y-6">
           <h3 className="text-xl font-display font-semibold border-b pb-2">Factores Clínicos Identificados</h3>
-          
+
           {factoresEncontrados.length === 0 ? (
-            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-lg text-emerald-800 font-medium">
+            <div className="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 rounded-lg text-emerald-800 dark:text-emerald-200 font-medium">
               {TEXTOS_CLINICOS["ninguno"]}
             </div>
           ) : (
@@ -58,12 +59,12 @@ export function ResultadoRiesgoCV({ puntaje, nivel, color, factoresEncontrados }
         </div>
       </div>
 
-      <div className="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-md shadow-sm">
+      <div className={cn("border-l-4 p-5 rounded-r-md shadow-sm", statusCalloutClasses("warning"))}>
         <div className="flex items-start">
-          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+          <AlertTriangle className={cn("h-5 w-5 mt-0.5 shrink-0", statusCalloutIconClasses("warning"))} />
           <div className="ml-3">
-            <h4 className="text-sm font-bold text-amber-800 mb-1">Aviso Clínico Obligatorio</h4>
-            <p className="text-sm text-amber-800/90 leading-relaxed">
+            <h4 className="text-sm font-bold mb-1">Aviso Clínico Obligatorio</h4>
+            <p className="text-sm opacity-90 leading-relaxed">
               Esta evaluación es orientativa y no reemplaza una valoración médica completa con estudios de laboratorio. Consulte a su médico para una evaluación de riesgo cardiovascular formal (SCORE, Framingham).
             </p>
           </div>

@@ -2,6 +2,7 @@ import { Button } from "@/shared/components/ui/button";
 import { AlertTriangle, Activity } from "lucide-react";
 import { cn } from "@/shared/utils/index";
 import { InterpretacionRiesgo } from "../data/interpretacion";
+import { statusCalloutClasses, statusCalloutIconClasses } from "@/shared/utils/status-colors";
 
 interface ResultadoFINDRISCProps {
   puntaje: number;
@@ -16,7 +17,7 @@ export function ResultadoFINDRISC({ puntaje, interpretacion, onReset }: Resultad
         <p className="text-sm text-muted-foreground uppercase tracking-widest font-semibold mb-4">
           Tu Puntaje FINDRISC
         </p>
-        
+
         <div className="flex items-baseline justify-center gap-2 mb-6">
           <h2 className="text-8xl font-display font-bold text-foreground">
             {puntaje}
@@ -31,7 +32,7 @@ export function ResultadoFINDRISC({ puntaje, interpretacion, onReset }: Resultad
             <Activity className="h-5 w-5" />
             Riesgo {interpretacion.nivel}
           </div>
-          
+
           <div className="bg-muted/30 py-3 px-6 rounded-lg border text-sm font-medium text-muted-foreground">
             Probabilidad a 10 años: <strong className="text-foreground">{interpretacion.probabilidad}</strong>
           </div>
@@ -46,12 +47,12 @@ export function ResultadoFINDRISC({ puntaje, interpretacion, onReset }: Resultad
         </Button>
       </div>
 
-      <div className="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-md">
+      <div className={cn("border-l-4 p-5 rounded-r-md", statusCalloutClasses("warning"))}>
         <div className="flex items-start">
-          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+          <AlertTriangle className={cn("h-5 w-5 mt-0.5 shrink-0", statusCalloutIconClasses("warning"))} />
           <div className="ml-3">
-            <h4 className="text-sm font-bold text-amber-800 mb-1">Aviso Clínico Obligatorio</h4>
-            <p className="text-sm text-amber-800/90">
+            <h4 className="text-sm font-bold mb-1">Aviso Clínico Obligatorio</h4>
+            <p className="text-sm opacity-90">
               Este cuestionario es una herramienta de orientación basada en el test FINDRISC (Finnish Diabetes Risk Score). No reemplaza el diagnóstico médico. Solo un análisis de sangre puede confirmar diabetes.
             </p>
           </div>

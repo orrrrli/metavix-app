@@ -57,6 +57,41 @@
   --danger-foreground: #ffffff;
 }
 
+/*
+ * Dark mode — variables reasignadas para que bg-card / text-foreground / etc.
+ * funcionen también FUERA del wrapper `.mvx-dash` (auth pages, páginas misceláneas,
+ * futuras landings). El wrapper `.mvx-dash` sigue aplicando su propio set
+ * encima de estas (línea siguiente) para tener su paleta particular más cálida.
+ */
+.dark {
+  --background: #0b1620;
+  --foreground: #f1f5f3;
+  --card: #0e1f2b;
+  --card-foreground: #f1f5f3;
+  --popover: #0e1f2b;
+  --popover-foreground: #f1f5f3;
+  --primary: #00c9a7;
+  --primary-foreground: #03251d;
+  --secondary: #1a2a35;
+  --secondary-foreground: #f1f5f3;
+  --muted: #1a2a35;
+  --muted-foreground: rgba(255, 255, 255, 0.56);
+  --accent: rgba(0, 201, 167, 0.14);
+  --accent-foreground: #2fe0c2;
+  --destructive: #f0795d;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: #2fe0c2;
+
+  --success: #46c98c;
+  --success-foreground: #03251d;
+  --warning: #e7b53a;
+  --warning-foreground: #03251d;
+  --danger: #f0795d;
+  --danger-foreground: #ffffff;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
