@@ -16,6 +16,7 @@ import {
   useLinkedPatientDailyRecords,
   useLinkedPatientLabResults,
 } from "@/features/doctor/hooks/use-doctor";
+import { ClinicalGoalsEditor } from "@/features/doctor/components/ClinicalGoalsEditor";
 import { DailyRecordResponse, GlucoseReadingResponse, GlucoseReadingType } from "@/types/daily-record";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -148,6 +149,7 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
           <TabsTrigger value="overview">Resumen Clínico</TabsTrigger>
           <TabsTrigger value="daily">Registros Diarios</TabsTrigger>
           <TabsTrigger value="lab">Resultados de Lab</TabsTrigger>
+          <TabsTrigger value="goals">Metas</TabsTrigger>
         </TabsList>
 
         {/* Overview — charts */}
@@ -378,6 +380,15 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Clinical Goals — doctor-set per-parameter custom thresholds */}
+        <TabsContent value="goals">
+          <ClinicalGoalsEditor
+            doctorId={doctorId ?? ""}
+            patientId={patientId}
+            isPregnant={Boolean(profile.isPregnant)}
+          />
         </TabsContent>
       </Tabs>
     </div>
