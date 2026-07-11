@@ -88,7 +88,7 @@ export function ConversorHbA1c({ modo, onCalcular }: ConversorHbA1cProps) {
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 mt-3 text-red-600 text-sm bg-red-50 p-2 rounded-md border border-red-100">
+          <div className="flex items-center gap-2 mt-3 text-red-600 dark:text-red-300 text-sm bg-red-50 dark:bg-red-950/40 p-2 rounded-md border border-red-100 dark:border-red-900/50">
             <AlertCircle className="h-4 w-4" />
             <span>{error}</span>
           </div>

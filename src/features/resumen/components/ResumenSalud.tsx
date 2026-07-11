@@ -11,6 +11,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { PatientMetricasResponse } from "@/types/patient-resumen";
+import { sectionContainerClasses } from "@/shared/utils/status-colors";
 
 type MetricaKey = keyof PatientMetricasResponse;
 
@@ -52,7 +53,7 @@ export function ResumenSalud() {
 
   if (isError || !data) {
     return (
-      <div className="bg-red-50 text-red-700 p-6 rounded-lg text-center">
+      <div className="bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-200 p-6 rounded-lg text-center border border-red-100 dark:border-red-900/50">
         <p>Ocurrió un error al cargar el resumen clínico.</p>
         <Button onClick={() => window.location.reload()} className="mt-4" variant="outline">
           Reintentar
@@ -115,7 +116,12 @@ export function ResumenSalud() {
         </Button>
       </div>
 
-      <div className="bg-white text-black shadow-lg rounded-xl overflow-hidden border">
+      {/*
+        Wrapper externo: en dark mode usa bg-card para que la tarjeta se integre con el dashboard oscuro.
+        El sub-árbol pdfRef se mantiene con bg-white text-black porque html2pdf lo clona
+        en un iframe sin la clase "dark" → el PDF exportado siempre se imprime claro.
+      */}
+      <div className="bg-white dark:bg-card text-black dark:text-card-foreground shadow-lg rounded-xl overflow-hidden border border-black/5 dark:border-border">
         <div ref={pdfRef} className="p-8 sm:p-12 max-w-4xl mx-auto bg-white" style={{ minHeight: '297mm' }}>
 
           <EncabezadoResumen nombrePaciente={perfil.nombre} />
@@ -124,7 +130,7 @@ export function ResumenSalud() {
           <div className="space-y-8">
             <section>
               <h3 className="text-lg font-display font-bold text-primary border-b-2 border-primary/20 pb-2 mb-4 uppercase tracking-wider">Control Glucémico</h3>
-              <div className="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+              <div className={cnSec("p-4 rounded-lg border")}>
                 {renderMetrica("glucosaAyuno", "Glucosa en ayuno", "mg/dL")}
                 {renderMetrica("hba1c", "Hemoglobina Glicosilada (HbA1c)", "%")}
               </div>
@@ -132,7 +138,7 @@ export function ResumenSalud() {
 
             <section>
               <h3 className="text-lg font-display font-bold text-primary border-b-2 border-primary/20 pb-2 mb-4 uppercase tracking-wider">Presión Arterial y Corazón</h3>
-              <div className="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+              <div className={cnSec("p-4 rounded-lg border")}>
                 {renderMetrica("presionSistolica", "Presión Sistólica", "mmHg")}
                 {renderMetrica("presionDiastolica", "Presión Diastólica", "mmHg")}
                 {renderMetrica("frecuenciaCardiaca", "Frecuencia Cardiaca", "lpm")}
@@ -141,7 +147,7 @@ export function ResumenSalud() {
 
             <section>
               <h3 className="text-lg font-display font-bold text-primary border-b-2 border-primary/20 pb-2 mb-4 uppercase tracking-wider">Peso y Composición Corporal</h3>
-              <div className="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+              <div className={cnSec("p-4 rounded-lg border")}>
                 {renderMetricaInfo("peso", "Peso", "kg")}
                 {renderMetrica("imc", "Índice de Masa Corporal (IMC)", "")}
                 {renderMetrica("cintura", "Circunferencia de Cintura", "cm")}
@@ -150,7 +156,7 @@ export function ResumenSalud() {
 
             <section>
               <h3 className="text-lg font-display font-bold text-primary border-b-2 border-primary/20 pb-2 mb-4 uppercase tracking-wider">Perfil de Lípidos</h3>
-              <div className="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+              <div className={cnSec("p-4 rounded-lg border")}>
                 {renderMetrica("colesterolTotal", "Colesterol Total", "mg/dL")}
                 {renderMetrica("colesterolLdl", "Colesterol LDL (Malo)", "mg/dL")}
                 {renderMetrica("colesterolHdl", "Colesterol HDL (Bueno)", "mg/dL")}
@@ -160,18 +166,18 @@ export function ResumenSalud() {
 
             <section>
               <h3 className="text-lg font-display font-bold text-primary border-b-2 border-primary/20 pb-2 mb-4 uppercase tracking-wider">Función Renal</h3>
-              <div className="bg-slate-50/50 p-4 rounded-lg border border-slate-100">
+              <div className={cnSec("p-4 rounded-lg border")}>
                 {renderMetrica("creatinina", "Creatinina", "mg/dL")}
                 {renderMetrica("bun", "Nitrógeno Ureico (BUN)", "mg/dL")}
               </div>
             </section>
 
-            <section className="bg-indigo-50/50 p-6 rounded-lg border border-indigo-100 mt-8">
-              <h3 className="text-lg font-display font-bold text-indigo-900 border-b-2 border-indigo-200 pb-2 mb-4 uppercase tracking-wider flex items-center gap-2">
-                <span className="bg-indigo-200 text-indigo-800 p-1 rounded">IA</span>
+            <section className="bg-indigo-50/50 dark:bg-indigo-950/30 p-6 rounded-lg border border-indigo-100 dark:border-indigo-800/60 mt-8">
+              <h3 className="text-lg font-display font-bold text-indigo-900 dark:text-indigo-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2 mb-4 uppercase tracking-wider flex items-center gap-2">
+                <span className="bg-indigo-200 dark:bg-indigo-800 text-indigo-800 dark:text-indigo-100 p-1 rounded">IA</span>
                 Análisis Inteligente
               </h3>
-              <div className="text-indigo-800/70 italic text-center py-8">
+              <div className="text-indigo-800/70 dark:text-indigo-300/70 italic text-center py-8">
                 Aquí estará el análisis de IA
               </div>
             </section>
@@ -182,4 +188,10 @@ export function ResumenSalud() {
       </div>
     </div>
   );
+}
+
+// Helper local: combina el patrón de sectionContainerClasses con clases adicionales
+// (p-4, rounded-lg, border) en una sola llamada para no repetir el cn manual 5 veces.
+function cnSec(extra: string): string {
+  return `${sectionContainerClasses()} ${extra}`;
 }

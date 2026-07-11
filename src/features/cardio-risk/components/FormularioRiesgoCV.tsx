@@ -37,7 +37,7 @@ export function FormularioRiesgoCV({
         <h3 className="text-xl font-display font-semibold mb-4 border-b pb-2">Datos generales</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="edad">Edad (años) <span className="text-red-500">*</span></Label>
+            <Label htmlFor="edad">Edad (años) <span className="text-red-500 dark:text-red-400">*</span></Label>
             <Input 
               id="edad" type="number" min="18" max="100" 
               value={edad} onChange={e => setEdad(e.target.value)} 
@@ -45,7 +45,7 @@ export function FormularioRiesgoCV({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="sexo">Sexo biológico <span className="text-red-500">*</span></Label>
+            <Label htmlFor="sexo">Sexo biológico <span className="text-red-500 dark:text-red-400">*</span></Label>
             <Select value={sexo} onValueChange={setSexo} required>
               <SelectTrigger id="sexo">
                 <SelectValue placeholder="Seleccione..." />
@@ -101,7 +101,7 @@ export function FormularioRiesgoCV({
       </section>
 
       {error && (
-        <div className="text-red-600 bg-red-50 p-4 rounded-md font-medium border border-red-100">
+        <div className="text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-950/40 p-4 rounded-md font-medium border border-red-100 dark:border-red-900/50">
           {error}
         </div>
       )}

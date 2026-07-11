@@ -110,8 +110,8 @@ function LoginPageContent(): React.ReactElement {
 export default function LoginPage(): React.ReactElement {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f2f2]">
-        <Loader2 className="size-8 animate-spin text-teal-500" />
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 dark:bg-background">
+        <Loader2 className="size-8 animate-spin text-primary" />
       </div>
     }>
       <LoginPageContent />

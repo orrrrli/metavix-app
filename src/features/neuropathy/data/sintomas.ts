@@ -33,8 +33,8 @@ export function interpretarNeuropatia(puntajeTotal: number): InterpretacionNeuro
       titulo: "No identificamos síntomas significativos",
       subtitulo: "No marcó síntomas sugestivos de neuropatía en este momento. Continúe con revisiones periódicas de sus pies.",
       aviso: "Aunque no tenga síntomas, revísese los pies diariamente y acuda a sus consultas de seguimiento. La neuropatía puede estar presente sin síntomas en sus etapas iniciales.",
-      colorNivel: "text-emerald-700 bg-emerald-100",
-      colorAviso: "bg-emerald-50 border-emerald-500 text-emerald-800"
+      colorNivel: "text-emerald-700 bg-emerald-100 dark:text-emerald-200 dark:bg-emerald-900/30",
+      colorAviso: "bg-emerald-50 border-emerald-500 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-400 dark:text-emerald-100"
     };
   }
   
@@ -44,8 +44,8 @@ export function interpretarNeuropatia(puntajeTotal: number): InterpretacionNeuro
       titulo: "Síntomas leves — Vale la pena mencionarlos",
       subtitulo: "Tiene algunos síntomas que podrían relacionarse con neuropatía incipiente. Se recomienda comentarlos en su próxima consulta.",
       aviso: "No entre en pánico, pero tampoco ignore estos síntomas. Mencionarlos a su médico en la próxima consulta permitirá una evaluación oportuna.",
-      colorNivel: "text-amber-700 bg-amber-100",
-      colorAviso: "bg-amber-50 border-amber-500 text-amber-800"
+      colorNivel: "text-amber-700 bg-amber-100 dark:text-amber-200 dark:bg-amber-900/30",
+      colorAviso: "bg-amber-50 border-amber-500 text-amber-800 dark:bg-amber-950/40 dark:border-amber-400 dark:text-amber-100"
     };
   }
   
@@ -55,8 +55,8 @@ export function interpretarNeuropatia(puntajeTotal: number): InterpretacionNeuro
       titulo: "Síntomas moderados — Consulte a su médico",
       subtitulo: "Los síntomas que reporta son compatibles con neuropatía diabética periférica. Se recomienda valoración médica próxima.",
       aviso: "Es importante que consulte a su médico en las próximas semanas. Existen tratamientos que pueden aliviar los síntomas y prevenir que progrese el daño.",
-      colorNivel: "text-orange-700 bg-orange-100",
-      colorAviso: "bg-red-50 border-red-500 text-red-800" // Fondo rojo claro según spec
+      colorNivel: "text-orange-700 bg-orange-100 dark:text-orange-200 dark:bg-orange-900/30",
+      colorAviso: "bg-red-50 border-red-500 text-red-800 dark:bg-red-950/40 dark:border-red-400 dark:text-red-100" // Fondo rojo claro según spec
     };
   }
   
@@ -66,7 +66,7 @@ export function interpretarNeuropatia(puntajeTotal: number): InterpretacionNeuro
     titulo: "Síntomas significativos — Consulta urgente recomendada",
     subtitulo: "Presenta múltiples síntomas sugestivos de neuropatía. Requiere valoración médica a la brevedad.",
     aviso: "Los síntomas que describe son sugestivos de neuropatía moderada a severa. Consulte a su médico lo antes posible. El tratamiento oportuno puede prevenir complicaciones graves como úlceras o amputaciones.",
-    colorNivel: "text-red-800 bg-red-200",
-    colorAviso: "bg-red-100 border-red-600 text-red-900" // Fondo rojo claro según spec
+    colorNivel: "text-red-800 bg-red-200 dark:text-red-200 dark:bg-red-900/30",
+    colorAviso: "bg-red-100 border-red-600 text-red-900 dark:bg-red-950/50 dark:border-red-400 dark:text-red-100" // Fondo rojo claro según spec
   };
 }

@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { ArrowLeft, Loader2, MailCheck } from 'lucide-react';
 import { forgotPassword } from '@/lib/api/auth';
 import AuthFloatingInput from '@/shared/components/auth/AuthFloatingInput';
+import { Button } from '@/shared/components/ui/button';
 
 const schema = z.object({
   email: z.string().email('Ingresa un email válido'),
@@ -33,25 +34,25 @@ export default function ForgotPasswordPage(): React.ReactElement {
 
   if (sent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f2f2] p-4">
-        <div className="max-w-md w-full text-center space-y-6 p-8 bg-white rounded-2xl shadow-lg border border-black/5">
-          <div className="inline-flex items-center justify-center p-4 bg-teal-50 rounded-full">
-            <MailCheck className="size-10 text-teal-500" />
+      <div className="min-h-screen flex items-center justify-center bg-muted/40 dark:bg-background p-4">
+        <div className="max-w-md w-full text-center space-y-6 p-8 bg-card text-card-foreground rounded-2xl shadow-lg border border-border">
+          <div className="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full">
+            <MailCheck className="size-10 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-[#101010]">Revisa tu correo</h1>
-          <p className="text-sm text-black/50 leading-relaxed">
-            Si <strong className="text-black/70">{submittedEmail}</strong> está registrado,
+          <h1 className="text-2xl font-bold text-foreground">Revisa tu correo</h1>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Si <strong className="text-foreground">{submittedEmail}</strong> está registrado,
             recibirás un enlace para restablecer tu contraseña en los próximos minutos.
           </p>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', borderRadius: '8px', background: '#fffbeb', border: '1px solid #fcd34d', padding: '12px 16px', textAlign: 'left' }}>
-            <span style={{ color: '#d97706', fontSize: '14px', lineHeight: 1, marginTop: '1px' }}>⚠</span>
-            <p style={{ fontSize: '12px', color: '#92400e', lineHeight: '1.5', margin: 0 }}>
+          <div className="flex items-start gap-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 p-3 text-left">
+            <span className="text-amber-600 dark:text-amber-300 text-sm leading-none mt-px">⚠</span>
+            <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed m-0">
               <strong>¿No ves el correo?</strong> Revisa tu carpeta de <strong>spam o correo no deseado</strong>. El enlace expira en 1 hora.
             </p>
           </div>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-teal-500 underline underline-offset-4"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary underline underline-offset-4"
           >
             <ArrowLeft size={14} />
             Volver al inicio de sesión
@@ -62,18 +63,18 @@ export default function ForgotPasswordPage(): React.ReactElement {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f2f2f2] p-4">
-      <div className="max-w-md w-full p-8 bg-white rounded-2xl shadow-lg border border-black/5">
+    <div className="min-h-screen flex items-center justify-center bg-muted/40 dark:bg-background p-4">
+      <div className="max-w-md w-full p-8 bg-card text-card-foreground rounded-2xl shadow-lg border border-border">
         <Link
           href="/login"
-          className="inline-flex items-center gap-1.5 text-sm text-black/40 hover:text-black/70 transition-colors mb-8"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft size={14} />
           Volver
         </Link>
 
-        <h1 className="text-2xl font-bold text-[#101010] mb-2">¿Olvidaste tu contraseña?</h1>
-        <p className="text-sm text-black/45 mb-8 leading-relaxed">
+        <h1 className="text-2xl font-bold text-foreground mb-2">¿Olvidaste tu contraseña?</h1>
+        <p className="text-sm text-muted-foreground mb-8 leading-relaxed">
           Ingresa tu email y te enviaremos un enlace para restablecerla.
         </p>
 
@@ -94,35 +95,20 @@ export default function ForgotPasswordPage(): React.ReactElement {
             )}
           />
 
-          <button
+          <Button
             type="submit"
             disabled={isSubmitting}
-            style={{
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              padding: '13px 24px',
-              fontSize: '1rem',
-              fontWeight: 700,
-              color: 'white',
-              background: isSubmitting ? '#00BFA580' : '#00BFA5',
-              border: 'none',
-              borderRadius: '9999px',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              transition: 'background 0.2s ease',
-            }}
+            className="w-full h-12 text-base"
           >
             {isSubmitting ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin mr-2" />
                 Enviando...
               </>
             ) : (
               'Enviar enlace'
             )}
-          </button>
+          </Button>
         </form>
       </div>
     </div>

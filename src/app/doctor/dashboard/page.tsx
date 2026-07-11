@@ -68,18 +68,18 @@ export default function DoctorDashboard(): React.ReactElement {
   return (
     <div className="space-y-6">
       {showVerificationBanner && (
-        <div className="flex items-start gap-3 rounded-lg border border-yellow-300 bg-yellow-50 p-4 text-yellow-800">
+        <div className="flex items-start gap-3 rounded-lg border border-yellow-300 dark:border-yellow-700/60 bg-yellow-50 dark:bg-yellow-950/30 p-4 text-yellow-800 dark:text-yellow-200">
           <AlertTriangle className="size-5 shrink-0 mt-0.5" />
           <div className="flex-1 text-sm">
             <p className="font-medium">Verificación SEP pendiente</p>
-            <p className="mt-0.5 text-yellow-700">
+            <p className="mt-0.5 text-yellow-700 dark:text-yellow-300">
               Tu cédula profesional está registrada y puedes atender pacientes. La verificación con el registro SEP puede tardar unos días hábiles.
             </p>
           </div>
           <button
             onClick={() => setBannerDismissed(true)}
             aria-label="Cerrar aviso"
-            className="shrink-0 rounded p-0.5 hover:bg-yellow-100"
+            className="shrink-0 rounded p-0.5 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
           >
             <X className="size-4" />
           </button>
