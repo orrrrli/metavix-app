@@ -11,9 +11,11 @@ import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile"
 import { useEvaluateGoals } from "@/features/patient/hooks/use-evaluate-goals";
 import { ParametroMeta } from "../ParametroMeta";
 import { ResumenControl } from "../ResumenControl";
+import { GoalEvaluationCard } from "../GoalEvaluationCard";
+import { goalEvalToViews } from "../../utils/goal-eval-to-view";
 import { PARAMETROS_META, EvaluacionMeta } from "../../data/parametros";
 import { GlucoseReadingType } from "@/types/daily-record";
-import { GoalStatus } from "@/types/goal-evaluation";
+import { GoalStatus, GoalEvaluationResponse } from "@/types/goal-evaluation";
 
 const DEFAULT_EVALUACIONES: Record<string, EvaluacionMeta> = PARAMETROS_META.reduce(
   (acc, p) => ({ ...acc, [p.id]: { estado: "sin_dato", color: "var(--ph)" } }),
@@ -45,6 +47,7 @@ export function MetasControl() {
 
   const [evaluaciones, setEvaluaciones] = useState<Record<string, EvaluacionMeta>>(DEFAULT_EVALUACIONES);
   const [mostrarResumen, setMostrarResumen] = useState(false);
+  const [evalResult, setEvalResult] = useState<GoalEvaluationResponse | null>(null);
 
   const isLoading = loadingLab || loadingDaily || loadingProfile;
 
@@ -91,6 +94,7 @@ export function MetasControl() {
   const handleEvaluar = async () => {
     try {
       const result = await evaluate();
+      setEvalResult(result);
       const newEvaluaciones: Record<string, EvaluacionMeta> = {};
       PARAMETROS_META.forEach((param) => {
         const item = result.items.find((i) => i.parameterId === param.id);
@@ -180,6 +184,15 @@ export function MetasControl() {
       </div>
 
       {mostrarResumen && <ResumenControl resultados={resultadosFormateados} />}
+
+      {evalResult && (
+        <div className="mt-8">
+          <GoalEvaluationCard
+            items={goalEvalToViews(evalResult)}
+            evaluatedAt={evalResult.evaluatedAt}
+          />
+        </div>
+      )}
 
       <div
         className="mt-12 pt-6 border-t text-center text-sm"
