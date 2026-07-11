@@ -1,9 +1,7 @@
-import { PARAMETROS_META } from '../data/parametros';
+import { PARAMETROS_META_BY_ID } from '../data/parametros';
 import type { GoalEvaluationResponse, NoDataReason } from '@/types/goal-evaluation';
 import type { GoalEvaluationItemView } from '../components/GoalEvaluationCard';
-import { getParameterNote } from './clinical-notes';
-
-const CATALOG_BY_ID = new Map(PARAMETROS_META.map((p) => [p.id, p]));
+import { getParameterNotes } from './clinical-notes';
 
 /**
  * Traduce un `NoDataReason` del backend al texto en español que se muestra al
@@ -38,16 +36,28 @@ export function formatNoDataReason(reason: NoDataReason | null | undefined): str
  * traduce al texto en español correspondiente — el chip muestra texto, no
  * códigos.
  *
- * `isPregnant` se usa para derivar la nota clínica de cada parámetro
- * (tabla "Por parámetro" RF-005..RF-016, ver clinical-notes.ts) en tiempo
- * de render — la nota no viene del backend ni se persiste.
+ * `isPregnant` y `previousCreatinine` alimentan la derivación de notas
+ * clínicas por parámetro en tiempo de render (ver clinical-notes.ts para el
+ * detalle de los flags `pregnancyNote`/`criticalAlert`/`increaseNote`
+ * declarados en `PARAMETROS_META`) — las notas no vienen del backend ni se
+ * persisten. `previousCreatinine` sólo tiene efecto en el parámetro
+ * `creatinine` (el único con `increaseNote` declarado hoy); para cualquier
+ * otro parámetro se ignora sin necesidad de una rama especial aquí.
  */
 export function goalEvalToViews(
   response: GoalEvaluationResponse,
   isPregnant: boolean,
+  previousCreatinine?: number | null,
 ): GoalEvaluationItemView[] {
   return response.items.map((item) => {
-    const catalog = CATALOG_BY_ID.get(item.parameterId);
+    const catalog = PARAMETROS_META_BY_ID.get(item.parameterId);
+    const { note, criticalAlert } = getParameterNotes({
+      parameterId: item.parameterId,
+      status: item.status,
+      valueUsed: item.valueUsed,
+      isPregnant,
+      previousValue: item.parameterId === 'creatinine' ? previousCreatinine : undefined,
+    });
     return {
       parameterId: item.parameterId,
       name: catalog?.nombre ?? item.parameterId,
@@ -55,7 +65,8 @@ export function goalEvalToViews(
       value: item.valueUsed,
       status: item.status,
       reason: formatNoDataReason(item.reason ?? null),
-      note: getParameterNote({ parameterId: item.parameterId, status: item.status, isPregnant }),
+      note,
+      criticalAlert,
     };
   });
 }

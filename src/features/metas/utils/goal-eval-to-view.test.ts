@@ -52,6 +52,53 @@ describe('goalEvalToViews', () => {
     expect(views[2].note).toBeNull();
   });
 
+  it('adds a critical alert for triglycerides OutOfRange >= 500', () => {
+    const withTg: GoalEvaluationResponse = {
+      evaluationId: 'ev-3',
+      evaluatedAt: '2026-07-10T15:00:00Z',
+      items: [{ parameterId: 'triglycerides', valueUsed: 540, goalUsed: 150, status: 'OutOfRange' }],
+    };
+    const views = goalEvalToViews(withTg, false);
+    expect(views[0].criticalAlert).toBe(
+      'Riesgo de pancreatitis aguda. Tratamiento farmacológico urgente (fibrato + aceite de pescado).',
+    );
+  });
+
+  it('leaves criticalAlert null for other parameters and for triglycerides below 500', () => {
+    const views = goalEvalToViews(response, false);
+    expect(views[0].criticalAlert).toBeNull();
+    const belowThreshold: GoalEvaluationResponse = {
+      evaluationId: 'ev-4',
+      evaluatedAt: '2026-07-10T15:00:00Z',
+      items: [{ parameterId: 'triglycerides', valueUsed: 300, goalUsed: 150, status: 'OutOfRange' }],
+    };
+    expect(goalEvalToViews(belowThreshold, false)[0].criticalAlert).toBeNull();
+  });
+
+  it('derives a creatinine-increase note from previousCreatinine when not pregnant', () => {
+    const withCreatinine: GoalEvaluationResponse = {
+      evaluationId: 'ev-5',
+      evaluatedAt: '2026-07-10T15:00:00Z',
+      items: [{ parameterId: 'creatinine', valueUsed: 1.1, goalUsed: 1.3, status: 'InRange' }],
+    };
+    const views = goalEvalToViews(withCreatinine, false, 1.0);
+    expect(views[0].note).toBe(
+      'Aumento menor de creatinina. Si coincide con inicio de IECA/ARA-II/iSGLT2, es esperado. No suspender.',
+    );
+  });
+
+  it('prioritizes the pregnancy note over the creatinine-increase note when both apply', () => {
+    const withCreatinine: GoalEvaluationResponse = {
+      evaluationId: 'ev-6',
+      evaluatedAt: '2026-07-10T15:00:00Z',
+      items: [{ parameterId: 'creatinine', valueUsed: 1.1, goalUsed: 1.3, status: 'InRange' }],
+    };
+    const views = goalEvalToViews(withCreatinine, true, 1.0);
+    expect(views[0].note).toBe(
+      'En embarazo, creatinina ≥ 1.0 mg/dL ya es anormal. Consultar con especialista.',
+    );
+  });
+
   it('translates a NoData reason to Spanish user-facing text', () => {
     const withReason: GoalEvaluationResponse = {
       evaluationId: 'ev-2',
