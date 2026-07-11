@@ -1,5 +1,6 @@
 import type { GoalStatus } from '@/types/goal-evaluation';
 import { ClinicalNote } from './ClinicalNote';
+import { CriticalAlert } from './CriticalAlert';
 
 export type GoalChipStatus = GoalStatus;
 
@@ -15,6 +16,8 @@ export interface GoalChipProps {
   reason?: string | null;
   /** Context-sensitive clinical note (e.g. pregnancy caveats). See clinical-notes.ts. */
   note?: string | null;
+  /** Urgent clinical alert (e.g. TG >= 500). See clinical-notes.ts. */
+  criticalAlert?: string | null;
 }
 
 interface StatusVisual {
@@ -70,7 +73,7 @@ export function formatChipAriaLabel(
  * measured value with its unit, the status label, and (for NoData) the reason
  * string from the API. Pure presentational component — no data fetching, no auth.
  */
-export function GoalChip({ status, name, value, unit, reason, note }: GoalChipProps) {
+export function GoalChip({ status, name, value, unit, reason, note, criticalAlert }: GoalChipProps) {
   const v = getStatusVisual(status);
   const showReason = status === 'NoData' && Boolean(reason);
 
@@ -105,6 +108,7 @@ export function GoalChip({ status, name, value, unit, reason, note }: GoalChipPr
         )}
       </div>
       {note && <ClinicalNote message={note} />}
+      {criticalAlert && <CriticalAlert message={criticalAlert} />}
     </div>
   );
 }

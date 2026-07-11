@@ -41,3 +41,32 @@ export function getParameterNote({ parameterId, status, isPregnant }: ParameterN
   if (BP_PARAMETER_IDS.has(parameterId) && status === 'InRange') return null;
   return note;
 }
+
+/**
+ * Evento "TG ≥ 500" — plan-motor-evaluacion-metas-clinicas.md §7 "Por evento".
+ * Texto exacto sin el glifo ⚠ (el ícono de CriticalAlert ya lo transmite).
+ */
+export function getTriglyceridesCriticalAlert(status: GoalStatus, valueUsed: number | null): string | null {
+  if (status !== 'OutOfRange' || valueUsed === null || valueUsed < 500) return null;
+  return 'Riesgo de pancreatitis aguda. Tratamiento farmacológico urgente (fibrato + aceite de pescado).';
+}
+
+/**
+ * Evento "Aumento de creatinina ≤ 30 %" — plan-motor-evaluacion-metas-clinicas.md
+ * §7 "Por evento". Compara el valor actual contra el lab previo; sólo aplica a
+ * un aumento estrictamente positivo y no mayor al 30 %.
+ */
+export function getCreatinineIncreaseNote(
+  valueUsed: number | null,
+  previousValue: number | null | undefined,
+): string | null {
+  if (valueUsed === null || previousValue === null || previousValue === undefined || previousValue <= 0) {
+    return null;
+  }
+  // Redondeado a 6 decimales para evitar falsos negativos en el límite del
+  // 30 % por error de precisión de punto flotante (ej. (1.3-1.0)/1.0*100
+  // da 30.000000000000004 en vez de 30).
+  const pctIncrease = Math.round((((valueUsed - previousValue) / previousValue) * 100) * 1e6) / 1e6;
+  if (pctIncrease <= 0 || pctIncrease > 30) return null;
+  return 'Aumento menor de creatinina. Si coincide con inicio de IECA/ARA-II/iSGLT2, es esperado. No suspender.';
+}

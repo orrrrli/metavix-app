@@ -1,7 +1,7 @@
 import { PARAMETROS_META } from '../data/parametros';
 import type { GoalEvaluationResponse, NoDataReason } from '@/types/goal-evaluation';
 import type { GoalEvaluationItemView } from '../components/GoalEvaluationCard';
-import { getParameterNote } from './clinical-notes';
+import { getParameterNote, getTriglyceridesCriticalAlert, getCreatinineIncreaseNote } from './clinical-notes';
 
 const CATALOG_BY_ID = new Map(PARAMETROS_META.map((p) => [p.id, p]));
 
@@ -41,10 +41,16 @@ export function formatNoDataReason(reason: NoDataReason | null | undefined): str
  * `isPregnant` se usa para derivar la nota clínica de cada parámetro
  * (tabla "Por parámetro" RF-005..RF-016, ver clinical-notes.ts) en tiempo
  * de render — la nota no viene del backend ni se persiste.
+ *
+ * `previousCreatinine` (opcional) es la creatinina del lab anterior al más
+ * reciente; se usa para derivar el evento "aumento de creatinina ≤ 30 %"
+ * (tabla "Por evento", ver clinical-notes.ts). Cuando ambas notas aplican
+ * (embarazo + aumento de creatinina) se prioriza la nota de embarazo.
  */
 export function goalEvalToViews(
   response: GoalEvaluationResponse,
   isPregnant: boolean,
+  previousCreatinine?: number | null,
 ): GoalEvaluationItemView[] {
   return response.items.map((item) => {
     const catalog = CATALOG_BY_ID.get(item.parameterId);
@@ -55,7 +61,15 @@ export function goalEvalToViews(
       value: item.valueUsed,
       status: item.status,
       reason: formatNoDataReason(item.reason ?? null),
-      note: getParameterNote({ parameterId: item.parameterId, status: item.status, isPregnant }),
+      note:
+        getParameterNote({ parameterId: item.parameterId, status: item.status, isPregnant }) ??
+        (item.parameterId === 'creatinine'
+          ? getCreatinineIncreaseNote(item.valueUsed, previousCreatinine)
+          : null),
+      criticalAlert:
+        item.parameterId === 'triglycerides'
+          ? getTriglyceridesCriticalAlert(item.status, item.valueUsed)
+          : null,
     };
   });
 }

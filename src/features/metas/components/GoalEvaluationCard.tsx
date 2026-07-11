@@ -16,6 +16,8 @@ export interface GoalEvaluationItemView {
   reason?: string | null;
   /** Nota clínica contextual (ej. advertencias por embarazo). Ver clinical-notes.ts. */
   note?: string | null;
+  /** Alerta crítica urgente (ej. TG ≥ 500). Ver clinical-notes.ts. */
+  criticalAlert?: string | null;
 }
 
 export interface GoalEvaluationCardProps {
@@ -69,6 +71,7 @@ export function GoalEvaluationCard({
                 unit={item.unit}
                 reason={item.reason}
                 note={item.note}
+                criticalAlert={item.criticalAlert}
               />
             ))}
           </div>

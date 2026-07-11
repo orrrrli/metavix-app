@@ -12,6 +12,7 @@ import { useEvaluateGoals } from "@/features/patient/hooks/use-evaluate-goals";
 import { ParametroMeta } from "../ParametroMeta";
 import { ResumenControl } from "../ResumenControl";
 import { GoalEvaluationCard } from "../GoalEvaluationCard";
+import { ClinicalNote } from "../ClinicalNote";
 import { goalEvalToViews } from "../../utils/goal-eval-to-view";
 import { PARAMETROS_META, EvaluacionMeta } from "../../data/parametros";
 import { GlucoseReadingType } from "@/types/daily-record";
@@ -80,6 +81,24 @@ export function MetasControl() {
   const sortedLabRecords = [...(labRecords ?? [])].sort(
     (a, b) => parseApiDate(b.sampleDate).getTime() - parseApiDate(a.sampleDate).getTime(),
   );
+
+  // T4 (FE-CHIPS-2): creatinina del lab previo al más reciente, para derivar
+  // la nota de "aumento de creatinina ≤ 30 %" (evento, ver clinical-notes.ts).
+  const creatinineLabs = sortedLabRecords.filter((r) => r.creatinine !== null);
+  const previousCreatinine = creatinineLabs[1]?.creatinine ?? null;
+
+  // T4 (FE-CHIPS-2): notas de embarazo a nivel página (tabla "Por evento").
+  // "Embarazo recién activado" ya se muestra abajo (banner existente);
+  // aquí sólo se cubren "desactivado" y "FPP alcanzada".
+  const pregnancyDeactivatedNote =
+    !profile?.isPregnant && profile?.pregnancyStartDate
+      ? 'Metas de embarazo desactivadas. Se reactivan las metas personalizadas del paciente, si existen. Recomendar nueva evaluación.'
+      : null;
+
+  const dueDateReachedNote =
+    profile?.isPregnant && profile?.pregnancyDueDate && parseApiDate(profile.pregnancyDueDate) <= new Date()
+      ? 'Fecha probable de parto alcanzada. ¿Confirmar desactivación del modo embarazo?'
+      : null;
 
   // T5: derived read-only values — no manual input. Las keys coinciden con
   // `PARAMETROS_META[i].id` (alineado con los `parameterId` que emite el backend).
@@ -167,6 +186,18 @@ export function MetasControl() {
         </div>
       )}
 
+      {pregnancyDeactivatedNote && (
+        <div className="mb-6">
+          <ClinicalNote message={pregnancyDeactivatedNote} />
+        </div>
+      )}
+
+      {dueDateReachedNote && (
+        <div className="mb-6">
+          <ClinicalNote message={dueDateReachedNote} />
+        </div>
+      )}
+
       <p className="text-lg mb-8" style={{ color: "var(--mut)" }}>
         Tus últimos resultados disponibles han sido cargados automáticamente. Los parámetros sin datos no cuentan con registros recientes.
       </p>
@@ -199,7 +230,7 @@ export function MetasControl() {
       {evalResult && (
         <div className="mt-8">
           <GoalEvaluationCard
-            items={goalEvalToViews(evalResult, Boolean(profile?.isPregnant))}
+            items={goalEvalToViews(evalResult, Boolean(profile?.isPregnant), previousCreatinine)}
             evaluatedAt={evalResult.evaluatedAt}
           />
         </div>
