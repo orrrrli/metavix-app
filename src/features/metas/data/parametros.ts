@@ -1,8 +1,35 @@
+import type { GoalStatus } from "@/types/goal-evaluation";
+
 export type EstadoMeta = "en_meta" | "cuidado" | "fuera_meta" | "sin_dato";
 
 export interface EvaluacionMeta {
   estado: EstadoMeta;
   color: string;
+}
+
+/** Nota clínica mostrada cuando la paciente está embarazada (tabla "Por
+ *  parámetro", RF-005..RF-016). Ver plan-motor-evaluacion-metas-clinicas.md §7. */
+export interface PregnancyNoteSpec {
+  text: string;
+  /** Si true, sólo se muestra cuando status !== 'InRange' (caso RF-005, PA).
+   *  Default (false/undefined): se muestra siempre que isPregnant es true. */
+  requiresAbnormalStatus?: boolean;
+}
+
+/** Alerta crítica urgente activada por un status + umbral de valor (tabla
+ *  "Por evento"). Hoy sólo la usa triglicéridos (TG >= 500). */
+export interface CriticalAlertSpec {
+  status: GoalStatus;
+  minValue: number;
+  text: string;
+}
+
+/** Nota mostrada cuando el valor actual sube respecto al lab anterior, sin
+ *  superar el porcentaje indicado (tabla "Por evento"). Hoy sólo la usa
+ *  creatinina (aumento <= 30%). */
+export interface IncreaseNoteSpec {
+  maxPercentIncrease: number;
+  text: string;
 }
 
 export interface DefParametro {
@@ -15,6 +42,9 @@ export interface DefParametro {
   min: number;
   max: number;
   unidad: string;
+  pregnancyNote?: PregnancyNoteSpec;
+  criticalAlert?: CriticalAlertSpec;
+  increaseNote?: IncreaseNoteSpec;
 }
 
 /**
@@ -87,6 +117,10 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 80,
     max: 220,
     unidad: "mmHg",
+    pregnancyNote: {
+      text: "En embarazo, la PA elevada puede indicar preeclampsia. Confirmar con especialista.",
+      requiresAbnormalStatus: true,
+    },
   },
   {
     id: "diastolic_bp",
@@ -98,6 +132,10 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 40,
     max: 130,
     unidad: "mmHg",
+    pregnancyNote: {
+      text: "En embarazo, la PA elevada puede indicar preeclampsia. Confirmar con especialista.",
+      requiresAbnormalStatus: true,
+    },
   },
   {
     id: "heart_rate",
@@ -120,6 +158,9 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 14,
     max: 60,
     unidad: "kg/m²",
+    pregnancyNote: {
+      text: "El IMC no se evalúa durante la gestación. Mostrar peso pregestacional como referencia.",
+    },
   },
   {
     id: "ldl_primary",
@@ -131,6 +172,9 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 30,
     max: 400,
     unidad: "mg/dL",
+    pregnancyNote: {
+      text: "Estatinas contraindicadas en embarazo. Meta numérica no aplica.",
+    },
   },
   {
     id: "hdl",
@@ -142,6 +186,9 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 10,
     max: 150,
     unidad: "mg/dL",
+    pregnancyNote: {
+      text: "HDL en embarazo: usar solo como referencia basal. Los rangos estándar no aplican.",
+    },
   },
   {
     id: "total_cholesterol",
@@ -153,6 +200,9 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 50,
     max: 500,
     unidad: "mg/dL",
+    pregnancyNote: {
+      text: "El colesterol total aumenta 25-50 % fisiológicamente en embarazo. No se evalúa.",
+    },
   },
   {
     id: "triglycerides",
@@ -164,6 +214,11 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 30,
     max: 1500,
     unidad: "mg/dL",
+    criticalAlert: {
+      status: "OutOfRange",
+      minValue: 500,
+      text: "Riesgo de pancreatitis aguda. Tratamiento farmacológico urgente (fibrato + aceite de pescado).",
+    },
   },
   {
     id: "creatinine",
@@ -175,6 +230,13 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 0.1,
     max: 15,
     unidad: "mg/dL",
+    pregnancyNote: {
+      text: "En embarazo, creatinina ≥ 1.0 mg/dL ya es anormal. Consultar con especialista.",
+    },
+    increaseNote: {
+      maxPercentIncrease: 30,
+      text: "Aumento menor de creatinina. Si coincide con inicio de IECA/ARA-II/iSGLT2, es esperado. No suspender.",
+    },
   },
   {
     id: "egfr",
@@ -186,6 +248,9 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 0,
     max: 200,
     unidad: "ml/min/1.73m²",
+    pregnancyNote: {
+      text: "eGFR (CKD-EPI) en embarazo: interpretar con cautela. Fórmula validada en no-embarazadas.",
+    },
   },
   {
     id: "bun",
@@ -197,6 +262,9 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 1,
     max: 200,
     unidad: "mg/dL",
+    pregnancyNote: {
+      text: "En embarazo, BUN > 15 mg/dL sugiere disfunción renal.",
+    },
   },
   {
     id: "waist_circumference",
@@ -208,8 +276,15 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 40,
     max: 250,
     unidad: "cm",
+    pregnancyNote: {
+      text: "La circunferencia de cintura no se evalúa durante la gestación.",
+    },
   },
 ];
+
+/** Mapa id → DefParametro para lookup O(1). Fuente única compartida por
+ *  goal-eval-to-view.ts y clinical-notes.ts. */
+export const PARAMETROS_META_BY_ID = new Map(PARAMETROS_META.map((p) => [p.id, p]));
 
 /**
  * @deprecated Esta función es legacy. La evaluación real ahora viene del
