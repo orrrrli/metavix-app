@@ -15,7 +15,9 @@ export interface LinkedPatientResponse {
   id: string;
   name: string;
   lastName: string;
-  medicalRecordNumber: string;
+  /** MRN assigned by a doctor when accepting the link request. `null` for
+   *  patients that have been linked historically before MRN was required. */
+  medicalRecordNumber: string | null;
 }
 
 export interface PendingLinkRequestResponse {
