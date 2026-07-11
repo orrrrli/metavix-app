@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AlertTriangle, X } from "lucide-react";
 
 
-import { Search, Users, Bell, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search, Users, Bell, CheckCircle, XCircle, Clock, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAuthStore } from "@/features/auth/store";
@@ -21,7 +21,6 @@ import { LinkedPatientResponse } from "@/types/doctor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/components/ui/table";
 import { Badge } from "@/shared/components/ui/badge";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 import { AcceptLinkRequestDialog } from "@/features/doctor/components/AcceptLinkRequestDialog";
@@ -228,55 +227,45 @@ export default function DoctorDashboard(): React.ReactElement {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>No. Expediente</TableHead>
-                  <TableHead className="text-right">Acción</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPatients.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={3} className="h-32 text-center text-muted-foreground">
-                      {patients.length === 0
-                        ? "No tiene pacientes vinculados aún."
-                        : "No se encontraron pacientes."}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredPatients.map((patient) => {
-                    const mrn = patient.medicalRecordNumber?.trim();
-                    const profileHref = mrn ? `/doctor/patients/${mrn}` : "#";
-                    return (
-                      <TableRow key={patient.id} className="cursor-pointer hover:bg-muted/50">
-                        <TableCell className="font-medium">
-                          {patient.name} {patient.lastName}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{patient.medicalRecordNumber || "—"}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Link
-                            href={profileHref}
-                            onClick={(e) => {
-                              if (profileHref === "#") e.preventDefault();
-                            }}
-                          >
-                            <Button variant="ghost" size="sm" disabled={profileHref === "#"}>
-                              Ver Perfil
-                            </Button>
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          {filteredPatients.length === 0 ? (
+            <div className="h-32 flex items-center justify-center text-center text-muted-foreground">
+              {patients.length === 0
+                ? "No tiene pacientes vinculados aún."
+                : "No se encontraron pacientes."}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredPatients.map((patient) => {
+                const mrn = patient.medicalRecordNumber?.trim();
+                const profileHref = mrn ? `/doctor/patients/${mrn}` : "#";
+                return (
+                  <div
+                    key={patient.id}
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-xl border border-border bg-card"
+                  >
+                    <div className="min-w-0 space-y-1.5">
+                      <p className="font-semibold text-base text-foreground truncate">
+                        {patient.name} {patient.lastName}
+                      </p>
+                      <Badge variant="secondary" className="font-mono">{patient.medicalRecordNumber || "—"}</Badge>
+                    </div>
+                    <Link
+                      href={profileHref}
+                      onClick={(e) => {
+                        if (profileHref === "#") e.preventDefault();
+                      }}
+                      className="shrink-0"
+                    >
+                      <Button variant="outline" size="sm" disabled={profileHref === "#"} className="w-full sm:w-auto">
+                        Ver Perfil
+                        <ChevronRight className="size-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
