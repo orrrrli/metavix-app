@@ -62,6 +62,7 @@ export function GoalEvaluationCard({
               <GoalChip
                 key={item.parameterId}
                 status={item.status}
+                name={item.name}
                 value={item.value}
                 unit={item.unit}
                 reason={item.reason}

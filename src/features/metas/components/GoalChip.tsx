@@ -4,6 +4,9 @@ export type GoalChipStatus = GoalStatus;
 
 export interface GoalChipProps {
   status: GoalChipStatus;
+  /** Human-readable parameter name (e.g. "HbA1c"). Resolved by the caller
+   *  from the catalog; flows through to the label and aria-label. */
+  name: string;
   value: number | null;
   unit: string;
   /** Only meaningful when status === 'NoData'. Domain emits non-null reasons like
@@ -45,18 +48,33 @@ function formatValue(value: number | null): string {
 }
 
 /**
- * Single clinical-parameter status indicator: shows the measured value with its
- * unit, the status label, and (for NoData) the reason string from the API.
- * Pure presentational component — no data fetching, no auth.
+ * Builds the aria-label for a chip: "HbA1c: En meta, 6.8 %" (or "HbA1c: Sin datos"
+ * when there's no value). Exported for unit testing without jsdom.
  */
-export function GoalChip({ status, value, unit, reason }: GoalChipProps) {
+export function formatChipAriaLabel(
+  name: string,
+  status: GoalChipStatus,
+  value: number | null,
+  unit: string,
+): string {
+  const v = getStatusVisual(status);
+  const valuePart = value !== null ? `, ${value} ${unit}`.trim() : '';
+  return `${name}: ${v.label}${valuePart}`;
+}
+
+/**
+ * Single clinical-parameter status indicator: shows the parameter name, the
+ * measured value with its unit, the status label, and (for NoData) the reason
+ * string from the API. Pure presentational component — no data fetching, no auth.
+ */
+export function GoalChip({ status, name, value, unit, reason }: GoalChipProps) {
   const v = getStatusVisual(status);
   const showReason = status === 'NoData' && Boolean(reason);
 
   return (
     <div
       role="status"
-      aria-label={`${v.label}${value !== null ? `: ${value} ${unit}` : ''}`}
+      aria-label={formatChipAriaLabel(name, status, value, unit)}
       className="inline-flex flex-col items-start gap-1 rounded-lg px-3 py-2 min-w-[7rem]"
       style={{
         color: v.fg,
@@ -64,6 +82,9 @@ export function GoalChip({ status, value, unit, reason }: GoalChipProps) {
         border: `1px solid ${v.border}`,
       }}
     >
+      <span className="text-sm font-semibold break-words" style={{ color: 'var(--text)' }}>
+        {name}
+      </span>
       <div className="flex items-baseline gap-1.5">
         <span className="text-base font-semibold tabular-nums" style={{ color: v.fg }}>
           {formatValue(value)}

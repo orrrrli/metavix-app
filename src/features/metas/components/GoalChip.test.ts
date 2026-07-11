@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getStatusVisual } from './GoalChip';
+import { getStatusVisual, formatChipAriaLabel } from './GoalChip';
 
 describe('getStatusVisual', () => {
   it('maps InRange to "En meta" with the green theme tokens', () => {
@@ -32,5 +32,20 @@ describe('getStatusVisual', () => {
     expect(v.fg).toBe('var(--mut)');
     expect(v.bg).toBe('var(--ph)');
     expect(v.border).toBe('var(--bd)');
+  });
+});
+
+describe('formatChipAriaLabel', () => {
+  it('includes the parameter name and the measured value with its unit', () => {
+    expect(formatChipAriaLabel('HbA1c', 'InRange', 6.8, '%')).toBe('HbA1c: En meta, 6.8 %');
+  });
+
+  it('omits the value part when value is null (NoData case)', () => {
+    expect(formatChipAriaLabel('IMC', 'NoData', null, 'kg/m²')).toBe('IMC: Sin datos');
+  });
+
+  it('still includes the unit label even for integer values', () => {
+    expect(formatChipAriaLabel('Glucosa en ayuno', 'AtRisk', 145, 'mg/dL'))
+      .toBe('Glucosa en ayuno: Revisar, 145 mg/dL');
   });
 });
