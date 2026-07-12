@@ -153,7 +153,10 @@ export function MetasControl() {
 
   const resultadosFormateados = PARAMETROS_META.map((param) => ({
     param,
-    valor: valoresEvaluados[param.id] ?? valores[param.id] ?? "",
+    // `||` (no `??`): si el backend emite `valueUsed: null`/ausente, toString()
+    // devuelve "" que aún así pisaría el valor pre-poblado de `valores`. Con `||`
+    // un string vacío del backend cae al fallback de `valores` (pre-poblado).
+    valor: valoresEvaluados[param.id] || valores[param.id] || "",
     evaluacion: evaluaciones[param.id],
   }));
 
@@ -216,7 +219,9 @@ export function MetasControl() {
           <ParametroMeta
             key={param.id}
             param={param}
-            valor={valoresEvaluados[param.id] ?? valores[param.id] ?? ""}
+            // `||` para que un valueUsed ausente o string vacío del backend no
+            // pise el valor pre-poblado en `valores` (mismo motivo que arriba).
+            valor={valoresEvaluados[param.id] || valores[param.id] || ""}
             colorActual={evaluaciones[param.id].color}
             readOnly
             evaluado={Boolean(evalResult)}
