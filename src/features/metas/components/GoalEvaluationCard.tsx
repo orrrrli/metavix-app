@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/metavix';
 import { GoalChip } from './GoalChip';
-import type { GoalStatus } from '@/types/goal-evaluation';
+import type { GoalStatus, CkdStage } from '@/types/goal-evaluation';
 
 /**
  * Vista pre-formateada que el caller (T3) ensambla a partir de la respuesta
@@ -18,6 +18,10 @@ export interface GoalEvaluationItemView {
   note?: string | null;
   /** Alerta crítica urgente (ej. TG ≥ 500). Ver clinical-notes.ts. */
   criticalAlert?: string | null;
+  /** Etapa KDIGO 2024 de ERC. Solo presente para el parámetro `egfr` y
+   *  cuando hay un valor numérico; null en cualquier otro caso. Ver
+   *  `CkdStageExplainer` y `data/ckd-stages.ts`. */
+  ckdStage?: CkdStage | null;
 }
 
 export interface GoalEvaluationCardProps {

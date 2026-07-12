@@ -1,5 +1,5 @@
 import { PARAMETROS_META_BY_ID } from '../data/parametros';
-import type { GoalEvaluationResponse, NoDataReason } from '@/types/goal-evaluation';
+import type { GoalEvaluationResponse, NoDataReason, CkdStage } from '@/types/goal-evaluation';
 import type { GoalEvaluationItemView } from '../components/GoalEvaluationCard';
 import { getParameterNotes } from './clinical-notes';
 
@@ -67,6 +67,12 @@ export function goalEvalToViews(
       reason: formatNoDataReason(item.reason ?? null),
       note,
       criticalAlert,
+      // ckdStage solo lo emite el backend para el item egfr y solo si
+      // valueUsed es numérico. Para cualquier otro parámetro queda null y
+      // el caller (CkdStageExplainer) no se monta. Pasamos el valor crudo
+      // sin derivar nada aquí — la clasificación ocurre en el backend
+      // (single source of truth clínica).
+      ckdStage: (item.ckdStage ?? null) as CkdStage | null,
     };
   });
 }
