@@ -14,13 +14,17 @@ import { ResumenControl } from "../ResumenControl";
 import { GoalEvaluationCard } from "../GoalEvaluationCard";
 import { ClinicalNote } from "../ClinicalNote";
 import { CkdStageExplainer } from "../CkdStageExplainer";
+import { NoDataReasonsTable } from "../NoDataReasonsTable";
 import { goalEvalToViews } from "../../utils/goal-eval-to-view";
 import { PARAMETROS_META, EvaluacionMeta } from "../../data/parametros";
 import { GlucoseReadingType } from "@/types/daily-record";
-import { GoalStatus, GoalEvaluationResponse } from "@/types/goal-evaluation";
+import { GoalStatus, GoalEvaluationResponse, NoDataReason } from "@/types/goal-evaluation";
 
 const DEFAULT_EVALUACIONES: Record<string, EvaluacionMeta> = PARAMETROS_META.reduce(
-  (acc, p) => ({ ...acc, [p.id]: { estado: "sin_dato", color: "var(--ph)" } }),
+  (acc, p) => ({
+    ...acc,
+    [p.id]: { estado: "sin_dato", color: "var(--ph)", isCustomGoal: false },
+  }),
   {} as Record<string, EvaluacionMeta>,
 );
 
@@ -29,12 +33,12 @@ function parseApiDate(dateStr: string): Date {
   return new Date(y, m - 1, d);
 }
 
-function mapGoalStatus(status: GoalStatus): EvaluacionMeta {
+function mapGoalStatus(status: GoalStatus, reason: NoDataReason | null | undefined, isCustomGoal: boolean): EvaluacionMeta {
   switch (status) {
-    case "InRange":    return { estado: "en_meta",    color: "var(--ok)" };
-    case "AtRisk":     return { estado: "cuidado",    color: "var(--warn)" };
-    case "OutOfRange": return { estado: "fuera_meta", color: "var(--bad)" };
-    case "NoData":     return { estado: "sin_dato",   color: "var(--ph)" };
+    case "InRange":    return { estado: "en_meta",    color: "var(--ok)",  isCustomGoal, reason: null };
+    case "AtRisk":     return { estado: "cuidado",    color: "var(--warn)", isCustomGoal, reason: null };
+    case "OutOfRange": return { estado: "fuera_meta", color: "var(--bad)", isCustomGoal, reason: null };
+    case "NoData":     return { estado: "sin_dato",   color: "var(--ph)",  isCustomGoal, reason: reason ?? null };
   }
 }
 
@@ -104,11 +108,19 @@ export function MetasControl() {
   // T5: derived read-only values — no manual input. Las keys coinciden con
   // `PARAMETROS_META[i].id` (alineado con los `parameterId` que emite el backend).
   const valores: Record<string, string> = {
-    hba1c:          sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
-    fasting_glucose: fastingGlucose?.toString() ?? "",
-    systolic_bp:    latestSBP?.toString() ?? "",
-    ldl_primary:    sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
-    bmi:            imc !== null ? imc.toFixed(1) : "",
+    hba1c:               sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
+    fasting_glucose:     fastingGlucose?.toString() ?? "",
+    systolic_bp:         latestSBP?.toString() ?? "",
+    diastolic_bp:        sortedDailyRecords.find((r) => r.diastolicPressure !== null)?.diastolicPressure?.toString() ?? "",
+    heart_rate:          sortedDailyRecords.find((r) => r.heartRate !== null)?.heartRate?.toString() ?? "",
+    waist_circumference: sortedDailyRecords.find((r) => r.waistCm !== null)?.waistCm?.toString() ?? "",
+    ldl_primary:         sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
+    hdl:                 sortedLabRecords.find((r) => r.hdl !== null)?.hdl?.toString() ?? "",
+    total_cholesterol:   sortedLabRecords.find((r) => r.totalCholesterol !== null)?.totalCholesterol?.toString() ?? "",
+    triglycerides:       sortedLabRecords.find((r) => r.triglycerides !== null)?.triglycerides?.toString() ?? "",
+    creatinine:          sortedLabRecords.find((r) => r.creatinine !== null)?.creatinine?.toString() ?? "",
+    bun:                 sortedLabRecords.find((r) => r.bun !== null)?.bun?.toString() ?? "",
+    bmi:                 imc !== null ? imc.toFixed(1) : "",
   };
 
   // T6: call evaluation API; T7: map GoalStatus → EvaluacionMeta
@@ -120,8 +132,8 @@ export function MetasControl() {
       PARAMETROS_META.forEach((param) => {
         const item = result.items.find((i) => i.parameterId === param.id);
         newEvaluaciones[param.id] = item
-          ? mapGoalStatus(item.status)
-          : { estado: "sin_dato", color: "var(--ph)" };
+          ? mapGoalStatus(item.status, item.reason ?? null, item.isCustomGoal === true)
+          : { estado: "sin_dato", color: "var(--ph)", isCustomGoal: false, reason: null };
       });
       setEvaluaciones(newEvaluaciones);
       setMostrarResumen(true);
@@ -145,7 +157,10 @@ export function MetasControl() {
 
   const resultadosFormateados = PARAMETROS_META.map((param) => ({
     param,
-    valor: valoresEvaluados[param.id] ?? valores[param.id] ?? "",
+    // `||` (no `??`): si el backend emite `valueUsed: null`/ausente, toString()
+    // devuelve "" que aún así pisaría el valor pre-poblado de `valores`. Con `||`
+    // un string vacío del backend cae al fallback de `valores` (pre-poblado).
+    valor: valoresEvaluados[param.id] || valores[param.id] || "",
     evaluacion: evaluaciones[param.id],
   }));
 
@@ -208,9 +223,13 @@ export function MetasControl() {
           <ParametroMeta
             key={param.id}
             param={param}
-            valor={valoresEvaluados[param.id] ?? valores[param.id] ?? ""}
+            // `||` para que un valueUsed ausente o string vacío del backend no
+            // pise el valor pre-poblado en `valores` (mismo motivo que arriba).
+            valor={valoresEvaluados[param.id] || valores[param.id] || ""}
             colorActual={evaluaciones[param.id].color}
+            isCustomGoal={evaluaciones[param.id].isCustomGoal}
             readOnly
+            evaluado={Boolean(evalResult)}
           />
         ))}
       </div>
@@ -227,6 +246,8 @@ export function MetasControl() {
       </div>
 
       {mostrarResumen && <ResumenControl resultados={resultadosFormateados} />}
+
+      {evalResult && <NoDataReasonsTable items={evalResult.items} />}
 
       {evalResult && (() => {
         // FE-CHIPS-3: derivamos las views una sola vez y las reusamos tanto en

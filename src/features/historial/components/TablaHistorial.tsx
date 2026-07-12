@@ -63,7 +63,7 @@ export function TablaHistorial({ registros, tipoDiabetes }: TablaHistorialProps)
         <tbody>
           {registros.map((registro) => (
             <FilaRegistro
-              key={registro.id}
+              key={registro.fecha}
               registro={registro}
               tipoDiabetes={tipoDiabetes}
             />

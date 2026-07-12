@@ -71,6 +71,102 @@ function mapLabToRegistro(r: LabRecordResponse): Registro {
   };
 }
 
+function mergeDailyFields(target: Registro, source: Registro): void {
+  if (target.glucosa_ayuno === undefined && source.glucosa_ayuno !== undefined) {
+    target.glucosa_ayuno = source.glucosa_ayuno;
+  }
+  if (target.presion_sistolica === undefined && source.presion_sistolica !== undefined) {
+    target.presion_sistolica = source.presion_sistolica;
+  }
+  if (target.presion_diastolica === undefined && source.presion_diastolica !== undefined) {
+    target.presion_diastolica = source.presion_diastolica;
+  }
+  if (target.frecuencia_cardiaca === undefined && source.frecuencia_cardiaca !== undefined) {
+    target.frecuencia_cardiaca = source.frecuencia_cardiaca;
+  }
+  if (target.peso === undefined && source.peso !== undefined) {
+    target.peso = source.peso;
+  }
+  if (target.cintura === undefined && source.cintura !== undefined) {
+    target.cintura = source.cintura;
+  }
+  if (source.glucosas_comidas && source.glucosas_comidas.length > 0) {
+    const seen = new Set(
+      (target.glucosas_comidas ?? []).map(
+        (g) => `${g.tipo}|${g.hora}|${g.valor}|${g.alimentos}`
+      )
+    );
+    for (const g of source.glucosas_comidas) {
+      const key = `${g.tipo}|${g.hora}|${g.valor}|${g.alimentos}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      target.glucosas_comidas = [...(target.glucosas_comidas ?? []), g];
+    }
+  }
+  if (source.notas !== undefined) {
+    if (target.notas === undefined) {
+      target.notas = source.notas;
+    } else if (target.notas !== source.notas) {
+      target.notas = `${target.notas}\n${source.notas}`;
+    }
+  }
+}
+
+function mergeLabFields(target: Registro, source: Registro): void {
+  if (target.hba1c === undefined && source.hba1c !== undefined) target.hba1c = source.hba1c;
+  if (target.colesterol_total === undefined && source.colesterol_total !== undefined) {
+    target.colesterol_total = source.colesterol_total;
+  }
+  if (target.colesterol_ldl === undefined && source.colesterol_ldl !== undefined) {
+    target.colesterol_ldl = source.colesterol_ldl;
+  }
+  if (target.colesterol_hdl === undefined && source.colesterol_hdl !== undefined) {
+    target.colesterol_hdl = source.colesterol_hdl;
+  }
+  if (target.trigliceridos === undefined && source.trigliceridos !== undefined) {
+    target.trigliceridos = source.trigliceridos;
+  }
+  if (target.bun === undefined && source.bun !== undefined) target.bun = source.bun;
+  if (target.creatinina === undefined && source.creatinina !== undefined) {
+    target.creatinina = source.creatinina;
+  }
+  if (target.ego_proteinas === undefined && source.ego_proteinas !== undefined) {
+    target.ego_proteinas = source.ego_proteinas;
+  }
+  if (target.ego_glucosa === undefined && source.ego_glucosa !== undefined) {
+    target.ego_glucosa = source.ego_glucosa;
+  }
+  if (source.notas !== undefined) {
+    if (target.notas === undefined) {
+      target.notas = source.notas;
+    } else if (target.notas !== source.notas) {
+      target.notas = `${target.notas}\n${source.notas}`;
+    }
+  }
+}
+
+function mergeByFecha(daily: Registro[], lab: Registro[]): Registro[] {
+  const byFecha = new Map<string, Registro>();
+
+  for (const l of lab) {
+    byFecha.set(l.fecha, { ...l });
+  }
+  for (const d of daily) {
+    const existing = byFecha.get(d.fecha);
+    if (existing) {
+      mergeLabFields(existing, d);
+      mergeDailyFields(existing, d);
+      existing.id = `${existing.id}+${d.id}`;
+    } else {
+      byFecha.set(d.fecha, { ...d });
+    }
+  }
+
+  return [...byFecha.values()].sort(
+    (a, b) => parseDailyDate(b.fecha).getTime() - parseDailyDate(a.fecha).getTime()
+  );
+}
+
 export default function HistorialPage() {
   const { patientId } = useAuthStore();
 
@@ -89,10 +185,7 @@ export default function HistorialPage() {
   const registros = useMemo<Registro[]>(() => {
     const daily = (dailyRecords ?? []).map(mapDailyToRegistro);
     const lab = (labRecords ?? []).map(mapLabToRegistro);
-
-    return [...daily, ...lab].sort(
-      (a, b) => parseDailyDate(b.fecha).getTime() - parseDailyDate(a.fecha).getTime()
-    );
+    return mergeByFecha(daily, lab);
   }, [dailyRecords, labRecords]);
 
   if (loadingDaily || loadingLab) {

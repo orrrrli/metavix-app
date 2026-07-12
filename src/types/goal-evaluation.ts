@@ -25,7 +25,12 @@ export type CkdStage = "G1" | "G2" | "G3a" | "G3b" | "G4" | "G5";
 export interface GoalEvaluationItemResponse {
   parameterId: string;
   valueUsed: number | null;
-  goalUsed: number;
+  // Nullable: items with status=NoData (e.g. "requires-specialist-evaluation" for DM1/DMG
+  // blood pressure, "not-evaluated-in-pregnancy" for BMI/waist) do not have a comparison
+  // threshold because they were not evaluated. The FE used to assume this was always a
+  // number — see MetasControl valor-pre-population fallback — but the backend has always
+  // emitted null here, so the typing now matches reality.
+  goalUsed: number | null;
   status: GoalStatus;
   /** Solo presente cuando `status === "NoData"`. Explica por qué el parámetro
    *  no se evaluó. */
@@ -33,6 +38,11 @@ export interface GoalEvaluationItemResponse {
   /** Etapa KDIGO 2024 de ERC, presente solo cuando `parameterId === "egfr"`
    *  y `valueUsed` es numérico. Ver `CkdStage`. */
   ckdStage?: CkdStage | null;
+  /** True cuando los umbrales aplicados a este parámetro vienen de un ClinicalGoal
+   *  seteado por su doctor (merged sobre el spec ADA vía ApplyCustom), no del
+   *  catálogo ADA puro. El FE lo usa para mostrar el chip "Ajustada por tu doctor"
+   *  en la card correspondiente. Default false cuando ausente. */
+  isCustomGoal?: boolean;
 }
 
 export interface GoalEvaluationResponse {

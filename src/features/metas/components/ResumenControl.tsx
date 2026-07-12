@@ -35,11 +35,20 @@ export function ResumenControl({ resultados }: ResumenControlProps) {
     sinDato: 0
   };
 
+  // `sin_dato` cuenta solo los parámetros sin valor numérico en ninguna fuente
+  // (ni backend ni pre-población). Un valor pre-poblado por el frontend
+  // (p. ej. peso de hace 35 días, fuera de la ventana de frescura clínica del
+  // backend) sigue siendo un valor que el paciente registró — no es "sin
+  // ingresar". La copy del mensaje ("Solicite estos estudios en su próxima
+  // consulta") aplica solo al caso real de dato ausente.
   resultados.forEach(r => {
+    if (!r.valor) {
+      conteos.sinDato++;
+      return;
+    }
     if (r.evaluacion.estado === "en_meta") conteos.enMeta++;
     else if (r.evaluacion.estado === "cuidado") conteos.cuidado++;
     else if (r.evaluacion.estado === "fuera_meta") conteos.fuera++;
-    else conteos.sinDato++;
   });
 
   return (

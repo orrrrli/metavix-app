@@ -9,9 +9,19 @@ interface ParametroMetaProps {
   colorActual: string;
   onChange?: (val: string) => void;
   readOnly?: boolean;
+  /** True una vez que el usuario pulsó "Evaluar mis metas". */
+  evaluado?: boolean;
+  /** True cuando los umbrales aplicados a este parámetro vienen de un ClinicalGoal
+   *  seteado por su doctor, no del catálogo ADA. Muestra el chip "Ajustada por tu
+   *  doctor" al lado del nombre del parámetro. */
+  isCustomGoal?: boolean;
 }
 
-export function ParametroMeta({ param, valor, colorActual, onChange, readOnly }: ParametroMetaProps) {
+export function ParametroMeta({ param, valor, colorActual, onChange, readOnly, evaluado, isCustomGoal }: ParametroMetaProps) {
+  // Parámetros que no se pueden pre-poblar (egfr derivado, postprandiales sin
+  // `postprandialWindow` en la API): antes de evaluar mostramos un aviso en vez
+  // de "Sin datos". Tras evaluar caen al comportamiento normal (valor o "Sin datos").
+  const mostrarAvisoEvaluar = readOnly && !valor && param.evaluationOnly && !evaluado;
   return (
     <div
       className="rounded-xl p-5 sm:p-6 shadow-sm hover:border-primary/20 transition-colors"
@@ -24,7 +34,7 @@ export function ParametroMeta({ param, valor, colorActual, onChange, readOnly }:
 
         {/* Info y Meta Esperada */}
         <div className="flex-1">
-          <div className="flex items-center gap-3 mb-1">
+          <div className="flex items-center gap-3 mb-1 flex-wrap">
             <h4 className="font-display font-semibold text-lg" style={{ color: "var(--text)" }}>{param.nombre}</h4>
             <span
               className="text-xs px-2 py-0.5 rounded font-medium"
@@ -32,6 +42,15 @@ export function ParametroMeta({ param, valor, colorActual, onChange, readOnly }:
             >
               {param.fuente}
             </span>
+            {isCustomGoal && (
+              <span
+                className="text-xs px-2 py-0.5 rounded font-medium"
+                style={{ background: "var(--info-bg)", color: "var(--info)" }}
+                title="Los umbrales de este parámetro fueron ajustados por tu doctor."
+              >
+                Ajustada por tu doctor
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-2 mt-2">
@@ -69,6 +88,10 @@ export function ParametroMeta({ param, valor, colorActual, onChange, readOnly }:
                     {param.unidad}
                   </span>
                 </>
+              ) : mostrarAvisoEvaluar ? (
+                <span className="text-sm italic" style={{ color: "var(--mut)" }}>
+                  Disponible al evaluar
+                </span>
               ) : (
                 <span className="text-sm italic" style={{ color: "var(--mut)" }}>Sin datos</span>
               )}
