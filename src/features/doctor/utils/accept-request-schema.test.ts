@@ -3,18 +3,18 @@ import { acceptRequestSchema, MRN_REGEX } from './accept-request-schema';
 
 describe('acceptRequestSchema', () => {
   describe('casos válidos', () => {
-    it('acepta un MRN bien formado con year y secuencia', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026-000001' });
+    it('acepta un MRN bien formado con fecha y hora', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-20260711-153045123' });
       expect(r.success).toBe(true);
     });
 
-    it('acepta ceros en la secuencia', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026-000000' });
+    it('acepta ceros en la hora', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-20260711-000000000' });
       expect(r.success).toBe(true);
     });
 
-    it('acepta el valor máximo de secuencia (999999)', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026-999999' });
+    it('acepta el valor máximo de hora (235959999)', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-20260711-235959999' });
       expect(r.success).toBe(true);
     });
 
@@ -36,37 +36,37 @@ describe('acceptRequestSchema', () => {
 
   describe('casos inválidos', () => {
     it('rechaza formato sin prefijo MRN-', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: '2026-000001' });
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: '20260711-153045123' });
       expect(r.success).toBe(false);
     });
 
-    it('rechaza año con dígitos no numéricos', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-abcd-000001' });
+    it('rechaza fecha con dígitos no numéricos', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-abcdefgh-153045123' });
       expect(r.success).toBe(false);
     });
 
-    it('rechaza secuencia con dígitos no numéricos', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026-abcdef' });
+    it('rechaza hora con dígitos no numéricos', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-20260711-abcdefghi' });
       expect(r.success).toBe(false);
     });
 
-    it('rechaza año con 2 dígitos (deben ser 4)', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-26-000001' });
+    it('rechaza fecha con 4 dígitos (deben ser 8)', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026-153045123' });
       expect(r.success).toBe(false);
     });
 
-    it('rechaza secuencia con 5 dígitos (deben ser 6)', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026-00001' });
+    it('rechaza hora con 6 dígitos (deben ser 9)', () => {
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-20260711-153045' });
       expect(r.success).toBe(false);
     });
 
     it('rechaza minúsculas en el prefijo', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'mrn-2026-000001' });
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'mrn-20260711-153045123' });
       expect(r.success).toBe(false);
     });
 
     it('rechaza espacios en blanco', () => {
-      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-2026- 000001' });
+      const r = acceptRequestSchema.safeParse({ medicalRecordNumber: 'MRN-20260711- 53045123' });
       expect(r.success).toBe(false);
     });
   });
@@ -74,14 +74,14 @@ describe('acceptRequestSchema', () => {
 
 describe('MRN_REGEX', () => {
   it('matchea exactamente el formato esperado', () => {
-    expect(MRN_REGEX.test('MRN-2026-000001')).toBe(true);
-    expect(MRN_REGEX.test('MRN-2026-999999')).toBe(true);
-    expect(MRN_REGEX.test('MRN-2026-000000')).toBe(true);
+    expect(MRN_REGEX.test('MRN-20260711-153045123')).toBe(true);
+    expect(MRN_REGEX.test('MRN-20260711-235959999')).toBe(true);
+    expect(MRN_REGEX.test('MRN-20260711-000000000')).toBe(true);
   });
 
   it('no matchea longitudes incorrectas', () => {
-    expect(MRN_REGEX.test('MRN-2026-0001')).toBe(false);
-    expect(MRN_REGEX.test('MRN-2026-0000001')).toBe(false);
-    expect(MRN_REGEX.test('MRN-202-000001')).toBe(false);
+    expect(MRN_REGEX.test('MRN-20260711-15304')).toBe(false);
+    expect(MRN_REGEX.test('MRN-20260711-1530451234')).toBe(false);
+    expect(MRN_REGEX.test('MRN-2026071-153045123')).toBe(false);
   });
 });
