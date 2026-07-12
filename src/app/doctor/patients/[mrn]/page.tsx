@@ -10,6 +10,7 @@ import { ArrowLeft, Activity, HeartPulse, Droplet, FlaskConical, FileText } from
 import Link from "next/link";
 
 import { useAuthStore } from "@/features/auth/store";
+import { parseApiDate } from "@/features/patient/utils/parse-api-date";
 import {
   useLinkedPatients,
   useLinkedPatientProfile,
@@ -26,10 +27,6 @@ import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 
 function parseDailyDate(dateStr: string): Date {
   return parse(dateStr, "dd/MM/yyyy", new Date());
-}
-
-function parseProfileDate(dateStr: string): Date {
-  return parse(dateStr, "yyyy-MM-dd", new Date());
 }
 
 function getFastingGlucose(readings: GlucoseReadingResponse[]): number | undefined {
@@ -106,7 +103,8 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
     );
   }
 
-  const age = differenceInYears(new Date(), parseProfileDate(profile.dateOfBirth));
+  const dateOfBirth = parseApiDate(profile.dateOfBirth);
+  const age = dateOfBirth ? differenceInYears(new Date(), dateOfBirth) : null;
   const chartData = buildChartData(dailyRecords);
   const sortedDaily = [...dailyRecords].sort(
     (a, b) => parseDailyDate(b.recordDate).getTime() - parseDailyDate(a.recordDate).getTime()
@@ -129,7 +127,7 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
             {profile.firstName} {profile.lastName}
           </h2>
           <p className="text-muted-foreground flex items-center gap-2 mt-1 flex-wrap">
-            <span>{age} años ({profile.gender ?? "—"})</span>
+            <span>{age !== null ? `${age} años` : "—"} ({profile.gender ?? "—"})</span>
             <span>&bull;</span>
             <span>{profile.diabetesType}</span>
             <span>&bull;</span>
@@ -145,12 +143,14 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="overview">Resumen Clínico</TabsTrigger>
-          <TabsTrigger value="daily">Registros Diarios</TabsTrigger>
-          <TabsTrigger value="lab">Resultados de Lab</TabsTrigger>
-          <TabsTrigger value="goals">Metas</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto mb-4">
+          <TabsList className="w-max min-w-full">
+            <TabsTrigger value="overview">Resumen Clínico</TabsTrigger>
+            <TabsTrigger value="daily">Registros Diarios</TabsTrigger>
+            <TabsTrigger value="lab">Resultados de Lab</TabsTrigger>
+            <TabsTrigger value="goals">Metas</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview — charts */}
         <TabsContent value="overview" className="space-y-6">

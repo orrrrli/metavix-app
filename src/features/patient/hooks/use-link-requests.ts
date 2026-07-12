@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getAllDoctors, getLinkedDoctors, sendLinkRequest, revokeLinkRequest } from '@/lib/api/patient';
+import { getAllDoctors, getLinkedDoctors, getPendingSentRequests, sendLinkRequest, revokeLinkRequest } from '@/lib/api/patient';
 import { LinkedDoctorResponse, SendLinkRequestBody } from '@/types/link-request';
 
 export function useAllDoctors() {
@@ -18,12 +18,21 @@ export function useLinkedDoctors(patientId: string) {
   });
 }
 
+export function usePendingSentRequests(patientId: string) {
+  return useQuery({
+    queryKey: ['pending-sent-requests', patientId],
+    queryFn: () => getPendingSentRequests(patientId),
+    enabled: !!patientId,
+  });
+}
+
 export function useSendLinkRequest(patientId: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (data: SendLinkRequestBody) => sendLinkRequest(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['linked-doctors', patientId] });
+      queryClient.invalidateQueries({ queryKey: ['pending-sent-requests', patientId] });
     },
   });
 }
@@ -36,6 +45,10 @@ export function useRevokeLinkRequest(patientId: string) {
       queryClient.setQueryData<LinkedDoctorResponse[]>(
         ['linked-doctors', patientId],
         (old) => old?.filter((d) => d.requestId !== requestId) ?? []
+      );
+      queryClient.setQueryData(
+        ['pending-sent-requests', patientId],
+        (old: { requestId: string }[] | undefined) => old?.filter((r) => r.requestId !== requestId) ?? []
       );
     },
   });
