@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { NavigationLoader } from "@/shared/components/ui/navigation-loader";
+import { waitForThemeClass } from "@/shared/lib/theme-transition";
 
 /**
  * MetavixDashboardLayout — marco del dashboard con identidad Metavix:
@@ -206,7 +207,26 @@ export default function MetavixDashboardLayout({
   };
 
   const handleToggleTheme = () => {
-    setTheme(isDark ? "light" : "dark");
+    const next = isDark ? "light" : "dark";
+
+    // Efecto "polygon": barrido diagonal usando la View Transitions API.
+    // Fallback silencioso si el navegador no la soporta o el usuario prefiere menos movimiento.
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => { ready: Promise<void> };
+    };
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!doc.startViewTransition || prefersReduced) {
+      setTheme(next);
+      return;
+    }
+
+    // next-themes aplica la clase de forma asíncrona, así que el callback debe
+    // esperar a que el DOM cambie antes de que Chrome capture el snapshot "new".
+    doc.startViewTransition(async () => {
+      setTheme(next);
+      await waitForThemeClass(next);
+    });
   };
 
   const handleLogout = () => {

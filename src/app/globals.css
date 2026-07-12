@@ -172,6 +172,38 @@
 .dark .mvx-dash .mvxdl-icon-sun { display:block; }
 .dark .mvx-dash .mvxdl-fab { animation-name: mvxFabPulseDark; }
 
+/* ── Efecto "polygon" para el cambio de tema (View Transitions API) ──
+   El tema nuevo entra con un barrido diagonal de esquina a esquina.
+   Ref: theme-toggle.rdsx.dev (variante polygon). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 999;
+}
+@keyframes mvxThemePolygonWipe {
+  from {
+    clip-path: polygon(50% -71%, -50% 71%, -50% 71%, 50% -71%);
+  }
+  to {
+    clip-path: polygon(50% -71%, -50% 71%, 150% 229%, 250% 71%);
+  }
+}
+::view-transition-new(root) {
+  animation: 0.5s cubic-bezier(0.65, 0, 0.35, 1) both mvxThemePolygonWipe;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}
+
 /* ── Sidebar responsive: sticky en desktop, drawer off-canvas en <lg ── */
 .mvxdl-sidebar {
   width: 262px; flex-shrink: 0;
