@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { flushSync } from "react-dom";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
@@ -142,6 +143,23 @@ export function Hero() {
   const [dark, setDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const toggleDark = () => {
+    // Efecto "polygon": barrido diagonal con la View Transitions API.
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void | Promise<void>) => { ready: Promise<void> };
+    };
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (!doc.startViewTransition || prefersReduced) {
+      setDark((d) => !d);
+      return;
+    }
+
+    doc.startViewTransition(() => {
+      flushSync(() => setDark((d) => !d));
+    });
+  };
+
   return (
     <div className={`mvx-hero${dark ? " dark" : ""}`} style={{ width: "100%", minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--bg)" }}>
       {/* NAV */}
@@ -156,7 +174,7 @@ export function Hero() {
           <Link href="/recursos" className="mvx-navlink" style={{ fontFamily: F, fontSize: 14 }}>Recursos</Link>
         </div>
         <div className="mvx-hero-nav-right" style={{ display: "flex", gap: 20, alignItems: "center" }}>
-          <button className="mvx-toggle" onClick={() => setDark((d) => !d)} aria-label="Cambiar modo oscuro">
+          <button className="mvx-toggle" onClick={toggleDark} aria-label="Cambiar modo oscuro">
             <span className="mvx-toggle-knob">
               <svg className="mvx-knob-ico mvx-knob-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" /></svg>
               <svg className="mvx-knob-ico mvx-knob-moon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#03251d" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z" /></svg>
