@@ -1,10 +1,19 @@
-import type { GoalStatus } from "@/types/goal-evaluation";
+import type { GoalStatus, NoDataReason } from "@/types/goal-evaluation";
 
 export type EstadoMeta = "en_meta" | "cuidado" | "fuera_meta" | "sin_dato";
 
 export interface EvaluacionMeta {
   estado: EstadoMeta;
   color: string;
+  /** Solo presente cuando `estado === "sin_dato"`. Es el `reason` que devolvió el
+   *  backend (ej. "requires-specialist-evaluation", "not-evaluated-in-pregnancy").
+   *  El componente `<NoDataReasonsTable>` lo usa para mostrar al paciente por qué
+   *  ese parámetro no se clasifica. */
+  reason?: NoDataReason | null;
+  /** True cuando los umbrales aplicados al parámetro vienen de un ClinicalGoal
+   *  seteado por su doctor, no del catálogo ADA. El componente `<ParametroMeta>`
+   *  muestra el chip "Ajustada por tu doctor" cuando es true. */
+  isCustomGoal: boolean;
 }
 
 /** Nota clínica mostrada cuando la paciente está embarazada (tabla "Por
@@ -309,39 +318,45 @@ export const PARAMETROS_META_BY_ID = new Map(PARAMETROS_META.map((p) => [p.id, p
  * preservar los thresholds documentados.
  */
 export function evaluarParametro(id: string, valorStr: string): EvaluacionMeta {
+  // Legacy stub: this function is no longer used by MetasControl (the patient-side evaluator
+  // now runs entirely on the backend via POST /goal-evaluations). It is kept here only for
+  // backwards-compatibility with any remaining imports and to preserve the threshold
+  // documentation that was originally in this switch. The isCustomGoal flag is always false
+  // and reason is always null because this client-side fallback cannot know what the doctor
+  // has set or why the backend declined to evaluate.
   if (!valorStr || valorStr.trim() === "") {
-    return { estado: "sin_dato", color: "bg-muted-foreground/30" };
+    return { estado: "sin_dato", color: "bg-muted-foreground/30", isCustomGoal: false, reason: null };
   }
 
   const val = Number(valorStr);
 
   switch (id) {
     case "hba1c":
-      if (val < 7.0) return { estado: "en_meta", color: "bg-emerald-500" };
-      if (val >= 7.0 && val <= 7.9) return { estado: "cuidado", color: "bg-amber-500" };
-      return { estado: "fuera_meta", color: "bg-red-500" };
+      if (val < 7.0) return { estado: "en_meta", color: "bg-emerald-500", isCustomGoal: false, reason: null };
+      if (val >= 7.0 && val <= 7.9) return { estado: "cuidado", color: "bg-amber-500", isCustomGoal: false, reason: null };
+      return { estado: "fuera_meta", color: "bg-red-500", isCustomGoal: false, reason: null };
 
     case "fasting_glucose":
-      if (val >= 80 && val <= 130) return { estado: "en_meta", color: "bg-emerald-500" };
-      if (val >= 131 && val <= 160) return { estado: "cuidado", color: "bg-amber-500" };
-      return { estado: "fuera_meta", color: "bg-red-500" };
+      if (val >= 80 && val <= 130) return { estado: "en_meta", color: "bg-emerald-500", isCustomGoal: false, reason: null };
+      if (val >= 131 && val <= 160) return { estado: "cuidado", color: "bg-amber-500", isCustomGoal: false, reason: null };
+      return { estado: "fuera_meta", color: "bg-red-500", isCustomGoal: false, reason: null };
 
     case "systolic_bp":
-      if (val < 130) return { estado: "en_meta", color: "bg-emerald-500" };
-      if (val >= 130 && val <= 139) return { estado: "cuidado", color: "bg-amber-500" };
-      return { estado: "fuera_meta", color: "bg-red-500" };
+      if (val < 130) return { estado: "en_meta", color: "bg-emerald-500", isCustomGoal: false, reason: null };
+      if (val >= 130 && val <= 139) return { estado: "cuidado", color: "bg-amber-500", isCustomGoal: false, reason: null };
+      return { estado: "fuera_meta", color: "bg-red-500", isCustomGoal: false, reason: null };
 
     case "ldl_primary":
-      if (val < 100) return { estado: "en_meta", color: "bg-emerald-500" };
-      if (val >= 100 && val <= 129) return { estado: "cuidado", color: "bg-amber-500" };
-      return { estado: "fuera_meta", color: "bg-red-500" };
+      if (val < 100) return { estado: "en_meta", color: "bg-emerald-500", isCustomGoal: false, reason: null };
+      if (val >= 100 && val <= 129) return { estado: "cuidado", color: "bg-amber-500", isCustomGoal: false, reason: null };
+      return { estado: "fuera_meta", color: "bg-red-500", isCustomGoal: false, reason: null };
 
     case "bmi":
-      if (val >= 18.5 && val <= 24.9) return { estado: "en_meta", color: "bg-emerald-500" };
-      if (val >= 25.0 && val <= 29.9) return { estado: "cuidado", color: "bg-amber-500" };
-      return { estado: "fuera_meta", color: "bg-red-500" };
+      if (val >= 18.5 && val <= 24.9) return { estado: "en_meta", color: "bg-emerald-500", isCustomGoal: false, reason: null };
+      if (val >= 25.0 && val <= 29.9) return { estado: "cuidado", color: "bg-amber-500", isCustomGoal: false, reason: null };
+      return { estado: "fuera_meta", color: "bg-red-500", isCustomGoal: false, reason: null };
 
     default:
-      return { estado: "sin_dato", color: "bg-muted-foreground/30" };
+      return { estado: "sin_dato", color: "bg-muted-foreground/30", isCustomGoal: false, reason: null };
   }
 }

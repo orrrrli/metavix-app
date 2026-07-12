@@ -14,13 +14,17 @@ import { ResumenControl } from "../ResumenControl";
 import { GoalEvaluationCard } from "../GoalEvaluationCard";
 import { ClinicalNote } from "../ClinicalNote";
 import { CkdStageExplainer } from "../CkdStageExplainer";
+import { NoDataReasonsTable } from "../NoDataReasonsTable";
 import { goalEvalToViews } from "../../utils/goal-eval-to-view";
 import { PARAMETROS_META, EvaluacionMeta } from "../../data/parametros";
 import { GlucoseReadingType } from "@/types/daily-record";
-import { GoalStatus, GoalEvaluationResponse } from "@/types/goal-evaluation";
+import { GoalStatus, GoalEvaluationResponse, NoDataReason } from "@/types/goal-evaluation";
 
 const DEFAULT_EVALUACIONES: Record<string, EvaluacionMeta> = PARAMETROS_META.reduce(
-  (acc, p) => ({ ...acc, [p.id]: { estado: "sin_dato", color: "var(--ph)" } }),
+  (acc, p) => ({
+    ...acc,
+    [p.id]: { estado: "sin_dato", color: "var(--ph)", isCustomGoal: false },
+  }),
   {} as Record<string, EvaluacionMeta>,
 );
 
@@ -29,12 +33,12 @@ function parseApiDate(dateStr: string): Date {
   return new Date(y, m - 1, d);
 }
 
-function mapGoalStatus(status: GoalStatus): EvaluacionMeta {
+function mapGoalStatus(status: GoalStatus, reason: NoDataReason | null | undefined, isCustomGoal: boolean): EvaluacionMeta {
   switch (status) {
-    case "InRange":    return { estado: "en_meta",    color: "var(--ok)" };
-    case "AtRisk":     return { estado: "cuidado",    color: "var(--warn)" };
-    case "OutOfRange": return { estado: "fuera_meta", color: "var(--bad)" };
-    case "NoData":     return { estado: "sin_dato",   color: "var(--ph)" };
+    case "InRange":    return { estado: "en_meta",    color: "var(--ok)",  isCustomGoal, reason: null };
+    case "AtRisk":     return { estado: "cuidado",    color: "var(--warn)", isCustomGoal, reason: null };
+    case "OutOfRange": return { estado: "fuera_meta", color: "var(--bad)", isCustomGoal, reason: null };
+    case "NoData":     return { estado: "sin_dato",   color: "var(--ph)",  isCustomGoal, reason: reason ?? null };
   }
 }
 
@@ -128,8 +132,8 @@ export function MetasControl() {
       PARAMETROS_META.forEach((param) => {
         const item = result.items.find((i) => i.parameterId === param.id);
         newEvaluaciones[param.id] = item
-          ? mapGoalStatus(item.status)
-          : { estado: "sin_dato", color: "var(--ph)" };
+          ? mapGoalStatus(item.status, item.reason ?? null, item.isCustomGoal === true)
+          : { estado: "sin_dato", color: "var(--ph)", isCustomGoal: false, reason: null };
       });
       setEvaluaciones(newEvaluaciones);
       setMostrarResumen(true);
@@ -223,6 +227,7 @@ export function MetasControl() {
             // pise el valor pre-poblado en `valores` (mismo motivo que arriba).
             valor={valoresEvaluados[param.id] || valores[param.id] || ""}
             colorActual={evaluaciones[param.id].color}
+            isCustomGoal={evaluaciones[param.id].isCustomGoal}
             readOnly
             evaluado={Boolean(evalResult)}
           />
@@ -241,6 +246,8 @@ export function MetasControl() {
       </div>
 
       {mostrarResumen && <ResumenControl resultados={resultadosFormateados} />}
+
+      {evalResult && <NoDataReasonsTable items={evalResult.items} />}
 
       {evalResult && (() => {
         // FE-CHIPS-3: derivamos las views una sola vez y las reusamos tanto en
