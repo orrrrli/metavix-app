@@ -247,10 +247,14 @@ export function useGlucosaResumen(
     let registradaHace: string | null = null;
     let horasDesde = "—";
     let proximaMedicion: string | null = null;
+    // Rango del hero: por defecto el de ayuno, pero se ajusta al tipo de la
+    // última lectura para que la barra y el pill de estado coincidan (#thermo).
+    let rangoUltima: [number, number] = [inf, supAyuno];
 
     if (last) {
       valor = last.g.valueMgDl;
       const r = rangoPara(last.g.readingType, hasDiabetes);
+      rangoUltima = [r.inf, r.sup];
       const ev = evaluar(valor, r);
       estado = ev.estado;
       estadoLabel = ev.label;
@@ -282,7 +286,7 @@ export function useGlucosaResumen(
       estadoLabel,
       contexto,
       registradaHace,
-      rangoObjetivo: [inf, supAyuno],
+      rangoObjetivo: rangoUltima,
       proximaMedicion,
       medicionesHoy,
       enMeta: enMetaHoy,
