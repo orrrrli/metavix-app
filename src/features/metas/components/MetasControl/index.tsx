@@ -13,6 +13,7 @@ import { ParametroMeta } from "../ParametroMeta";
 import { ResumenControl } from "../ResumenControl";
 import { GoalEvaluationCard } from "../GoalEvaluationCard";
 import { ClinicalNote } from "../ClinicalNote";
+import { CkdStageExplainer } from "../CkdStageExplainer";
 import { goalEvalToViews } from "../../utils/goal-eval-to-view";
 import { PARAMETROS_META, EvaluacionMeta } from "../../data/parametros";
 import { GlucoseReadingType } from "@/types/daily-record";
@@ -227,14 +228,26 @@ export function MetasControl() {
 
       {mostrarResumen && <ResumenControl resultados={resultadosFormateados} />}
 
-      {evalResult && (
-        <div className="mt-8">
-          <GoalEvaluationCard
-            items={goalEvalToViews(evalResult, Boolean(profile?.isPregnant), previousCreatinine)}
-            evaluatedAt={evalResult.evaluatedAt}
-          />
-        </div>
-      )}
+      {evalResult && (() => {
+        // FE-CHIPS-3: derivamos las views una sola vez y las reusamos tanto en
+        // el grid de chips como en el CkdStageExplainer (que necesita el
+        // ckdStage y el valueUsed del item egfr). El explainer solo se monta
+        // cuando el backend emitió una etapa (es decir, eGFR con creatinina
+        // reciente); si no hay valor numérico, no se muestra.
+        const views = goalEvalToViews(evalResult, Boolean(profile?.isPregnant), previousCreatinine);
+        const egfrView = views.find((v) => v.parameterId === 'egfr');
+        return (
+          <div className="mt-8 space-y-6">
+            <GoalEvaluationCard items={views} evaluatedAt={evalResult.evaluatedAt} />
+            {egfrView?.ckdStage && (
+              <CkdStageExplainer
+                currentStage={egfrView.ckdStage}
+                egfrValue={egfrView.value}
+              />
+            )}
+          </div>
+        );
+      })()}
 
       <div
         className="mt-12 pt-6 border-t text-center text-sm"

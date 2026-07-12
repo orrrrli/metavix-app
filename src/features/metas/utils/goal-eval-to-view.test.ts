@@ -131,6 +131,36 @@ describe('goalEvalToViews', () => {
     expect(views[3].reason).toBeNull();
   });
 
+  it('forwards the ckdStage from the API onto the view (egfr with numeric value)', () => {
+    const withEgfr: GoalEvaluationResponse = {
+      evaluationId: 'ev-7',
+      evaluatedAt: '2026-07-10T15:00:00Z',
+      items: [
+        { parameterId: 'egfr', valueUsed: 47, goalUsed: 60, status: 'AtRisk', ckdStage: 'G3a' },
+      ],
+    };
+    const views = goalEvalToViews(withEgfr, false);
+    expect(views[0].ckdStage).toBe('G3a');
+  });
+
+  it('forwards ckdStage null when the API omits it (non-egfr parameter)', () => {
+    const views = goalEvalToViews(response, false);
+    expect(views[0].ckdStage).toBeNull();
+    expect(views[4].ckdStage).toBeNull();
+  });
+
+  it('forwards ckdStage null for egfr when no numeric value is present', () => {
+    const noCreatinine: GoalEvaluationResponse = {
+      evaluationId: 'ev-8',
+      evaluatedAt: '2026-07-10T15:00:00Z',
+      items: [
+        { parameterId: 'egfr', valueUsed: null, goalUsed: 60, status: 'NoData', reason: 'no-recent-data' },
+      ],
+    };
+    const views = goalEvalToViews(noCreatinine, false);
+    expect(views[0].ckdStage).toBeNull();
+  });
+
   it('returns an empty array when the response has no items', () => {
     expect(
       goalEvalToViews({ evaluationId: 'x', evaluatedAt: '2026-07-10T15:00:00Z', items: [] }, false),
