@@ -60,8 +60,23 @@ export default function MetavixUltimaLectura({
 }: MetavixUltimaLecturaProps) {
   const e = ESTADO_VAR[estado];
 
+  const [inf, sup] = rangoObjetivo;
+
+  // Eje de la barra: acolchado alrededor del rango objetivo del paciente, de
+  // modo que las bandas de color y el marcador coincidan con las etiquetas
+  // impresas debajo. inf−30 a la izquierda, sup+50 a la derecha.
+  const axisMin = inf - 30;
+  const axisMax = sup + 50;
+  const axisSpan = axisMax - axisMin;
+  const toPct = (v: number) => Math.max(0, Math.min(1, (v - axisMin) / axisSpan));
+
+  // Anchos de las tres bandas (bajo / objetivo / alto) derivados del rango.
+  const bajoW = toPct(inf) * 100;
+  const objetivoW = (toPct(sup) - toPct(inf)) * 100;
+  const altoW = (1 - toPct(sup)) * 100;
+
   const num = typeof valor === "number" ? valor : parseFloat(String(valor));
-  const pct = markerPct ?? Math.max(0.04, Math.min(0.96, (num - 40) / (250 - 40)));
+  const pct = markerPct ?? Math.max(0.04, Math.min(0.96, toPct(num)));
 
   const card: React.CSSProperties = {
     background: "var(--card)",
@@ -141,9 +156,9 @@ export default function MetavixUltimaLectura({
         {/* barra de rango */}
         <div style={{ marginTop: 4 }}>
           <div style={{ position: "relative", height: 11, borderRadius: 999, overflow: "hidden", display: "flex" }}>
-            <div style={{ width: "16%", background: "var(--bad)", opacity: 0.85 }} />
-            <div style={{ width: "62%", background: "var(--ok)" }} />
-            <div style={{ width: "22%", background: "var(--warn)", opacity: 0.9 }} />
+            <div style={{ width: `${bajoW}%`, background: "var(--bad)", opacity: 0.85 }} />
+            <div style={{ width: `${objetivoW}%`, background: "var(--ok)" }} />
+            <div style={{ width: `${altoW}%`, background: "var(--warn)", opacity: 0.9 }} />
           </div>
           <div style={{ position: "relative", height: 0 }}>
             <div
