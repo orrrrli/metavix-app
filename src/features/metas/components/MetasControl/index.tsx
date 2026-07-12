@@ -104,11 +104,19 @@ export function MetasControl() {
   // T5: derived read-only values — no manual input. Las keys coinciden con
   // `PARAMETROS_META[i].id` (alineado con los `parameterId` que emite el backend).
   const valores: Record<string, string> = {
-    hba1c:          sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
-    fasting_glucose: fastingGlucose?.toString() ?? "",
-    systolic_bp:    latestSBP?.toString() ?? "",
-    ldl_primary:    sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
-    bmi:            imc !== null ? imc.toFixed(1) : "",
+    hba1c:               sortedLabRecords.find((r) => r.hba1c !== null)?.hba1c?.toString() ?? "",
+    fasting_glucose:     fastingGlucose?.toString() ?? "",
+    systolic_bp:         latestSBP?.toString() ?? "",
+    diastolic_bp:        sortedDailyRecords.find((r) => r.diastolicPressure !== null)?.diastolicPressure?.toString() ?? "",
+    heart_rate:          sortedDailyRecords.find((r) => r.heartRate !== null)?.heartRate?.toString() ?? "",
+    waist_circumference: sortedDailyRecords.find((r) => r.waistCm !== null)?.waistCm?.toString() ?? "",
+    ldl_primary:         sortedLabRecords.find((r) => r.ldl !== null)?.ldl?.toString() ?? "",
+    hdl:                 sortedLabRecords.find((r) => r.hdl !== null)?.hdl?.toString() ?? "",
+    total_cholesterol:   sortedLabRecords.find((r) => r.totalCholesterol !== null)?.totalCholesterol?.toString() ?? "",
+    triglycerides:       sortedLabRecords.find((r) => r.triglycerides !== null)?.triglycerides?.toString() ?? "",
+    creatinine:          sortedLabRecords.find((r) => r.creatinine !== null)?.creatinine?.toString() ?? "",
+    bun:                 sortedLabRecords.find((r) => r.bun !== null)?.bun?.toString() ?? "",
+    bmi:                 imc !== null ? imc.toFixed(1) : "",
   };
 
   // T6: call evaluation API; T7: map GoalStatus → EvaluacionMeta
@@ -211,6 +219,7 @@ export function MetasControl() {
             valor={valoresEvaluados[param.id] ?? valores[param.id] ?? ""}
             colorActual={evaluaciones[param.id].color}
             readOnly
+            evaluado={Boolean(evalResult)}
           />
         ))}
       </div>

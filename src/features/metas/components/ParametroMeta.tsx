@@ -9,9 +9,15 @@ interface ParametroMetaProps {
   colorActual: string;
   onChange?: (val: string) => void;
   readOnly?: boolean;
+  /** True una vez que el usuario pulsó "Evaluar mis metas". */
+  evaluado?: boolean;
 }
 
-export function ParametroMeta({ param, valor, colorActual, onChange, readOnly }: ParametroMetaProps) {
+export function ParametroMeta({ param, valor, colorActual, onChange, readOnly, evaluado }: ParametroMetaProps) {
+  // Parámetros que no se pueden pre-poblar (egfr derivado, postprandiales sin
+  // `postprandialWindow` en la API): antes de evaluar mostramos un aviso en vez
+  // de "Sin datos". Tras evaluar caen al comportamiento normal (valor o "Sin datos").
+  const mostrarAvisoEvaluar = readOnly && !valor && param.evaluationOnly && !evaluado;
   return (
     <div
       className="rounded-xl p-5 sm:p-6 shadow-sm hover:border-primary/20 transition-colors"
@@ -69,6 +75,10 @@ export function ParametroMeta({ param, valor, colorActual, onChange, readOnly }:
                     {param.unidad}
                   </span>
                 </>
+              ) : mostrarAvisoEvaluar ? (
+                <span className="text-sm italic" style={{ color: "var(--mut)" }}>
+                  Disponible al evaluar
+                </span>
               ) : (
                 <span className="text-sm italic" style={{ color: "var(--mut)" }}>Sin datos</span>
               )}

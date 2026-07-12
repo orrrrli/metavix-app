@@ -45,6 +45,14 @@ export interface DefParametro {
   pregnancyNote?: PregnancyNoteSpec;
   criticalAlert?: CriticalAlertSpec;
   increaseNote?: IncreaseNoteSpec;
+  /**
+   * Parámetro que no se puede pre-poblar al cargar la página: su valor solo
+   * existe tras evaluar. `egfr` es derivado (CKD-EPI, lo calcula el backend);
+   * los postprandiales dependen de `postprandialWindow`, campo que la API aún
+   * no expone en las lecturas de glucosa. Para estos, la UI muestra un aviso
+   * "Disponible al evaluar" en lugar de "Sin datos" mientras no se haya evaluado.
+   */
+  evaluationOnly?: boolean;
 }
 
 /**
@@ -95,6 +103,7 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 50,
     max: 500,
     unidad: "mg/dL",
+    evaluationOnly: true,
   },
   {
     id: "postprandial_2h",
@@ -106,6 +115,7 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 50,
     max: 500,
     unidad: "mg/dL",
+    evaluationOnly: true,
   },
   {
     id: "systolic_bp",
@@ -248,6 +258,7 @@ export const PARAMETROS_META: DefParametro[] = [
     min: 0,
     max: 200,
     unidad: "ml/min/1.73m²",
+    evaluationOnly: true,
     pregnancyNote: {
       text: "eGFR (CKD-EPI) en embarazo: interpretar con cautela. Fórmula validada en no-embarazadas.",
     },
