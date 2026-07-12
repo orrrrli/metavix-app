@@ -109,7 +109,7 @@ export function AcceptLinkRequestDialog({
               type="text"
               autoComplete="off"
               spellCheck={false}
-              placeholder="MRN-AAAA-NNNNNN"
+              placeholder="MRN-AAAAMMDD-HHMMSSmmm"
               aria-invalid={!!errors.medicalRecordNumber}
               aria-describedby={errors.medicalRecordNumber ? 'mrn-error' : 'mrn-hint'}
               className="font-mono"
@@ -121,7 +121,7 @@ export function AcceptLinkRequestDialog({
               </p>
             ) : (
               <p id="mrn-hint" className="text-xs text-muted-foreground">
-                Formato: <span className="font-mono">MRN-AAAA-NNNNNN</span> (ej. MRN-2026-000001)
+                Formato: <span className="font-mono">MRN-AAAAMMDD-HHMMSSmmm</span> (ej. MRN-20260711-153045123)
               </p>
             )}
           </div>
