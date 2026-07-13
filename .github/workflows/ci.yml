@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit:
+    name: Unit + lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test
+      # Si un snapshot DOM falla (p.ej. generado en otro SO), regenéralos en
+      # Linux y súbelos como artifact "vitest-snapshots" para commitearlos.
+      # En condiciones normales este paso no corre.
+      - name: Regenerar snapshots en Linux si fallan
+        if: failure()
+        run: npx vitest run -u
+      - name: Subir snapshots regenerados
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-snapshots
+          path: "**/__snapshots__/**"
+          retention-days: 7
+          if-no-files-found: ignore
+
+  e2e:
+    name: E2E visual (Playwright)
+    runs-on: ubuntu-latest
+    # Imagen oficial de Playwright: mismo font-rendering que generó las baseline,
+    # así los screenshots no fallan por diferencias de SO. Fijar el tag al match
+    # de la versión de @playwright/test en package.json.
+    container:
+      image: mcr.microsoft.com/playwright:v1.61.1-jammy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      # Si aún no hay baseline commiteadas (primer setup), este paso las genera
+      # en Linux y el artifact "playwright-baselines" queda descargable para
+      # commitearlas una sola vez. En condiciones normales no hace nada.
+      - name: Generar baseline si faltan
+        run: |
+          if [ ! -d e2e/__screenshots__ ]; then
+            echo "::warning::No hay baseline; generándolas. Descarga el artifact y commitéalas."
+            npm run test:e2e:update || true
+          fi
+      - run: npm run test:e2e
+      - name: Subir reporte de diffs al fallar
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+      - name: Subir baseline generadas (primer setup)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-baselines
+          path: e2e/__screenshots__/
+          retention-days: 7
+          if-no-files-found: ignore

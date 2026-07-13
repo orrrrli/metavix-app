@@ -90,7 +90,7 @@ export function calcularEstadoMetrica(
       return { estado: "fuera_de_meta", meta: "< 80 mmHg" };
 
     case "colesterolLdl":
-      let metaLdl = hasDiabetes ? "< 100 mg/dL" : "< 130 mg/dL";
+      const metaLdl = hasDiabetes ? "< 100 mg/dL" : "< 130 mg/dL";
       if (hasDiabetes) {
         if (valor < 100) return { estado: "en_meta", meta: metaLdl };
         if (valor <= 130) return { estado: "revisar", meta: metaLdl };

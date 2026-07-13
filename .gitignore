@@ -50,3 +50,9 @@ docs/brain
 
 # Graphify knowledge graph output
 graphify-out/
+
+# Playwright (baselines en e2e/__screenshots__/ SÍ se commitean)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

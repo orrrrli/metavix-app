@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Callout } from "../Callout";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -28,13 +28,16 @@ export function CalcularDosis({ patientId }: CalcularDosisProps) {
     alerta: { variant: "info" | "success" | "warning" | "danger"; msg: string } | null;
   } | null>(null);
 
-  useEffect(() => {
-    if (perfil) {
-      setMeta(perfil.targetGlucose?.toString() ?? "");
-      setRic(perfil.ric?.toString() ?? "");
-      setFs(perfil.sensitivityFactor?.toString() ?? "");
-    }
-  }, [perfil]);
+  // Pre-poblar el formulario con el perfil al llegar/cambiar: patrón "ajustar
+  // estado en render" de React en vez de useEffect + setState (que dispara
+  // renders en cascada). Ver react.dev/learn/you-might-not-need-an-effect.
+  const [perfilAnterior, setPerfilAnterior] = useState(perfil);
+  if (perfil && perfil !== perfilAnterior) {
+    setPerfilAnterior(perfil);
+    setMeta(perfil.targetGlucose?.toString() ?? "");
+    setRic(perfil.ric?.toString() ?? "");
+    setFs(perfil.sensitivityFactor?.toString() ?? "");
+  }
 
   const calcular = (e: React.FormEvent) => {
     e.preventDefault();
