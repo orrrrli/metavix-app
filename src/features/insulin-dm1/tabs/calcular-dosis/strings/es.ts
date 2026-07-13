@@ -1,0 +1,22 @@
+export const calcularDosisStrings = {
+  sectionDatos: "1. Tus datos actuales",
+  sectionConfig: "2. Tu configuración médica",
+  hcLabel: "Gramos de HC a comer",
+  hcPlaceholder: "Ej. 45",
+  glucosaLabel: "Glucosa preprandial actual (mg/dL)",
+  glucosaPlaceholder: "Ej. 110",
+  ricLabel: "RIC (g/U)",
+  fsLabel: "Factor S. (mg/dL)",
+  metaLabel: "Glucosa Meta (mg/dL)",
+  submit: "Calcular Dosis",
+  resultTitle: "Resultado sugerido",
+  dosisTotalLabel: "Dosis Total",
+  unidad: "U",
+  redondeoNota: "Redondeado a 0.5 unidades",
+  desgloseTitle: "Desglose del cálculo",
+  porComidaPrefix: "Por comida",
+  porCorreccion: "Por corrección:",
+  emptyTitle: "Ingresa tus datos",
+  emptyBody:
+    "Llena el formulario a la izquierda con tus gramos de carbohidratos y glucosa actual para calcular tu dosis.",
+} as const;
