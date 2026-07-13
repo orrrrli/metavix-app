@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const baseUrl = 'http://localhost:3000/api/v1/doctor';
 
 describe('clinical-goals API client', () => {
-  const originalFetch = global.fetch;
 
   beforeEach(async () => {
     process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3000';
@@ -14,13 +13,13 @@ describe('clinical-goals API client', () => {
   });
 
   afterEach(() => {
-    global.fetch = originalFetch;
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
   describe('getClinicalGoals', () => {
     it('devuelve [] en 404 (paciente sin metas)', async () => {
-      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 404 });
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }));
       const { getClinicalGoals } = await import('./clinical-goals');
       const result = await getClinicalGoals('doc-1', 'pat-1');
       expect(result).toEqual([]);
@@ -40,11 +39,11 @@ describe('clinical-goals API client', () => {
           createdAt: '2026-07-10T00:00:00Z',
         },
       ];
-      global.fetch = vi.fn().mockResolvedValue({
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => ({ data: { goals: data } }),
-      });
+      }));
       const { getClinicalGoals } = await import('./clinical-goals');
       const result = await getClinicalGoals('doc-1', 'pat-1');
       expect(result).toEqual(data);
@@ -54,18 +53,18 @@ describe('clinical-goals API client', () => {
       // Sin metas personalizadas, el backend responde `{ data: { goals: [] } }`.
       // El cliente debe devolver [] (no `{ goals: [] }`) para que `.map`
       // funcione en el editor.
-      global.fetch = vi.fn().mockResolvedValue({
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
         ok: true,
         status: 200,
         json: async () => ({ data: { goals: [] } }),
-      });
+      }));
       const { getClinicalGoals } = await import('./clinical-goals');
       const result = await getClinicalGoals('doc-1', 'pat-1');
       expect(result).toEqual([]);
     });
 
     it('lanza error en status no-ok y no-404', async () => {
-      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 });
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
       const { getClinicalGoals } = await import('./clinical-goals');
       await expect(getClinicalGoals('doc-1', 'pat-1')).rejects.toThrow(
         '[getClinicalGoals] 500',
@@ -74,7 +73,7 @@ describe('clinical-goals API client', () => {
 
     it('usa la URL y credenciales correctas', async () => {
       const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: { goals: [] } }) });
-      global.fetch = fetchMock;
+      vi.stubGlobal('fetch', fetchMock);
       const { getClinicalGoals } = await import('./clinical-goals');
       await getClinicalGoals('doc-1', 'pat-1');
       expect(fetchMock).toHaveBeenCalledWith(
@@ -102,7 +101,7 @@ describe('clinical-goals API client', () => {
         status: 201,
         json: async () => ({ data: created }),
       });
-      global.fetch = fetchMock;
+      vi.stubGlobal('fetch', fetchMock);
       const { createClinicalGoal } = await import('./clinical-goals');
       const result = await createClinicalGoal('doc-1', 'pat-1', 'hba1c', {
         customAtRiskHigh: 7.0,
@@ -120,7 +119,7 @@ describe('clinical-goals API client', () => {
     });
 
     it('lanza error en 409 (meta duplicada)', async () => {
-      global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 409 });
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 409 }));
       const { createClinicalGoal } = await import('./clinical-goals');
       await expect(
         createClinicalGoal('doc-1', 'pat-1', 'hba1c', { customAtRiskHigh: 7.0 }),
@@ -146,7 +145,7 @@ describe('clinical-goals API client', () => {
         status: 200,
         json: async () => ({ data: updated }),
       });
-      global.fetch = fetchMock;
+      vi.stubGlobal('fetch', fetchMock);
       const { updateClinicalGoal } = await import('./clinical-goals');
       const result = await updateClinicalGoal('doc-1', 'pat-1', 'goal-1', {
         customAtRiskHigh: 7.5,
