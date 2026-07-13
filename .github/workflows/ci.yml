@@ -17,6 +17,20 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run test
+      # Si un snapshot DOM falla (p.ej. generado en otro SO), regenéralos en
+      # Linux y súbelos como artifact "vitest-snapshots" para commitearlos.
+      # En condiciones normales este paso no corre.
+      - name: Regenerar snapshots en Linux si fallan
+        if: failure()
+        run: npx vitest run -u
+      - name: Subir snapshots regenerados
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-snapshots
+          path: "**/__snapshots__/**"
+          retention-days: 7
+          if-no-files-found: ignore
 
   e2e:
     name: E2E visual (Playwright)
