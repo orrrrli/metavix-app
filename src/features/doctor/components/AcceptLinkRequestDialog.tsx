@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle, Check, RefreshCw } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,13 @@ import {
 import { Button } from '@/shared/components/ui/button';
 import { Input } from '@/shared/components/ui/input';
 import { Label } from '@/shared/components/ui/label';
-import { acceptRequestSchema, type AcceptRequestFormValues } from '../utils/accept-request-schema';
+import { acceptRequestSchema, MRN_REGEX, type AcceptRequestFormValues } from '../utils/accept-request-schema';
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return '?';
+  return parts.slice(0, 2).map((p) => p[0]!.toUpperCase()).join('');
+}
 
 interface AcceptLinkRequestDialogProps {
   /** Whether the dialog is open. */
@@ -34,6 +40,12 @@ interface AcceptLinkRequestDialogProps {
   onConfirm: (medicalRecordNumber: string) => void;
   /** Called when the dialog is closed (cancel / X / backdrop). */
   onClose: () => void;
+  /**
+   * Refetches the suggested MRN from the backend. Wired to the "Generar
+   * otro" action so the doctor gets a fresh timestamp-derived value without
+   * manually clearing the input.
+   */
+  onRegenerateMrn?: () => void;
 }
 
 /**
@@ -49,11 +61,13 @@ export function AcceptLinkRequestDialog({
   isSubmitting,
   onConfirm,
   onClose,
+  onRegenerateMrn,
 }: AcceptLinkRequestDialogProps) {
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isValid },
   } = useForm<AcceptRequestFormValues>({
     // Zod 4's resolver infers `input: unknown` when chaining string regex;
@@ -63,6 +77,9 @@ export function AcceptLinkRequestDialog({
     defaultValues: { medicalRecordNumber: suggestedMrn },
     mode: 'onChange',
   });
+
+  const mrnValue = watch('medicalRecordNumber');
+  const mrnIsValidFormat = !!mrnValue && MRN_REGEX.test(mrnValue);
 
   // Cada vez que el dialog se abre, resetea al valor sugerido actual.
   // Sin esto, abrir → cancelar → abrir dejaría el valor editado anterior.
@@ -87,7 +104,21 @@ export function AcceptLinkRequestDialog({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Aceptar solicitud de {patientName}</DialogTitle>
+          <div className="flex items-center gap-4">
+            <div
+              className="flex size-14 shrink-0 items-center justify-center rounded-full text-lg font-semibold"
+              style={{ backgroundColor: '#e7f6ee', color: '#1f9d6b' }}
+              aria-hidden="true"
+            >
+              {getInitials(patientName)}
+            </div>
+            <div className="flex flex-col gap-1">
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Nueva solicitud
+              </span>
+              <DialogTitle>Aceptar solicitud de {patientName}</DialogTitle>
+            </div>
+          </div>
           <DialogDescription>
             Asigna o confirma el número de historia clínica (MRN) para este paciente.
             El sistema sugiere el siguiente valor disponible; puedes editarlo si lo necesitas.
@@ -97,40 +128,66 @@ export function AcceptLinkRequestDialog({
         <form
           onSubmit={handleSubmit(handleValid, handleInvalid)}
           noValidate
-          className="space-y-3"
+          className="space-y-6"
           aria-label="Formulario de asignación de MRN"
         >
-          <div className="space-y-1.5">
-            <Label htmlFor="medicalRecordNumber" className="text-sm font-medium">
-              Número de historia clínica
-            </Label>
-            <Input
-              id="medicalRecordNumber"
-              type="text"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder="MRN-AAAAMMDD-HHMMSSmmm"
-              aria-invalid={!!errors.medicalRecordNumber}
-              aria-describedby={errors.medicalRecordNumber ? 'mrn-error' : 'mrn-hint'}
-              className="font-mono"
-              {...register('medicalRecordNumber')}
-            />
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="medicalRecordNumber" className="text-base font-semibold">
+                Número de historia clínica
+              </Label>
+              {onRegenerateMrn && (
+                <button
+                  type="button"
+                  onClick={onRegenerateMrn}
+                  className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+                >
+                  <RefreshCw className="size-3.5" />
+                  Generar otro
+                </button>
+              )}
+            </div>
+            <div className="relative">
+              <Input
+                id="medicalRecordNumber"
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                placeholder="MRN-AAAAMMDD-HHMMSSmmm"
+                aria-invalid={!!errors.medicalRecordNumber}
+                aria-describedby={errors.medicalRecordNumber ? 'mrn-error' : 'mrn-hint'}
+                className="h-11 bg-[#faf7f1] font-mono text-base font-semibold pr-9 dark:bg-input/30 aria-invalid:border-[#dd5236] aria-invalid:ring-[#dd5236]/20"
+                {...register('medicalRecordNumber')}
+              />
+              {mrnIsValidFormat && (
+                <Check
+                  className="absolute right-3 top-1/2 size-5 -translate-y-1/2 text-[#1f9d6b]"
+                  aria-hidden="true"
+                />
+              )}
+            </div>
             {errors.medicalRecordNumber ? (
-              <p id="mrn-error" role="alert" className="text-xs text-destructive">
+              <p id="mrn-error" role="alert" className="text-sm" style={{ color: '#dd5236' }}>
                 {errors.medicalRecordNumber.message}
               </p>
             ) : (
-              <p id="mrn-hint" className="text-xs text-muted-foreground">
-                Formato: <span className="font-mono">MRN-AAAAMMDD-HHMMSSmmm</span> (ej. MRN-20260711-153045123)
+              <p id="mrn-hint" className="text-sm leading-relaxed text-muted-foreground">
+                Formato: <code className="rounded bg-muted px-1.5 py-0.5 font-mono">MRN-AAAAMMDD-HHMMSSmmm</code>{' '}
+                (ej. <code className="rounded bg-muted px-1.5 py-0.5 font-mono">MRN-20260711-153045123</code>)
               </p>
             )}
           </div>
 
-          <DialogFooter className="-mx-4 -mb-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+          <DialogFooter>
+            <Button type="button" variant="outline" size="lg" onClick={onClose} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting || !isValid}>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={isSubmitting || !isValid}
+              className="hover:bg-primary/90"
+            >
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />

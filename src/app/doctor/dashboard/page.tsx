@@ -45,7 +45,7 @@ export default function DoctorDashboard(): React.ReactElement {
 
   // Only ask the backend for an MRN suggestion while the dialog is open.
   // The hook is enabled lazily so we don't fire the request on page load.
-  const { data: suggestedMrn = "" } = useMrnSuggestion(
+  const { data: suggestedMrn = "", refetch: refetchMrnSuggestion } = useMrnSuggestion(
     pendingAccept ? new Date().getFullYear() : undefined,
   );
 
@@ -279,6 +279,7 @@ export default function DoctorDashboard(): React.ReactElement {
         isSubmitting={accepting}
         onConfirm={handleConfirmAccept}
         onClose={() => setPendingAccept(null)}
+        onRegenerateMrn={() => refetchMrnSuggestion()}
       />
     </div>
   );
