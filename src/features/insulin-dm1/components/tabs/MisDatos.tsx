@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { TarjetaPerfil } from "../TarjetaPerfil";
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
@@ -25,18 +25,21 @@ export function MisDatos({ patientId }: MisDatosProps) {
     telefono_medico: "",
   });
 
-  useEffect(() => {
-    if (perfil) {
-      setFormData({
-        nombre_insulina: perfil.insulinName ?? "",
-        ric: perfil.ric?.toString() ?? "",
-        factor_sensibilidad: perfil.sensitivityFactor?.toString() ?? "",
-        glucosa_meta: perfil.targetGlucose?.toString() ?? "",
-        nombre_medico: perfil.doctorName ?? "",
-        telefono_medico: perfil.doctorPhone ?? "",
-      });
-    }
-  }, [perfil]);
+  // Pre-poblar el formulario con el perfil al llegar/cambiar: patrón "ajustar
+  // estado en render" de React en vez de useEffect + setState (que dispara
+  // renders en cascada). Ver react.dev/learn/you-might-not-need-an-effect.
+  const [perfilAnterior, setPerfilAnterior] = useState(perfil);
+  if (perfil && perfil !== perfilAnterior) {
+    setPerfilAnterior(perfil);
+    setFormData({
+      nombre_insulina: perfil.insulinName ?? "",
+      ric: perfil.ric?.toString() ?? "",
+      factor_sensibilidad: perfil.sensitivityFactor?.toString() ?? "",
+      glucosa_meta: perfil.targetGlucose?.toString() ?? "",
+      nombre_medico: perfil.doctorName ?? "",
+      telefono_medico: perfil.doctorPhone ?? "",
+    });
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

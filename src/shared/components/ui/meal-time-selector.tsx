@@ -27,29 +27,6 @@ function CrescentMoonIcon({ className }: { className?: string }) {
   );
 }
 
-function SunriseIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      {/* Upward rays */}
-      <path d="M12 3v2" />
-      <path d="M5.64 5.64l1.41 1.41" />
-      <path d="M18.36 5.64l-1.41 1.41" />
-      {/* Half-sun arc at horizon */}
-      <path d="M5 15a7 7 0 0 1 14 0" />
-      {/* Horizon line */}
-      <line x1="2" y1="15" x2="22" y2="15" />
-    </svg>
-  );
-}
-
 function HighNoonSunIcon({ className }: { className?: string }) {
   return (
     <svg

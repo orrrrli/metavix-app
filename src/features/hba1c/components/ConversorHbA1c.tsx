@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
@@ -13,11 +13,15 @@ export function ConversorHbA1c({ modo, onCalcular }: ConversorHbA1cProps) {
   const [valorInput, setValorInput] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  // Limpiar input al cambiar de modo
-  useEffect(() => {
+  // Limpiar input al cambiar de modo: patrón "ajustar estado en render" de React
+  // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes),
+  // en vez de un useEffect con setState (que dispara render en cascada).
+  const [modoAnterior, setModoAnterior] = useState(modo);
+  if (modo !== modoAnterior) {
+    setModoAnterior(modo);
     setValorInput("");
     setError(null);
-  }, [modo]);
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

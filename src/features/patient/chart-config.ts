@@ -1,4 +1,4 @@
-import { DiabetesType } from './types';
+import { DiabetesType, HealthRecordDto } from './types';
 
 // --- Types ---
 
@@ -183,15 +183,18 @@ export function getStatus(
 }
 
 export function extractMetricValue(
-  record: any,
+  record: HealthRecordDto,
   campo: string
 ): number | null {
   if (campo === 'glucosa_ayuno') {
-    const reading = record.glucosas_comidas?.find((g: any) => g.tipo === 'ayuno');
+    const reading = record.glucosas_comidas?.find((g) => g.tipo === 'ayuno');
     return reading?.valor ?? null;
   }
   if (campo === 'imc') {
     return record.imc ?? null;
   }
-  return record[campo] ?? null;
+  // Acceso dinámico por nombre de métrica: el `campo` viene del catálogo de
+  // gráficas y corresponde a una key numérica del DTO.
+  const value = (record as unknown as Record<string, unknown>)[campo];
+  return typeof value === 'number' ? value : null;
 }

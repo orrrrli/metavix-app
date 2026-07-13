@@ -63,19 +63,11 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
   const { mrn } = use(params);
   const { doctorId, _hasHydrated } = useAuthStore();
 
-  // Wait for the Zustand store to rehydrate from localStorage before firing
-  // any doctor-scoped queries. Without this, on hard-reload the store is
-  // `null` for doctorId on first render → queries fire with empty ids →
-  // backend's :guid route constraint rejects with 404 and React Query
-  // retries in a tight loop.
-  if (!_hasHydrated) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <GooeyLoader />
-      </div>
-    );
-  }
-
+  // Todos los hooks se llaman incondicionalmente (rules-of-hooks). No disparan
+  // queries hasta que el store hidrata: cada uno gatea con `enabled: hydrated
+  // && isValidId` internamente (ver use-doctor.ts), evitando el 404-retry-loop
+  // con doctorId vacío en hard-reload. El guard de `_hasHydrated` de abajo solo
+  // controla qué se muestra, no si las queries corren.
   const { data: patients = [], isLoading: loadingPatients } = useLinkedPatients(doctorId ?? "");
   const patient = patients.find(p => p.medicalRecordNumber === mrn);
   const patientId = patient?.id ?? "";
@@ -83,6 +75,14 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
   const { data: profile, isLoading: loadingProfile, isError: profileError } = useLinkedPatientProfile(doctorId ?? "", patientId);
   const { data: dailyRecords = [], isLoading: loadingDaily } = useLinkedPatientDailyRecords(doctorId ?? "", patientId);
   const { data: labRecords = [], isLoading: loadingLab } = useLinkedPatientLabResults(doctorId ?? "", patientId);
+
+  if (!_hasHydrated) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <GooeyLoader />
+      </div>
+    );
+  }
 
   if (loadingPatients || loadingProfile || loadingDaily || loadingLab) {
     return (

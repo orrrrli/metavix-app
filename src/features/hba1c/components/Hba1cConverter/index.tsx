@@ -18,7 +18,7 @@ export function Hba1cConverter() {
   const [interpretacion, setInterpretacion] = useState<InterpretacionHba1c | null>(null);
 
   const handleTabChange = (value: string) => {
-    setModo(value as any);
+    setModo(value as "hba1c_to_glucosa" | "glucosa_to_hba1c");
     setResultado(null);
     setInterpretacion(null);
   };
