@@ -2,9 +2,9 @@
 
 import { useAuthStore } from "@/features/auth/store";
 import { Aprender } from "../tabs/Aprender";
-import { CalcularDosis } from "../tabs/CalcularDosis";
-import { MisDatos } from "../tabs/MisDatos";
-import { RegistroDiario } from "../tabs/RegistroDiario";
+import { CalcularDosisControl } from "../../tabs/calcular-dosis/components/CalcularDosisControl";
+import { MisDatosControl } from "../../tabs/mis-datos/components/MisDatosControl";
+import { RegistroDiarioControl } from "../../tabs/registro-diario/components/RegistroDiarioControl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 
 export function InsulinaDM1() {
@@ -26,15 +26,15 @@ export function InsulinaDM1() {
       </TabsContent>
 
       <TabsContent value="calcular">
-        <CalcularDosis patientId={patientId} />
+        <CalcularDosisControl patientId={patientId} />
       </TabsContent>
 
       <TabsContent value="perfil">
-        <MisDatos patientId={patientId} />
+        <MisDatosControl patientId={patientId} />
       </TabsContent>
 
       <TabsContent value="registros">
-        <RegistroDiario patientId={patientId} />
+        <RegistroDiarioControl patientId={patientId} />
       </TabsContent>
     </Tabs>
   );

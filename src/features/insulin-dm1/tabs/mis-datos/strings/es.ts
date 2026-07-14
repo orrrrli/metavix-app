@@ -1,0 +1,16 @@
+export const misDatosStrings = {
+  title: "Configurar Perfil Médico",
+  seccionClinicos: "Datos Clínicos",
+  seccionContacto: "Datos de Contacto",
+  insulina: "Nombre de la Insulina",
+  insulinaPlaceholder: "Ej. Novorapid, Humalog",
+  meta: "Glucosa Meta (mg/dL)",
+  ric: "RIC (Relación I:C)",
+  fs: "Factor de Sensibilidad",
+  medico: "Nombre del Médico",
+  telefono: "Teléfono del Médico",
+  guardar: "Guardar Perfil",
+  guardando: "Guardando...",
+  guardadoOk: "Perfil guardado exitosamente",
+  guardadoError: "Error al guardar el perfil",
+} as const;
