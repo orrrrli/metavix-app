@@ -1,4 +1,4 @@
-import { DoctorProfileCard } from '@/features/doctor/components/DoctorProfileCard';
+import { DoctorProfileControl } from '@/features/doctor/perfil/components/DoctorProfileControl';
 
 export default function DoctorPerfilPage() {
   return (
@@ -7,7 +7,7 @@ export default function DoctorPerfilPage() {
         <h2 className="text-3xl font-display font-bold text-foreground">Mi Perfil</h2>
         <p className="text-muted-foreground mt-1">Gestiona tu información profesional.</p>
       </div>
-      <DoctorProfileCard />
+      <DoctorProfileControl />
     </div>
   );
 }

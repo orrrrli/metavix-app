@@ -1,4 +1,4 @@
-import { ResumenSalud } from "@/features/resumen/components/ResumenSalud";
+import { ResumenControl } from "@/features/resumen/components/ResumenControl";
 
 export default function ResumenPage() {
   return (
@@ -8,7 +8,7 @@ export default function ResumenPage() {
         <p className="mt-1" style={{ color: 'var(--mut)' }}>Tu perfil clínico actualizado y su interpretación frente a guías médicas internacionales.</p>
       </div>
 
-      <ResumenSalud />
+      <ResumenControl />
     </div>
   );
 }
