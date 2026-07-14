@@ -31,7 +31,7 @@ import type {
 } from "../view-data/profile-form-schema";
 import type { DateOrPlaceholder } from "../view-data/format-date-or-placeholder";
 import { perfilStrings as S } from "../strings/es";
-import { ProfileRow, Muted } from "./ProfileRow";
+import { ProfileRow, Muted } from "@/shared/components/ProfileRow";
 
 /** Renderiza una fecha-o-placeholder respetando el estilo atenuado. */
 function DateValue({ value }: { value: DateOrPlaceholder }) {
