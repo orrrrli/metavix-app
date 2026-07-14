@@ -19,16 +19,16 @@ function makeNotification(
 describe("buildNotificationsViewData", () => {
   it("sin notificaciones → vacío, 0 no leídas", () => {
     const vd = buildNotificationsViewData([]);
-    expect(vd.ordenadas).toEqual([]);
+    expect(vd.items).toEqual([]);
     expect(vd.unreadCount).toBe(0);
   });
 
-  it("ordena por fecha descendente (más reciente primero)", () => {
+  it("preserva el orden del backend (no re-ordena)", () => {
     const vd = buildNotificationsViewData([
-      makeNotification({ id: "vieja", createdAt: "2026-07-01T10:00:00Z" }),
       makeNotification({ id: "nueva", createdAt: "2026-07-10T10:00:00Z" }),
+      makeNotification({ id: "vieja", createdAt: "2026-07-01T10:00:00Z" }),
     ]);
-    expect(vd.ordenadas.map((n) => n.id)).toEqual(["nueva", "vieja"]);
+    expect(vd.items.map((n) => n.id)).toEqual(["nueva", "vieja"]);
   });
 
   it("cuenta las no leídas", () => {
@@ -38,14 +38,5 @@ describe("buildNotificationsViewData", () => {
       makeNotification({ id: "c", isRead: false }),
     ]);
     expect(vd.unreadCount).toBe(2);
-  });
-
-  it("no muta el array original", () => {
-    const input = [
-      makeNotification({ id: "a", createdAt: "2026-07-01T10:00:00Z" }),
-      makeNotification({ id: "b", createdAt: "2026-07-10T10:00:00Z" }),
-    ];
-    buildNotificationsViewData(input);
-    expect(input[0].id).toBe("a");
   });
 });
