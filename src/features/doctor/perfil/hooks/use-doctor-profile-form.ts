@@ -66,7 +66,6 @@ export function useDoctorProfileForm() {
     });
 
   return {
-    profile: profile ?? null,
     viewData,
     isLoading,
     isError,
