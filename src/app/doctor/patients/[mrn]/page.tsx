@@ -17,7 +17,7 @@ import {
   useLinkedPatientDailyRecords,
   useLinkedPatientLabResults,
 } from "@/features/doctor/hooks/use-doctor";
-import { ClinicalGoalsEditor } from "@/features/doctor/components/ClinicalGoalsEditor";
+import { ClinicalGoalsEditorControl } from "@/features/doctor/clinical-goals/components/ClinicalGoalsEditorControl";
 import { DailyRecordResponse, GlucoseReadingResponse, GlucoseReadingType } from "@/types/daily-record";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
@@ -384,7 +384,7 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
 
         {/* Clinical Goals — doctor-set per-parameter custom thresholds */}
         <TabsContent value="goals">
-          <ClinicalGoalsEditor
+          <ClinicalGoalsEditorControl
             doctorId={doctorId ?? ""}
             patientId={patientId}
             isPregnant={Boolean(profile.isPregnant)}

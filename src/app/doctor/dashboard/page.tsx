@@ -12,10 +12,8 @@ import { useAuthStore } from "@/features/auth/store";
 import {
   useLinkedPatients,
   usePendingLinkRequests,
-  useAcceptLinkRequest,
   useRejectLinkRequest,
   useMyDoctorProfile,
-  useMrnSuggestion,
 } from "@/features/doctor/hooks/use-doctor";
 import { LinkedPatientResponse } from "@/types/doctor";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
@@ -23,7 +21,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Badge } from "@/shared/components/ui/badge";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
-import { AcceptLinkRequestDialog } from "@/features/doctor/components/AcceptLinkRequestDialog";
+import { AcceptLinkRequestControl } from "@/features/doctor/link-requests/components/AcceptLinkRequestControl";
 
 export default function DoctorDashboard(): React.ReactElement {
   const { doctorId, _hasHydrated } = useAuthStore();
@@ -40,14 +38,7 @@ export default function DoctorDashboard(): React.ReactElement {
   const { data: patients = [], isLoading: loadingPatients } = useLinkedPatients(doctorId ?? "");
   const { data: pendingRequests = [], isLoading: loadingRequests } = usePendingLinkRequests(doctorId ?? "");
 
-  const { mutate: accept, isPending: accepting } = useAcceptLinkRequest(doctorId ?? "");
   const { mutate: reject, isPending: rejecting } = useRejectLinkRequest(doctorId ?? "");
-
-  // Only ask the backend for an MRN suggestion while the dialog is open.
-  // The hook is enabled lazily so we don't fire the request on page load.
-  const { data: suggestedMrn = "", refetch: refetchMrnSuggestion } = useMrnSuggestion(
-    pendingAccept ? new Date().getFullYear() : undefined,
-  );
 
   // Wait for Zustand store rehydration before firing doctor-scoped queries.
   if (!_hasHydrated) {
@@ -73,23 +64,6 @@ export default function DoctorDashboard(): React.ReactElement {
 
   function openAcceptDialog(requestId: string, patientName: string): void {
     setPendingAccept({ requestId, patientName });
-  }
-
-  function handleConfirmAccept(mrn: string): void {
-    if (!pendingAccept) return;
-    const { requestId, patientName } = pendingAccept;
-    accept(
-      { requestId, medicalRecordNumber: mrn },
-      {
-        onSuccess: () => {
-          toast.success(`Solicitud de ${patientName} aceptada`);
-          setPendingAccept(null);
-        },
-        onError: () => {
-          toast.error("No se pudo aceptar la solicitud. Verifica el MRN e inténtalo de nuevo.");
-        },
-      }
-    );
   }
 
   function handleReject(requestId: string, patientName: string): void {
@@ -196,7 +170,7 @@ export default function DoctorDashboard(): React.ReactElement {
                     </Button>
                     <Button
                       size="sm"
-                      disabled={accepting}
+                      disabled={pendingAccept?.requestId === req.requestId}
                       onClick={() => openAcceptDialog(req.requestId, `${req.patientFirstName} ${req.patientLastName}`)}
                     >
                       <CheckCircle className="size-4 mr-1" />
@@ -272,14 +246,10 @@ export default function DoctorDashboard(): React.ReactElement {
         </CardContent>
       </Card>
 
-      <AcceptLinkRequestDialog
-        open={pendingAccept !== null}
-        patientName={pendingAccept?.patientName ?? ""}
-        suggestedMrn={suggestedMrn}
-        isSubmitting={accepting}
-        onConfirm={handleConfirmAccept}
+      <AcceptLinkRequestControl
+        doctorId={doctorId ?? ""}
+        pendingAccept={pendingAccept}
         onClose={() => setPendingAccept(null)}
-        onRegenerateMrn={() => refetchMrnSuggestion()}
       />
     </div>
   );
