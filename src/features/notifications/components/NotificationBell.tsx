@@ -7,12 +7,13 @@ import { NotificationPanel } from "./NotificationPanel";
 
 export interface NotificationBellProps {
   notifications?: NotificationResponse[];
+  /** Nº de no leídas, ya calculado por `buildNotificationsViewData`. */
+  unreadCount?: number;
   onNotificationClick?: (id: string) => void;
 }
 
-export function NotificationBell({ notifications = [], onNotificationClick }: NotificationBellProps) {
+export function NotificationBell({ notifications = [], unreadCount = 0, onNotificationClick }: NotificationBellProps) {
   const [open, setOpen] = useState(false);
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

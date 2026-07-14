@@ -5,7 +5,6 @@ export interface NotificationsViewData {
   ordenadas: NotificationResponse[];
   /** Número de no leídas (alimenta el badge de la campana). */
   unreadCount: number;
-  hasUnread: boolean;
 }
 
 /**
@@ -20,5 +19,5 @@ export function buildNotificationsViewData(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
   const unreadCount = ordenadas.filter((n) => !n.isRead).length;
-  return { ordenadas, unreadCount, hasUnread: unreadCount > 0 };
+  return { ordenadas, unreadCount };
 }

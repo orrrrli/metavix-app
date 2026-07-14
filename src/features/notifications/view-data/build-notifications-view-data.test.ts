@@ -21,7 +21,6 @@ describe("buildNotificationsViewData", () => {
     const vd = buildNotificationsViewData([]);
     expect(vd.ordenadas).toEqual([]);
     expect(vd.unreadCount).toBe(0);
-    expect(vd.hasUnread).toBe(false);
   });
 
   it("ordena por fecha descendente (más reciente primero)", () => {
@@ -39,7 +38,6 @@ describe("buildNotificationsViewData", () => {
       makeNotification({ id: "c", isRead: false }),
     ]);
     expect(vd.unreadCount).toBe(2);
-    expect(vd.hasUnread).toBe(true);
   });
 
   it("no muta el array original", () => {
