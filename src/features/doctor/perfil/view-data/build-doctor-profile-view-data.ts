@@ -1,9 +1,9 @@
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
 import { z } from "zod";
 import type { DoctorProfileResponse } from "@/types/doctor";
-
-const EM_DASH = "—";
+import {
+  buildProfileIdentity,
+  formatMemberSince,
+} from "@/shared/utils/profile-identity";
 
 export const doctorProfileSchema = z.object({
   licenseNumber: z.string().min(1, "La cédula profesional es requerida"),
@@ -34,24 +34,16 @@ export interface DoctorProfileViewData {
 export function buildDoctorProfileViewData(
   profile: DoctorProfileResponse,
 ): DoctorProfileViewData {
-  const fullName =
-    `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || EM_DASH;
-  const initials =
-    [profile.firstName?.[0], profile.lastName?.[0]]
-      .filter(Boolean)
-      .join("")
-      .toUpperCase() || "?";
-
-  const created = parseISO(profile.createdAt);
-  const memberSince = isNaN(created.getTime())
-    ? EM_DASH
-    : format(created, "MMMM yyyy", { locale: es });
+  const { fullName, initials } = buildProfileIdentity(
+    profile.firstName,
+    profile.lastName,
+  );
 
   return {
     fullName,
     initials,
     speciality: profile.speciality,
-    memberSince,
+    memberSince: formatMemberSince(profile.createdAt),
     isVerified: profile.isVerified,
     email: profile.email,
     id: profile.id,
