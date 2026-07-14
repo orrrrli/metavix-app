@@ -17,10 +17,6 @@ export interface ResumenScreenProps {
   onExport: () => void;
 }
 
-function cnSec(extra: string): string {
-  return `${sectionContainerClasses()} ${extra}`;
-}
-
 /**
  * UI pura del resumen clínico. Itera `viewData.secciones` — sin
  * `calcularEstadoMetrica` inline (vive en `view-data/`). La exportación a PDF
@@ -64,7 +60,7 @@ export function ResumenScreen({ viewData, pdfRef, isExporting, onExport }: Resum
                 <h3 className="text-lg font-display font-bold text-primary border-b-2 border-primary/20 pb-2 mb-4 uppercase tracking-wider">
                   {seccion.titulo}
                 </h3>
-                <div className={cnSec("p-4 rounded-lg border")}>
+                <div className={`${sectionContainerClasses()} p-4 rounded-lg border`}>
                   {seccion.metricas.map((m) => (
                     <SeccionMetrica
                       key={m.id}
