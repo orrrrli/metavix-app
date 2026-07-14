@@ -16,11 +16,12 @@ export function NotificationControl() {
   const { data: notifications } = useMyNotifications();
   const { mutate: markNotificationRead } = useMarkNotificationRead();
 
-  const { ordenadas } = buildNotificationsViewData(notifications ?? []);
+  const { items, unreadCount } = buildNotificationsViewData(notifications ?? []);
 
   return (
     <NotificationBell
-      notifications={ordenadas}
+      notifications={items}
+      unreadCount={unreadCount}
       onNotificationClick={markNotificationRead}
     />
   );

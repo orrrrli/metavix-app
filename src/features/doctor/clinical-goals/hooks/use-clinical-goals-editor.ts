@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   useClinicalGoals,
   useSaveClinicalGoal,
@@ -19,8 +18,9 @@ export interface SaveCallbacks {
 
 /**
  * Domain hook del editor de metas clínicas: carga las metas, compone el view
- * data, y gestiona qué parámetro está abierto (`openParamId`). `save` decide
- * POST/PUT y expone callbacks para los toasts del Control.
+ * data, y expone `save` (decide POST/PUT) con callbacks para los toasts del
+ * Control. La visibilidad del parámetro abierto es estado presentacional y
+ * vive en el Control (ver `feature-composition.md`), no aquí.
  */
 export function useClinicalGoalsEditor(doctorId: string, patientId: string) {
   const { data: goals = [], isLoading } = useClinicalGoals(doctorId, patientId);
@@ -29,14 +29,7 @@ export function useClinicalGoalsEditor(doctorId: string, patientId: string) {
     patientId,
   );
 
-  const [openParamId, setOpenParamId] = useState<string | null>(null);
-
   const viewData: ClinicalGoalsViewData = buildClinicalGoalsViewData(goals);
-
-  const toggleParam = (paramId: string) =>
-    setOpenParamId((cur) => (cur === paramId ? null : paramId));
-
-  const closeParam = () => setOpenParamId(null);
 
   const save = async (
     parameterId: string,
@@ -46,12 +39,11 @@ export function useClinicalGoalsEditor(doctorId: string, patientId: string) {
   ) => {
     try {
       await saveGoal({ goalId: existing?.id ?? null, parameterId, payload });
-      setOpenParamId(null);
       cb.onSuccess?.(Boolean(existing));
     } catch {
       cb.onError?.();
     }
   };
 
-  return { viewData, isLoading, isSaving, openParamId, toggleParam, closeParam, save };
+  return { viewData, isLoading, isSaving, save };
 }

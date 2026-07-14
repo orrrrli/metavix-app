@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import type { PatientProfileResponse } from "@/types/patient-profile";
 import { parseApiDate } from "@/features/patient/utils/parse-api-date";
+import { buildProfileIdentity } from "@/shared/utils/profile-identity";
 import { formatDiabetesLabel } from "./format-diabetes-label";
 import { formatGenderLabel, type GenderLabel } from "./format-gender-label";
 import {
@@ -41,13 +42,10 @@ export interface ProfileViewData {
 export function buildProfileViewData(
   profile: PatientProfileResponse,
 ): ProfileViewData {
-  const fullName =
-    `${profile.firstName ?? ""} ${profile.lastName ?? ""}`.trim() || EM_DASH;
-  const initials =
-    [profile.firstName?.[0], profile.lastName?.[0]]
-      .filter(Boolean)
-      .join("")
-      .toUpperCase() || "?";
+  const { fullName, initials } = buildProfileIdentity(
+    profile.firstName,
+    profile.lastName,
+  );
 
   const createdDate = parseApiDate(profile.createdAt);
   const memberSince = createdDate

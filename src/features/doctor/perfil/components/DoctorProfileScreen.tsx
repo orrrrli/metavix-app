@@ -14,6 +14,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Badge } from "@/shared/components/ui/badge";
+import { ProfileRow, Muted } from "@/shared/components/ProfileRow";
 import type { UseFormRegister, FieldErrors } from "react-hook-form";
 import { doctorPerfilStrings as S } from "../strings/es";
 import type {
@@ -21,29 +22,7 @@ import type {
   DoctorProfileFormData,
 } from "../view-data/build-doctor-profile-view-data";
 
-function ProfileRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between py-2.5 border-b last:border-0">
-      <dt className="flex items-center gap-2 text-sm text-muted-foreground">
-        {icon}
-        {label}
-      </dt>
-      <dd className="text-sm font-medium text-right">{value}</dd>
-    </div>
-  );
-}
-
-const NotRegistered = () => (
-  <span className="text-muted-foreground italic">{S.notRegistered}</span>
-);
+const NotRegistered = () => <Muted>{S.notRegistered}</Muted>;
 
 export interface DoctorProfileScreenProps {
   viewData: DoctorProfileViewData;

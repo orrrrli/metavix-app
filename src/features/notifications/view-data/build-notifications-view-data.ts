@@ -1,24 +1,21 @@
 import type { NotificationResponse } from "@/types/notification";
 
 export interface NotificationsViewData {
-  /** Todas las notificaciones ordenadas por fecha descendente (más reciente primero). */
-  ordenadas: NotificationResponse[];
+  /** Notificaciones tal cual las devuelve el backend (ya ordenadas newest-first). */
+  items: NotificationResponse[];
   /** Número de no leídas (alimenta el badge de la campana). */
   unreadCount: number;
-  hasUnread: boolean;
 }
 
 /**
- * Compone el view data de la bandeja de notificaciones: ordena por fecha
- * descendente y cuenta las no leídas. Puro y testeable; el fetch vive en
- * `NotificationControl`.
+ * Compone el view data de la bandeja de notificaciones y cuenta las no leídas.
+ * El backend ya devuelve las notificaciones ordenadas por fecha descendente
+ * (`OrderByDescending(CreatedAt)`), así que aquí no se re-ordena. Puro y
+ * testeable; el fetch vive en `NotificationControl`.
  */
 export function buildNotificationsViewData(
   notifications: NotificationResponse[] = [],
 ): NotificationsViewData {
-  const ordenadas = [...notifications].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-  );
-  const unreadCount = ordenadas.filter((n) => !n.isRead).length;
-  return { ordenadas, unreadCount, hasUnread: unreadCount > 0 };
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  return { items: notifications, unreadCount };
 }

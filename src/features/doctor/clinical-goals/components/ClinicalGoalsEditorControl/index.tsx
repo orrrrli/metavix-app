@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { toast } from "sonner";
 import { useClinicalGoalsEditor } from "../../hooks/use-clinical-goals-editor";
 import { clinicalGoalsStrings as S } from "../../strings/es";
@@ -18,8 +19,16 @@ export function ClinicalGoalsEditorControl({
   patientId,
   isPregnant = false,
 }: ClinicalGoalsEditorControlProps) {
-  const { viewData, isLoading, isSaving, openParamId, toggleParam, closeParam, save } =
-    useClinicalGoalsEditor(doctorId, patientId);
+  const { viewData, isLoading, isSaving, save } = useClinicalGoalsEditor(
+    doctorId,
+    patientId,
+  );
+
+  // Estado presentacional: qué parámetro está expandido. Vive en el Control.
+  const [openParamId, setOpenParamId] = useState<string | null>(null);
+  const toggleParam = (paramId: string) =>
+    setOpenParamId((cur) => (cur === paramId ? null : paramId));
+  const closeParam = () => setOpenParamId(null);
 
   return (
     <ClinicalGoalsEditorScreen
@@ -32,8 +41,10 @@ export function ClinicalGoalsEditorControl({
       onCancel={closeParam}
       onSave={(parameterId, existing, payload) =>
         save(parameterId, existing, payload, {
-          onSuccess: (wasUpdate) =>
-            toast.success(wasUpdate ? S.saveSuccessUpdate : S.saveSuccessCreate),
+          onSuccess: (wasUpdate) => {
+            toast.success(wasUpdate ? S.saveSuccessUpdate : S.saveSuccessCreate);
+            closeParam();
+          },
           onError: () => toast.error(S.saveError),
         })
       }
