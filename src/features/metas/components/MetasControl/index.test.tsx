@@ -40,10 +40,10 @@ describe("MetasControl (integración del wrapper)", () => {
     renderWithQuery(<MetasControl />);
 
     await screen.findByRole("button", { name: metasStrings.evaluateButton });
-    expect(screen.queryByText("Tu Estado Actual")).toBeNull();
+    expect(screen.queryByText(/en meta · /i)).toBeNull();
   });
 
-  it("click en Evaluar muestra el resumen y la card de evaluación", async () => {
+  it("click en Evaluar muestra la pantalla de progreso y luego el resumen", async () => {
     server.use(
       ...metasHandlers({
         evalResponse: makeEvalResponse({
@@ -58,12 +58,15 @@ describe("MetasControl (integración del wrapper)", () => {
     });
     await userEvent.click(btn);
 
-    await waitFor(() =>
-      expect(screen.getByText("Tu Estado Actual")).toBeTruthy(),
+    expect(screen.getByText(metasStrings.evaluatingMetas.title)).toBeTruthy();
+
+    await waitFor(
+      () => expect(screen.getByText(/en meta · /i)).toBeTruthy(),
+      { timeout: 7000 },
     );
-    // El nombre del parámetro aparece en la GoalEvaluationCard.
+    // El nombre del parámetro aparece en el detalle de evaluación.
     expect(screen.getAllByText(/HbA1c/i).length).toBeGreaterThan(0);
-  });
+  }, 10000);
 
   it("hace scroll al bloque de resumen tras evaluar", async () => {
     server.use(...metasHandlers());
@@ -74,8 +77,10 @@ describe("MetasControl (integración del wrapper)", () => {
     });
     await userEvent.click(btn);
 
-    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
-  });
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled(), {
+      timeout: 7000,
+    });
+  }, 10000);
 
   it("un error en la evaluación dispara el toast y no muestra resumen", async () => {
     // El override del POST va primero: MSW usa el primer handler que matchea.
@@ -96,6 +101,6 @@ describe("MetasControl (integración del wrapper)", () => {
     await waitFor(() =>
       expect(toastError).toHaveBeenCalledWith(metasStrings.evaluateError),
     );
-    expect(screen.queryByText("Tu Estado Actual")).toBeNull();
+    expect(screen.queryByText(/en meta · /i)).toBeNull();
   });
 });

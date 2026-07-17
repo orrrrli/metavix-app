@@ -9,10 +9,14 @@ describe("metasStrings", () => {
         "dueDateReachedNote",
         "evaluateButton",
         "evaluateError",
+        "evaluationInvite",
+        "evaluatingMetas",
         "loadingMessage",
-        "preEvaluationBanner",
+        "pregnancyBadge",
         "pregnancyDeactivatedNote",
         "pregnancyMode",
+        "subtitle",
+        "title",
       ].sort(),
     );
   });

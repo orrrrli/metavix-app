@@ -75,7 +75,23 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       toolsItems={TOOLS}
       profileHref="/paciente/perfil"
       onLogout={logout}
-      subSaludo={<SubSaludoPaciente rango="7d" />}
+      // Encabezado contextual por ruta. Coincidencia por prefijo de pathname
+      // (se usa la más larga); default = saludo personal + racha de 7 días.
+      saludoConfig={{
+        "/paciente/dashboard": {
+          saludo: (name) => `Hola, ${name}`,
+          subSaludo: <SubSaludoPaciente rango="7d" />,
+        },
+        "/paciente/herramientas/metas": {
+          saludo: "Tus metas, de un vistazo",
+          subSaludo:
+            "Compara tus últimos valores contra las metas clínicas que tu médico te asignó.",
+        },
+      }}
+      defaultSaludo={{
+        saludo: (name) => `Hola, ${name}`,
+        subSaludo: <SubSaludoPaciente rango="7d" />,
+      }}
       cta={hideCta ? undefined : {
         label: "Registrar nueva lectura",
         onClick: () => router.push("/paciente/nuevo-registro"),

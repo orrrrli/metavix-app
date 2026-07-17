@@ -55,6 +55,9 @@ export default function DoctorLayout({ children }: { children: React.ReactNode }
       navItems={NAV}
       profileHref="/doctor/perfil"
       onLogout={logout}
+      defaultSaludo={{
+        saludo: (name) => `Hola, Dr. ${name}`,
+      }}
       notificationsSlot={<NotificationControl />}
     >
       {children}

@@ -50,6 +50,23 @@ export interface MetavixDashboardLayoutProps {
   toolsLabel?: string;
   cta?: MetavixCta;
   greetingPrefix?: string;
+  /**
+   * Encabezado por ruta. La key es un prefijo de `pathname`; se usa la
+   * coincidencia más larga. Cada entrada define el saludo (puede ser un
+   * string fijo o una función que recibe el nombre del usuario) y un
+   * sub-encabezado opcional. Si no hay match, se usa `defaultSaludo`.
+   */
+  saludoConfig?: Record<
+    string,
+    {
+      saludo: string | ((firstName: string) => string);
+      subSaludo?: React.ReactNode;
+    }
+  >;
+  defaultSaludo?: {
+    saludo: string | ((firstName: string) => string);
+    subSaludo?: React.ReactNode;
+  };
   subSaludo?: React.ReactNode;
   accent?: string;
   notificationsSlot?: React.ReactNode;
@@ -131,7 +148,9 @@ export default function MetavixDashboardLayout({
   toolsLabel = "Herramientas",
   cta,
   greetingPrefix = "Hola, ",
-  subSaludo,
+  saludoConfig = {},
+  defaultSaludo,
+  subSaludo: legacySubSaludo,
   accent = "#00c9a7",
   notificationsSlot,
   children,
@@ -182,7 +201,27 @@ export default function MetavixDashboardLayout({
       .join("")
       .toUpperCase();
   const firstName = userName.split(" ")[0] || userName;
-  const saludo = `${greetingPrefix}${firstName}`;
+  // Encabezado por ruta: elegimos la coincidencia más larga (prefijo) y
+  // caemos al default si no hay match. El default reproduce el comportamiento
+  // histórico ("Hola, [nombre]" + subSaludo del role layout) para no
+  // requerir config en cada página.
+  const matchedRoute = Object.keys(saludoConfig)
+    .filter((r) => pathname === r || pathname.startsWith(r + "/"))
+    .sort((a, b) => b.length - a.length)[0];
+  const activeEntry = (matchedRoute && saludoConfig[matchedRoute]) || null;
+  const fallback =
+    defaultSaludo ??
+    (legacySubSaludo !== undefined
+      ? { saludo: `${greetingPrefix}${firstName}`, subSaludo: legacySubSaludo }
+      : null);
+  const resolved = activeEntry ?? fallback;
+  const saludoText = resolved
+    ? typeof resolved.saludo === "function"
+      ? resolved.saludo(firstName)
+      : resolved.saludo
+    : null;
+  const subSaludoNode = resolved?.subSaludo;
+  const showSaludo = saludoText !== null;
 
   const rootStyle: React.CSSProperties = {
     display: "flex",
@@ -490,22 +529,26 @@ export default function MetavixDashboardLayout({
         {/* contenido */}
         <main className="mvxdl-main" style={{ flex: 1, padding: "34px 40px 120px", maxWidth: 1240, width: "100%" }}>
           <NavigationLoader>
-            <div style={{ marginBottom: 26 }}>
-              <h1
-                style={{
-                  fontSize: 34,
-                  fontWeight: 800,
-                  color: "var(--text)",
-                  letterSpacing: "-0.03em",
-                  margin: "0 0 4px",
-                }}
-              >
-                {saludo}
-              </h1>
-              <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
-                {subSaludo}
-              </p>
-            </div>
+            {showSaludo && (
+              <div style={{ marginBottom: 26 }}>
+                <h1
+                  style={{
+                    fontSize: 34,
+                    fontWeight: 800,
+                    color: "var(--text)",
+                    letterSpacing: "-0.03em",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  {saludoText}
+                </h1>
+                {subSaludoNode !== undefined && subSaludoNode !== null && (
+                  <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
+                    {subSaludoNode}
+                  </p>
+                )}
+              </div>
+            )}
             {children}
           </NavigationLoader>
         </main>

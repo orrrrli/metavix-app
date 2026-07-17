@@ -3,8 +3,7 @@ import type { LabRecordResponse } from "@/types/lab-record";
 import type { PatientProfileResponse } from "@/types/patient-profile";
 import type { CkdStage, GoalEvaluationResponse } from "@/types/goal-evaluation";
 import type { EvaluacionMeta } from "../data/parametros";
-import type { GoalEvaluationItemView } from "../components/GoalEvaluationCard";
-import { goalEvalToViews } from "../utils/goal-eval-to-view";
+import { goalEvalToViews, type GoalEvaluationItemView } from "../utils/goal-eval-to-view";
 import { buildPreEvaluationValues } from "./build-pre-evaluation-values";
 import { buildEvaluacionesMap } from "./build-evaluaciones-map";
 import {
