@@ -1,24 +1,38 @@
-import { Info } from 'lucide-react';
+import { Info, AlertTriangle } from "lucide-react";
 
 export interface ClinicalNoteProps {
-  message: string;
+  texto: string;
+  tono?: "info" | "warn";
 }
 
 /**
- * Compact, non-critical clinical note shown under a GoalChip (e.g. pregnancy
- * caveats, reference-only notes). For urgent conditions requiring immediate
- * action, use CriticalAlert (T2) instead.
+ * Nota clínica compacta de una línea, con icono. Reutilizable para banners de
+ * embarazo (desactivado / fecha de parto) y para notas por parámetro
+ * (advertencias, alertas críticas). `tono: "warn"` cubre tanto avisos como lo
+ * que antes manejaba `CriticalAlert` (T2) — mismo slot visual, distinto color.
  */
-export function ClinicalNote({ message }: ClinicalNoteProps) {
+export function ClinicalNote({ texto, tono = "info" }: ClinicalNoteProps) {
+  const isWarn = tono === "warn";
+  const Icon = isWarn ? AlertTriangle : Info;
   return (
     <div
-      role="status"
+      role={isWarn ? "alert" : "status"}
       className="flex items-start gap-2 mt-1 p-2 rounded-md border"
-      style={{ background: 'var(--info-bg)', borderColor: 'var(--info)' }}
+      style={{
+        background: isWarn ? "var(--bad-bg)" : "var(--info-bg)",
+        borderColor: isWarn ? "var(--bad)" : "var(--info)",
+      }}
     >
-      <Info className="size-4 shrink-0 mt-0.5" style={{ color: 'var(--info)' }} aria-hidden="true" />
-      <p className="text-xs leading-snug" style={{ color: 'var(--text)' }}>
-        {message}
+      <Icon
+        className="size-4 shrink-0 mt-0.5"
+        style={{ color: isWarn ? "var(--bad)" : "var(--info)" }}
+        aria-hidden="true"
+      />
+      <p
+        className="text-xs leading-snug"
+        style={{ color: isWarn ? "var(--bad)" : "var(--text)", fontWeight: isWarn ? 500 : undefined }}
+      >
+        {texto}
       </p>
     </div>
   );

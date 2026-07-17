@@ -40,7 +40,7 @@ describe("MetasControl (integración del wrapper)", () => {
     renderWithQuery(<MetasControl />);
 
     await screen.findByRole("button", { name: metasStrings.evaluateButton });
-    expect(screen.queryByText("Tu Estado Actual")).toBeNull();
+    expect(screen.queryByText(/en meta · /i)).toBeNull();
   });
 
   it("click en Evaluar muestra el resumen y la card de evaluación", async () => {
@@ -59,9 +59,9 @@ describe("MetasControl (integración del wrapper)", () => {
     await userEvent.click(btn);
 
     await waitFor(() =>
-      expect(screen.getByText("Tu Estado Actual")).toBeTruthy(),
+      expect(screen.getByText(/en meta · /i)).toBeTruthy(),
     );
-    // El nombre del parámetro aparece en la GoalEvaluationCard.
+    // El nombre del parámetro aparece en el detalle de evaluación.
     expect(screen.getAllByText(/HbA1c/i).length).toBeGreaterThan(0);
   });
 
@@ -96,6 +96,6 @@ describe("MetasControl (integración del wrapper)", () => {
     await waitFor(() =>
       expect(toastError).toHaveBeenCalledWith(metasStrings.evaluateError),
     );
-    expect(screen.queryByText("Tu Estado Actual")).toBeNull();
+    expect(screen.queryByText(/en meta · /i)).toBeNull();
   });
 });

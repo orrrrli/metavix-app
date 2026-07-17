@@ -5,6 +5,9 @@
  * texto de la página.
  */
 export const metasStrings = {
+  title: "Mis Metas de Control",
+  subtitle: "Lo más importante primero, para que sepas qué hacer hoy.",
+  pregnancyBadge: "Embarazo · metas ajustadas",
   pregnancyMode: {
     title: "Estás en modo embarazo",
     body: "Las metas clínicas que ves están ajustadas para el embarazo. Las metas personalizadas que tenías antes quedan en pausa y se reactivarán cuando se desactive el embarazo.",

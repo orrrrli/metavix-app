@@ -27,7 +27,6 @@ function baseProps(overrides: Partial<MetasViewData> = {}) {
     onEvaluate: () => {},
     isEvaluating: false,
     isLoading: false,
-    showResumen: false,
   };
 }
 
@@ -61,13 +60,19 @@ describe("MetasScreen", () => {
     expect(screen.getByText(metasStrings.pregnancyDeactivatedNote)).toBeTruthy();
   });
 
+  it("antes de evaluar, muestra el botón Evaluar y no el bloque de resultados", () => {
+    render(<MetasScreen {...baseProps()} />);
+    expect(screen.getByRole("button", { name: metasStrings.evaluateButton })).toBeTruthy();
+    expect(screen.queryByText(/Necesita tu atención/i)).toBeNull();
+  });
+
   it("el botón Evaluar queda deshabilitado mientras isEvaluating", () => {
     render(<MetasScreen {...baseProps()} isEvaluating />);
     const btn = screen.getByRole("button", { name: metasStrings.evaluateButton });
     expect(btn.hasAttribute("disabled")).toBe(true);
   });
 
-  it("con hasEvalResult renderiza la card de evaluación", () => {
+  it("con hasEvalResult renderiza el hero y el detalle del parámetro evaluado", () => {
     const vd = buildMetasViewData({
       labRecords: [],
       dailyRecords: [],
@@ -78,13 +83,22 @@ describe("MetasScreen", () => {
       now: NOW,
     });
     render(<MetasScreen {...baseProps()} viewData={vd} />);
-    // El nombre del parámetro aparece en la card de evaluación.
     expect(screen.getAllByText(/HbA1c/i).length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: metasStrings.evaluateButton })).toBeNull();
   });
 
-  it("sin evaluar no renderiza el resumen aunque showResumen sea true por error", () => {
-    render(<MetasScreen {...baseProps()} showResumen={false} />);
-    expect(screen.queryByText(metasStrings.adaDisclaimer)).toBeTruthy();
+  it("con eGFR evaluado renderiza el CkdStageExplainer", () => {
+    const vd = buildMetasViewData({
+      labRecords: [],
+      dailyRecords: [],
+      profile: makeProfile(),
+      evalResult: makeEvalResponse({
+        items: [{ parameterId: "egfr", status: "InRange", valueUsed: 72, ckdStage: "G2" }],
+      }),
+      now: NOW,
+    });
+    render(<MetasScreen {...baseProps()} viewData={vd} />);
+    expect(screen.getByText(/Etapa de enfermedad renal/i)).toBeTruthy();
   });
 });
 
@@ -120,7 +134,7 @@ describe("MetasScreen — DOM snapshots", () => {
     expect(container.innerHTML).toMatchSnapshot();
   });
 
-  it("post-evaluación con card, resumen y CkdStageExplainer", () => {
+  it("post-evaluación con hero, detalle y CkdStageExplainer", () => {
     const vd = buildMetasViewData({
       labRecords: [],
       dailyRecords: [],
@@ -138,9 +152,7 @@ describe("MetasScreen — DOM snapshots", () => {
       }),
       now: NOW,
     });
-    const { container } = render(
-      <MetasScreen {...baseProps()} viewData={vd} showResumen />,
-    );
+    const { container } = render(<MetasScreen {...baseProps()} viewData={vd} />);
     expect(container.innerHTML).toMatchSnapshot();
   });
 });

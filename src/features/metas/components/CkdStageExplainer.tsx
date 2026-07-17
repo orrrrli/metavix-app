@@ -1,5 +1,4 @@
 import { Info } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/components/ui/metavix';
 import type { CkdStage } from '@/types/goal-evaluation';
 import { CKD_STAGES, getCkdStageMeta } from '../data/ckd-stages';
 
@@ -37,97 +36,76 @@ export const CKD_ROW_TONE_TOKENS: Record<CkdRowTone, { bg: string; border: strin
 export interface CkdStageExplainerProps {
   /** Etapa actual del paciente (null si no hay eGFR numérico). */
   currentStage: CkdStage | null;
-  /** Valor de eGFR en ml/min/1.73m² (null si no hay). Se muestra junto al
-   *  nombre de la etapa actual; null cuando no hay valor numérico. */
+  /** Valor de eGFR en ml/min/1.73m² (null si no hay). */
   egfrValue: number | null;
 }
 
 /**
  * Tarjeta educativa sobre la etapa KDIGO de enfermedad renal crónica
- * correspondiente al eGFR. Aparece debajo del grid de chips en MetasControl
- * solo cuando el paciente tiene un eGFR numérico (la condición de montaje la
- * decide el caller — ver MetasControl/index.tsx).
- *
- * Estructura:
- *  - Header: icono + título + subtítulo (etapa actual + valor, o glosario).
- *  - Tabla de las 6 etapas (G1..G5) con nombre, rango y acción clínica.
- *    La fila de la etapa actual se resalta con el color de severidad.
- *
- * La card no clasifica nada — recibe la etapa ya calculada por el backend
- * (single source of truth) y la presenta. La descripción en español vive en
- * `data/ckd-stages.ts` (catálogo estático, fuente KDIGO 2024 + ADA 2026).
+ * correspondiente al eGFR. La etapa la calcula el backend (single source of
+ * truth clínica) — este componente solo la presenta.
  */
 export function CkdStageExplainer({ currentStage, egfrValue }: CkdStageExplainerProps) {
   const currentMeta = getCkdStageMeta(currentStage);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start gap-3">
-          <div
-            className="flex items-center justify-center size-9 rounded-full shrink-0"
-            style={{ background: 'var(--info)' }}
-          >
-            <Info className="size-5" style={{ color: '#fff' }} aria-hidden="true" />
-          </div>
-          <div className="flex-1">
-            <CardTitle>Etapa de enfermedad renal (KDIGO 2024)</CardTitle>
-            {currentMeta && egfrValue !== null ? (
-              <p className="text-sm mt-1" style={{ color: 'var(--text)' }}>
-                Tu eGFR de <strong>{egfrValue.toFixed(0)} ml/min/1.73m²</strong> corresponde a la{' '}
-                <strong>{currentMeta.name}</strong>.
-              </p>
-            ) : (
-              <p className="text-sm mt-1" style={{ color: 'var(--mut)' }}>
-                Tabla de referencia KDIGO 2024 para interpretar el eGFR.
-              </p>
-            )}
-          </div>
+    <div
+      className="rounded-xl p-5 sm:p-6"
+      style={{ background: 'var(--card)', border: '1.5px solid var(--card-bd)' }}
+    >
+      <div className="flex items-start gap-3 mb-4">
+        <div
+          className="flex items-center justify-center size-9 rounded-full shrink-0"
+          style={{ background: 'var(--info)' }}
+        >
+          <Info className="size-5" style={{ color: '#fff' }} aria-hidden="true" />
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {CKD_STAGES.map((stage) => {
-            const isCurrent = stage.id === currentStage;
-            const tone = getCkdStageRowVisual(stage.id, isCurrent);
-            const tokens = CKD_ROW_TONE_TOKENS[tone];
-            return (
-              <div
-                key={stage.id}
-                data-testid="ckd-stage-row"
-                data-stage={stage.id}
-                data-current={isCurrent ? 'true' : 'false'}
-                className="rounded-md border p-3 transition-colors"
-                style={{
-                  background: tokens.bg,
-                  borderColor: tokens.border,
-                }}
-              >
-                <div className="flex items-baseline justify-between gap-3">
-                  <p
-                    className="text-sm font-semibold"
-                    style={{ color: tone === 'neutral' ? 'var(--text)' : tokens.text }}
-                  >
-                    {stage.name}
-                  </p>
-                  <p
-                    className="text-xs shrink-0"
-                    style={{ color: tone === 'neutral' ? 'var(--mut)' : tokens.text }}
-                  >
-                    {stage.range}
-                  </p>
-                </div>
-                <p
-                  className="text-xs mt-1 leading-snug"
-                  style={{ color: 'var(--text)' }}
-                >
+        <div className="flex-1">
+          <h3 className="font-display font-semibold text-base" style={{ color: 'var(--text)' }}>
+            Etapa de enfermedad renal (KDIGO 2024)
+          </h3>
+          {currentMeta && egfrValue !== null ? (
+            <p className="text-sm mt-1" style={{ color: 'var(--mut)' }}>
+              Tu eGFR de <strong>{egfrValue.toFixed(0)} ml/min/1.73m²</strong> corresponde a la{' '}
+              <strong>{currentMeta.name}</strong>.
+            </p>
+          ) : (
+            <p className="text-sm mt-1" style={{ color: 'var(--mut)' }}>
+              Tabla de referencia KDIGO 2024 para interpretar el eGFR.
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {CKD_STAGES.map((stage) => {
+          const isCurrent = stage.id === currentStage;
+          const tone = getCkdStageRowVisual(stage.id, isCurrent);
+          const tokens = CKD_ROW_TONE_TOKENS[tone];
+          return (
+            <div
+              key={stage.id}
+              data-testid="ckd-stage-row"
+              data-stage={stage.id}
+              data-current={isCurrent ? 'true' : 'false'}
+              className="flex justify-between items-start gap-4 rounded-md border p-3"
+              style={{ background: tokens.bg, borderColor: tokens.border }}
+            >
+              <div>
+                <p className="text-sm font-semibold" style={{ color: tone === 'neutral' ? 'var(--text)' : tokens.text }}>
+                  {stage.name}
+                </p>
+                <p className="text-xs mt-1 leading-snug" style={{ color: 'var(--text)' }}>
                   <span className="font-medium">Acción:</span> {stage.action}
                 </p>
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+              <p className="text-xs shrink-0 whitespace-nowrap" style={{ color: tone === 'neutral' ? 'var(--mut)' : tokens.text }}>
+                {stage.range}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

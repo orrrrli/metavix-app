@@ -11,8 +11,11 @@ describe("metasStrings", () => {
         "evaluateError",
         "loadingMessage",
         "preEvaluationBanner",
+        "pregnancyBadge",
         "pregnancyDeactivatedNote",
         "pregnancyMode",
+        "subtitle",
+        "title",
       ].sort(),
     );
   });

@@ -1,7 +1,28 @@
 import { PARAMETROS_META_BY_ID } from '../data/parametros';
-import type { GoalEvaluationResponse, NoDataReason, CkdStage } from '@/types/goal-evaluation';
-import type { GoalEvaluationItemView } from '../components/GoalEvaluationCard';
+import type { GoalEvaluationResponse, NoDataReason, CkdStage, GoalStatus } from '@/types/goal-evaluation';
 import { getParameterNotes } from './clinical-notes';
+
+/**
+ * Vista pre-formateada de un ítem de evaluación, ensamblada a partir de la
+ * respuesta cruda de la API + el catálogo de parámetros. Los componentes que
+ * la consumen no conocen la API ni el catálogo — solo reciben la lista lista
+ * para renderizar.
+ */
+export interface GoalEvaluationItemView {
+  parameterId: string;
+  name: string;
+  unit: string;
+  value: number | null;
+  status: GoalStatus;
+  reason?: string | null;
+  /** Nota clínica contextual (ej. advertencias por embarazo). Ver clinical-notes.ts. */
+  note?: string | null;
+  /** Alerta crítica urgente (ej. TG ≥ 500). Ver clinical-notes.ts. */
+  criticalAlert?: string | null;
+  /** Etapa KDIGO 2024 de ERC. Solo presente para el parámetro `egfr` y
+   *  cuando hay un valor numérico; null en cualquier otro caso. */
+  ckdStage?: CkdStage | null;
+}
 
 /**
  * Traduce un `NoDataReason` del backend al texto en español que se muestra al
