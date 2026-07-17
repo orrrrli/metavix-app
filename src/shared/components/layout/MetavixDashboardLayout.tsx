@@ -51,10 +51,22 @@ export interface MetavixDashboardLayoutProps {
   cta?: MetavixCta;
   greetingPrefix?: string;
   /**
-   * Rutas en las que se oculta el saludo ("Hola, [nombre]") porque la página
-   * renderiza su propio encabezado. Coincidencia por prefijo.
+   * Encabezado por ruta. La key es un prefijo de `pathname`; se usa la
+   * coincidencia más larga. Cada entrada define el saludo (puede ser un
+   * string fijo o una función que recibe el nombre del usuario) y un
+   * sub-encabezado opcional. Si no hay match, se usa `defaultSaludo`.
    */
-  hideSaludoOnRoutes?: string[];
+  saludoConfig?: Record<
+    string,
+    {
+      saludo: string | ((firstName: string) => string);
+      subSaludo?: React.ReactNode;
+    }
+  >;
+  defaultSaludo?: {
+    saludo: string | ((firstName: string) => string);
+    subSaludo?: React.ReactNode;
+  };
   subSaludo?: React.ReactNode;
   accent?: string;
   notificationsSlot?: React.ReactNode;
@@ -136,8 +148,9 @@ export default function MetavixDashboardLayout({
   toolsLabel = "Herramientas",
   cta,
   greetingPrefix = "Hola, ",
-  hideSaludoOnRoutes = [],
-  subSaludo,
+  saludoConfig = {},
+  defaultSaludo,
+  subSaludo: legacySubSaludo,
   accent = "#00c9a7",
   notificationsSlot,
   children,
@@ -188,10 +201,27 @@ export default function MetavixDashboardLayout({
       .join("")
       .toUpperCase();
   const firstName = userName.split(" ")[0] || userName;
-  const saludo = `${greetingPrefix}${firstName}`;
-  const showSaludo = !hideSaludoOnRoutes.some(
-    (r) => pathname === r || pathname.startsWith(r + "/"),
-  );
+  // Encabezado por ruta: elegimos la coincidencia más larga (prefijo) y
+  // caemos al default si no hay match. El default reproduce el comportamiento
+  // histórico ("Hola, [nombre]" + subSaludo del role layout) para no
+  // requerir config en cada página.
+  const matchedRoute = Object.keys(saludoConfig)
+    .filter((r) => pathname === r || pathname.startsWith(r + "/"))
+    .sort((a, b) => b.length - a.length)[0];
+  const activeEntry = (matchedRoute && saludoConfig[matchedRoute]) || null;
+  const fallback =
+    defaultSaludo ??
+    (legacySubSaludo !== undefined
+      ? { saludo: `${greetingPrefix}${firstName}`, subSaludo: legacySubSaludo }
+      : null);
+  const resolved = activeEntry ?? fallback;
+  const saludoText = resolved
+    ? typeof resolved.saludo === "function"
+      ? resolved.saludo(firstName)
+      : resolved.saludo
+    : null;
+  const subSaludoNode = resolved?.subSaludo;
+  const showSaludo = saludoText !== null;
 
   const rootStyle: React.CSSProperties = {
     display: "flex",
@@ -510,11 +540,13 @@ export default function MetavixDashboardLayout({
                     margin: "0 0 4px",
                   }}
                 >
-                  {saludo}
+                  {saludoText}
                 </h1>
-                <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
-                  {subSaludo}
-                </p>
+                {subSaludoNode !== undefined && subSaludoNode !== null && (
+                  <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
+                    {subSaludoNode}
+                  </p>
+                )}
               </div>
             )}
             {children}
