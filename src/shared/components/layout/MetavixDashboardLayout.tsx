@@ -59,7 +59,8 @@ export interface MetavixDashboardLayoutProps {
   saludoConfig?: Record<
     string,
     {
-      saludo: string | ((firstName: string) => string);
+      /** `null` suprime el encabezado por completo (la pantalla ya trae su propio título). */
+      saludo: string | ((firstName: string) => string) | null;
       subSaludo?: React.ReactNode;
     }
   >;
@@ -215,11 +216,12 @@ export default function MetavixDashboardLayout({
       ? { saludo: `${greetingPrefix}${firstName}`, subSaludo: legacySubSaludo }
       : null);
   const resolved = activeEntry ?? fallback;
-  const saludoText = resolved
-    ? typeof resolved.saludo === "function"
-      ? resolved.saludo(firstName)
-      : resolved.saludo
-    : null;
+  const saludoText =
+    resolved && resolved.saludo !== null
+      ? typeof resolved.saludo === "function"
+        ? resolved.saludo(firstName)
+        : resolved.saludo
+      : null;
   const subSaludoNode = resolved?.subSaludo;
   const showSaludo = saludoText !== null;
 

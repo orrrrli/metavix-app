@@ -33,6 +33,7 @@ const noop = () => {};
 
 function baseProps(resumen: GlucosaResumen) {
   return {
+    firstName: "María",
     resumen,
     indicadores: buildOtrosIndicadoresViewData({
       dailyRecords: [],

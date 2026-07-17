@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useAuthStore } from "@/features/auth/store";
 import {
   TrendingUp,
   Syringe,
@@ -96,6 +97,9 @@ const TOOLS: Tool[] = [
 ];
 
 export default function HerramientasIndexPage() {
+  const { fullName } = useAuthStore();
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22, paddingBottom: 8 }}>
       <div>
@@ -111,7 +115,9 @@ export default function HerramientasIndexPage() {
           Herramientas clínicas
         </h1>
         <p style={{ fontSize: 14, color: "var(--mut)", margin: "6px 0 0", maxWidth: 640 }}>
-          Calculadoras, evaluadores y guías para ayudarte a tomar decisiones informadas junto a tu médico.
+          {firstName
+            ? `Aquí tienes calculadoras, evaluadores y guías, ${firstName}, para tomar decisiones informadas junto a tu médico.`
+            : "Calculadoras, evaluadores y guías para ayudarte a tomar decisiones informadas junto a tu médico."}
         </p>
       </div>
 

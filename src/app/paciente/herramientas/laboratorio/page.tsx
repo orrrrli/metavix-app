@@ -14,7 +14,8 @@ const numOrNull = (v: string): number | null => (v.trim() !== "" ? Number(v) : n
 const strOrNull = (v: string): string | null => (v.trim() !== "" ? v.trim() : null);
 
 export default function LaboratorioPage() {
-  const { patientId } = useAuthStore();
+  const { patientId, fullName } = useAuthStore();
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
   const { mutate: createLab, isPending } = useCreateLabRecord(patientId ?? "");
 
   const [sampleDate, setSampleDate] = useState(new Date().toISOString().split("T")[0]);
@@ -90,7 +91,9 @@ export default function LaboratorioPage() {
           Laboratorio y EGO
         </h2>
         <p className="mt-1" style={{ color: "var(--mut)" }}>
-          Registra los resultados de tus estudios de laboratorio y examen general de orina. Todos los campos son opcionales; llena los que tengas.
+          {firstName
+            ? `Registra tus estudios de laboratorio y examen general de orina, ${firstName}. Todos los campos son opcionales; llena los que tengas.`
+            : "Registra los resultados de tus estudios de laboratorio y examen general de orina. Todos los campos son opcionales; llena los que tengas."}
         </p>
       </div>
 

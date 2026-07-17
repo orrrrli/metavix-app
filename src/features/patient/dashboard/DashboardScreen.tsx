@@ -60,6 +60,7 @@ function renderValor(ind: IndicadorData): React.ReactNode {
 }
 
 export interface DashboardScreenProps {
+  firstName: string | null;
   resumen: GlucosaResumen;
   indicadores: IndicadorData[];
   rango: "7d" | "14d" | "30d";
@@ -76,6 +77,7 @@ export interface DashboardScreenProps {
  * `view-data/` y `hooks/`.
  */
 export function DashboardScreen({
+  firstName,
   resumen,
   indicadores,
   rango,
@@ -85,6 +87,17 @@ export function DashboardScreen({
   onRetry,
   onIndicadorClick,
 }: DashboardScreenProps) {
+  const header = (
+    <div>
+      <h1 className="text-3xl font-display font-bold" style={{ color: "var(--text)" }}>
+        {dashboardStrings.title}
+      </h1>
+      <p className="mt-1" style={{ color: "var(--mut)" }}>
+        {firstName ? dashboardStrings.subtitle(firstName, resumen.rachaDias) : dashboardStrings.subtitleFallback}
+      </p>
+    </div>
+  );
+
   if (resumen.loading) {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center">
@@ -96,27 +109,30 @@ export function DashboardScreen({
   // Issue #7: error de fetch NO debe mostrarse como "sin registros".
   if (resumen.error) {
     return (
-      <div
-        className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center"
-        style={{ color: "var(--mut)" }}
-      >
-        <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
-          {dashboardStrings.errorTitle}
-        </p>
-        <p style={{ fontSize: 13.5, margin: 0 }}>{dashboardStrings.errorBody}</p>
-        <button
-          onClick={onRetry}
-          className="mt-1 rounded-xl px-5 py-2 text-sm font-semibold transition-colors"
-          style={{
-            background: "var(--accent)",
-            color: "#03251d",
-            fontFamily: "'Sora', sans-serif",
-            border: "none",
-            cursor: "pointer",
-          }}
+      <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
+        {header}
+        <div
+          className="flex min-h-[40vh] flex-col items-center justify-center gap-3 text-center"
+          style={{ color: "var(--mut)" }}
         >
-          {dashboardStrings.retryButton}
-        </button>
+          <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)" }}>
+            {dashboardStrings.errorTitle}
+          </p>
+          <p style={{ fontSize: 13.5, margin: 0 }}>{dashboardStrings.errorBody}</p>
+          <button
+            onClick={onRetry}
+            className="mt-1 rounded-xl px-5 py-2 text-sm font-semibold transition-colors"
+            style={{
+              background: "var(--accent)",
+              color: "#03251d",
+              fontFamily: "'Sora', sans-serif",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {dashboardStrings.retryButton}
+          </button>
+        </div>
       </div>
     );
   }
@@ -137,6 +153,7 @@ export function DashboardScreen({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
+      {header}
       {resumen.valor !== null &&
         resumen.estado &&
         resumen.estadoLabel &&

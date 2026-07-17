@@ -17,7 +17,8 @@ function horaActual(): string {
 }
 
 export default function PresionArterialPage() {
-  const { patientId } = useAuthStore();
+  const { patientId, fullName } = useAuthStore();
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
   const { mutate: createRecord, isPending } = useCreateDailyRecord(patientId ?? "");
 
   const [sistolica, setSistolica] = useState("");
@@ -68,7 +69,9 @@ export default function PresionArterialPage() {
           Presión arterial
         </h2>
         <p className="mt-1" style={{ color: "var(--mut)" }}>
-          Registra tu presión arterial y frecuencia cardíaca para dar seguimiento junto a tu médico.
+          {firstName
+            ? `Registra tu presión arterial y frecuencia cardíaca, ${firstName}, para dar seguimiento junto a tu médico.`
+            : "Registra tu presión arterial y frecuencia cardíaca para dar seguimiento junto a tu médico."}
         </p>
       </div>
 

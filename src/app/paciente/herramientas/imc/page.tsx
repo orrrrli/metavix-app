@@ -83,7 +83,8 @@ function getBmiColor(bmi: number): string {
 }
 
 export default function BmiTrendPage() {
-  const { patientId } = useAuthStore();
+  const { patientId, fullName } = useAuthStore();
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
   const [range, setRange] = useState<RangeKey>("30d");
   const [mode, setMode] = useState<"preset" | "custom">("preset");
   const [customRange, setCustomRange] = useState<DateRange | undefined>(undefined);
@@ -195,7 +196,7 @@ export default function BmiTrendPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Link href="/paciente/dashboard">
+        <Link href="/paciente/herramientas/calculadora-imc">
           <Button variant="outline" size="icon" className="shrink-0">
             <ArrowLeft className="size-4" />
           </Button>
@@ -203,7 +204,7 @@ export default function BmiTrendPage() {
         <div>
           <h2 className="text-3xl font-display font-bold text-foreground">Tendencia de IMC</h2>
           <p className="text-muted-foreground mt-1">
-            Evolución de tu Índice de Masa Corporal a lo largo del tiempo
+            {firstName ? `Así ha evolucionado tu Índice de Masa Corporal, ${firstName}, a lo largo del tiempo.` : "Evolución de tu Índice de Masa Corporal a lo largo del tiempo"}
           </p>
         </div>
       </div>

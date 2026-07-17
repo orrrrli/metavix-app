@@ -168,7 +168,8 @@ function mergeByFecha(daily: Registro[], lab: Registro[]): Registro[] {
 }
 
 export default function HistorialPage() {
-  const { patientId } = useAuthStore();
+  const { patientId, fullName } = useAuthStore();
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
 
   const {
     data: dailyRecords,
@@ -209,7 +210,7 @@ export default function HistorialPage() {
       <div className="space-y-6 max-w-7xl mx-auto">
         <div>
           <h2 className="text-3xl font-display font-bold" style={{ color: 'var(--text)' }}>Mi Historial</h2>
-          <p className="mt-1" style={{ color: 'var(--mut)' }}>Visualiza todos tus registros diarios y monitorea tus metas.</p>
+          <p className="mt-1" style={{ color: 'var(--mut)' }}>{firstName ? `Aquí tienes tus registros, ${firstName}.` : "Visualiza todos tus registros diarios y monitorea tus metas."}</p>
         </div>
         <p className="text-sm text-center py-12" style={{ color: 'var(--mut)' }}>Aún no tienes registros. Comienza registrando tu primera lectura.</p>
       </div>
@@ -221,7 +222,7 @@ export default function HistorialPage() {
       <div>
         <h2 className="text-3xl font-display font-bold" style={{ color: 'var(--text)' }}>Mi Historial</h2>
         <p className="mt-1" style={{ color: 'var(--mut)' }}>
-          Visualiza todos tus registros diarios y monitorea tus metas.
+          {firstName ? `Aquí tienes tus registros, ${firstName}.` : "Visualiza todos tus registros diarios y monitorea tus metas."}
         </p>
       </div>
 
