@@ -1,11 +1,13 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Loader2, Info } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
 import { ClinicalNote } from "./ClinicalNote";
 import { CkdStageExplainer } from "./CkdStageExplainer";
 import { NoDataReasonsTable } from "./NoDataReasonsTable";
 import { EvaluacionMetasGrid } from "./EvaluacionMetasGrid";
+import { EvaluationInvite } from "./EvaluationInvite";
+import { EvaluatingMetas } from "./EvaluatingMetas";
 import { formatEvaluatedAt } from "../utils/format-evaluated-at";
 import { metasStrings } from "../strings/es";
 import {
@@ -22,6 +24,8 @@ export interface MetasScreenProps {
   isEvaluating: boolean;
   isLoading: boolean;
 }
+
+const MIN_EVALUATING_MS = 5000;
 
 const ESTADO_COLOR: Record<"ok" | "warn" | "bad", { color: string; bg: string; border: string }> = {
   ok: { color: "var(--ok)", bg: "var(--ok-bg)", border: "var(--ok-bg)" },
@@ -67,6 +71,41 @@ function headlineFor(resumen: ReturnType<typeof resumenMetas>) {
  * decide `viewData.hasEvalResult` (no hay estado de UI propio para esto).
  */
 export function MetasScreen({ viewData, onEvaluate, isEvaluating, isLoading }: MetasScreenProps) {
+  const [showEvaluatingScreen, setShowEvaluatingScreen] = useState(false);
+  const [scrollPending, setScrollPending] = useState(false);
+  const isEvaluatingRef = useRef(isEvaluating);
+
+  useEffect(() => {
+    isEvaluatingRef.current = isEvaluating;
+  }, [isEvaluating]);
+
+  useEffect(() => {
+    if (!showEvaluatingScreen) return;
+
+    let cancelled = false;
+    const closeWhenRequestSettles = () => {
+      if (cancelled) return;
+      if (isEvaluatingRef.current) {
+        setTimeout(closeWhenRequestSettles, 100);
+        return;
+      }
+      setShowEvaluatingScreen(false);
+      setScrollPending(true);
+    };
+    const timer = setTimeout(closeWhenRequestSettles, MIN_EVALUATING_MS);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [showEvaluatingScreen]);
+
+  useEffect(() => {
+    if (!scrollPending) return;
+    document
+      .getElementById("resumen-metas")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [scrollPending]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-20" style={{ color: "var(--mut)" }}>
@@ -86,6 +125,12 @@ export function MetasScreen({ viewData, onEvaluate, isEvaluating, isLoading }: M
     .sort((a, b) => (a.estado === b.estado ? 0 : a.estado === "bad" ? -1 : 1));
   const vasBien = parametros.filter((p) => p.estado === "ok");
   const sinRegistrar = parametros.filter((p) => p.estado === "vacio");
+
+  const handleEvaluate = () => {
+    setShowEvaluatingScreen(true);
+    setScrollPending(false);
+    onEvaluate();
+  };
 
   return (
     <div className="max-w-4xl mx-auto pb-12 animate-in fade-in duration-500">
@@ -133,31 +178,18 @@ export function MetasScreen({ viewData, onEvaluate, isEvaluating, isLoading }: M
         </div>
       )}
 
-      {!hasEvalResult && (
-        <>
-          <p className="text-lg mb-8" style={{ color: "var(--mut)" }}>{metasStrings.preEvaluationBanner}</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-            {parametros.map((p) => (
-              <div
-                key={p.id}
-                className="rounded-xl p-4 text-center"
-                style={{ background: "var(--ph)", border: "1.5px solid var(--bd)" }}
-              >
-                <div className="text-xl font-bold" style={{ color: "var(--soft)" }}>{p.valor ?? "—"}</div>
-                <div className="text-xs mt-1" style={{ color: "var(--mut)" }}>{p.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-center">
-            <Button onClick={onEvaluate} disabled={isEvaluating} className="w-full sm:w-auto h-14 px-10 text-lg shadow-md">
-              {isEvaluating && <Loader2 className="h-5 w-5 mr-2 animate-spin" />}
-              {metasStrings.evaluateButton}
-            </Button>
-          </div>
-        </>
+      {showEvaluatingScreen && <EvaluatingMetas />}
+
+      {!hasEvalResult && !showEvaluatingScreen && (
+        <EvaluationInvite
+          onEvaluate={handleEvaluate}
+          isEvaluating={isEvaluating}
+          totalParametros={resumen.total}
+          parametrosConDatos={parametros.filter((p) => p.valor != null).length}
+        />
       )}
 
-      {hasEvalResult && evalResult && (
+      {hasEvalResult && evalResult && !showEvaluatingScreen && (
         <div id="resumen-metas" className="space-y-6">
           <p className="text-xs" style={{ color: "var(--soft)" }}>
             Evaluación: {formatEvaluatedAt(evalResult.evaluatedAt)}

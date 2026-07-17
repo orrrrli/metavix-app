@@ -11,11 +11,6 @@ export function MetasControl() {
   const handleEvaluar = async () => {
     try {
       await evaluate();
-      setTimeout(() => {
-        document
-          .getElementById("resumen-metas")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
     } catch {
       toast.error(metasStrings.evaluateError);
     }
