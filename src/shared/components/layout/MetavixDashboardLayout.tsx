@@ -50,6 +50,11 @@ export interface MetavixDashboardLayoutProps {
   toolsLabel?: string;
   cta?: MetavixCta;
   greetingPrefix?: string;
+  /**
+   * Rutas en las que se oculta el saludo ("Hola, [nombre]") porque la página
+   * renderiza su propio encabezado. Coincidencia por prefijo.
+   */
+  hideSaludoOnRoutes?: string[];
   subSaludo?: React.ReactNode;
   accent?: string;
   notificationsSlot?: React.ReactNode;
@@ -131,6 +136,7 @@ export default function MetavixDashboardLayout({
   toolsLabel = "Herramientas",
   cta,
   greetingPrefix = "Hola, ",
+  hideSaludoOnRoutes = [],
   subSaludo,
   accent = "#00c9a7",
   notificationsSlot,
@@ -183,6 +189,9 @@ export default function MetavixDashboardLayout({
       .toUpperCase();
   const firstName = userName.split(" ")[0] || userName;
   const saludo = `${greetingPrefix}${firstName}`;
+  const showSaludo = !hideSaludoOnRoutes.some(
+    (r) => pathname === r || pathname.startsWith(r + "/"),
+  );
 
   const rootStyle: React.CSSProperties = {
     display: "flex",
@@ -490,22 +499,24 @@ export default function MetavixDashboardLayout({
         {/* contenido */}
         <main className="mvxdl-main" style={{ flex: 1, padding: "34px 40px 120px", maxWidth: 1240, width: "100%" }}>
           <NavigationLoader>
-            <div style={{ marginBottom: 26 }}>
-              <h1
-                style={{
-                  fontSize: 34,
-                  fontWeight: 800,
-                  color: "var(--text)",
-                  letterSpacing: "-0.03em",
-                  margin: "0 0 4px",
-                }}
-              >
-                {saludo}
-              </h1>
-              <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
-                {subSaludo}
-              </p>
-            </div>
+            {showSaludo && (
+              <div style={{ marginBottom: 26 }}>
+                <h1
+                  style={{
+                    fontSize: 34,
+                    fontWeight: 800,
+                    color: "var(--text)",
+                    letterSpacing: "-0.03em",
+                    margin: "0 0 4px",
+                  }}
+                >
+                  {saludo}
+                </h1>
+                <p style={{ fontSize: 14.5, color: "var(--mut)", margin: 0 }}>
+                  {subSaludo}
+                </p>
+              </div>
+            )}
             {children}
           </NavigationLoader>
         </main>

@@ -75,6 +75,9 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       toolsItems={TOOLS}
       profileHref="/paciente/perfil"
       onLogout={logout}
+      // Páginas con su propio encabezado: el layout omite "Hola, [nombre]"
+      // para no duplicar el título que la propia página ya renderiza.
+      hideSaludoOnRoutes={["/paciente/herramientas/metas"]}
       subSaludo={<SubSaludoPaciente rango="7d" />}
       cta={hideCta ? undefined : {
         label: "Registrar nueva lectura",
