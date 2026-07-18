@@ -14,7 +14,8 @@ import { DashboardScreen } from "../DashboardScreen";
  * derivación vive en `view-data/`; la UI en `DashboardScreen`.
  */
 export function DashboardControl() {
-  const { patientId } = useAuthStore();
+  const { patientId, fullName } = useAuthStore();
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
   const router = useRouter();
   const [rango, setRango] = useState<"7d" | "14d" | "30d">("7d");
 
@@ -28,6 +29,7 @@ export function DashboardControl() {
 
   return (
     <DashboardScreen
+      firstName={firstName}
       resumen={resumen}
       indicadores={indicadores}
       rango={rango}

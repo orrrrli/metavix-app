@@ -79,13 +79,16 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
       // (se usa la más larga); default = saludo personal + racha de 7 días.
       saludoConfig={{
         "/paciente/dashboard": {
-          saludo: (name) => `Hola, ${name}`,
-          subSaludo: <SubSaludoPaciente rango="7d" />,
+          saludo: null,
         },
-        "/paciente/herramientas/metas": {
-          saludo: "Tus metas, de un vistazo",
-          subSaludo:
-            "Compara tus últimos valores contra las metas clínicas que tu médico te asignó.",
+        "/paciente/herramientas": {
+          saludo: null,
+        },
+        "/paciente/historial": {
+          saludo: null,
+        },
+        "/paciente/doctores": {
+          saludo: null,
         },
       }}
       defaultSaludo={{

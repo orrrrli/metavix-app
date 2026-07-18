@@ -19,8 +19,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, MetavixButto
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 
 export default function DoctoresPage(): React.ReactElement {
-  const { patientId } = useAuthStore();
+  const { patientId, fullName } = useAuthStore();
   const [search, setSearch] = useState("");
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
 
   const { data: linkedDoctors = [], isLoading: loadingLinked } = useLinkedDoctors(patientId ?? "");
   const { data: allDoctors = [], isLoading: loadingAll } = useAllDoctors();
@@ -91,7 +92,7 @@ export default function DoctoresPage(): React.ReactElement {
       <div>
         <h2 className="text-3xl font-display font-bold" style={{ color: 'var(--text)' }}>Mis Médicos</h2>
         <p className="mt-1" style={{ color: 'var(--mut)' }}>
-          Gestiona los médicos que tienen acceso a tu expediente clínico.
+          {firstName ? `Aquí puedes ver y gestionar a tus médicos, ${firstName}.` : "Gestiona los médicos que tienen acceso a tu expediente clínico."}
         </p>
       </div>
 

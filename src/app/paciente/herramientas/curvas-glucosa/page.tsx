@@ -57,7 +57,8 @@ function getRefLimits(diabetesType: string) {
 }
 
 export default function GlucoseCurvesPage() {
-  const { patientId } = useAuthStore();
+  const { patientId, fullName } = useAuthStore();
+  const firstName = (fullName ?? "").split(" ")[0] || fullName;
 
   const { data: records = [], isLoading } = useDailyRecords(patientId ?? "");
   const { data: profile } = usePatientProfile(patientId ?? "");
@@ -113,7 +114,9 @@ export default function GlucoseCurvesPage() {
         </Link>
         <div>
           <h2 className="text-3xl font-display font-bold text-foreground">Curvas de glucosa del día</h2>
-          <p className="text-muted-foreground mt-1">Comportamiento de la glucosa a lo largo de un día, por tiempo de comida</p>
+          <p className="text-muted-foreground mt-1">
+            {firstName ? `Así se comportó tu glucosa a lo largo del día, ${firstName}, por tiempo de comida.` : "Comportamiento de la glucosa a lo largo de un día, por tiempo de comida"}
+          </p>
         </div>
       </div>
 
