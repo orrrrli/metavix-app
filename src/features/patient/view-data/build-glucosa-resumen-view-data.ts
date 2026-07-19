@@ -5,6 +5,7 @@ import {
   rangoPara,
   rangoParaDefault,
   evaluar,
+  bandaEnMeta,
   EstadoClinico,
 } from "../utils/rangos-glucosa";
 
@@ -169,8 +170,9 @@ export function buildGlucosaResumenViewData(
   const hasDiabetes = diabetesRaw !== "None" && diabetesRaw !== "";
 
   const rangoDefecto = rangoParaDefault(hasDiabetes);
-  const inf = rangoDefecto.enMetaInf ?? rangoDefecto.inf;
-  const supAyuno = rangoDefecto.enMetaSup ?? rangoDefecto.sup;
+  const bandaDefecto = bandaEnMeta(rangoDefecto);
+  const inf = bandaDefecto?.desde ?? 0;
+  const supAyuno = bandaDefecto?.hasta ?? 0;
 
   // Series para gráfica: agrupar por día
   const grupos = new Map<string, { values: number[]; date: Date }>();
@@ -213,7 +215,7 @@ export function buildGlucosaResumenViewData(
 
   const enRango = (g: { readingType: GlucoseReadingType; valueMgDl: number }) => {
     const r = rangoPara(g.readingType, hasDiabetes);
-    return g.valueMgDl <= r.sup && g.valueMgDl >= r.inf;
+    return evaluar(g.valueMgDl, r).estado !== "bad";
   };
   const enVentana = records
     .filter((r) => parseDailyDate(r.recordDate).getTime() >= desdeVentana.getTime())
@@ -242,7 +244,7 @@ export function buildGlucosaResumenViewData(
   const medicionesHoy = todayReadings.length;
   const enMetaHoy = todayReadings.filter((g) => {
     const r = rangoPara(g.readingType, hasDiabetes);
-    return g.valueMgDl <= r.sup && g.valueMgDl >= r.inf;
+    return evaluar(g.valueMgDl, r).estado !== "bad";
   }).length;
 
   // Última lectura (no solo de hoy — la más reciente global con glucosa)
@@ -273,7 +275,8 @@ export function buildGlucosaResumenViewData(
   if (last) {
     valor = last.g.valueMgDl;
     const r = rangoPara(last.g.readingType, hasDiabetes);
-    rangoUltima = [r.enMetaInf ?? r.inf, r.enMetaSup ?? r.sup];
+    const banda = bandaEnMeta(r);
+    rangoUltima = banda ? [banda.desde, banda.hasta] : rangoUltima;
     const ev = evaluar(valor, r);
     estado = ev.estado;
     estadoLabel = ev.label;

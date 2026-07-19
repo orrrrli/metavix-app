@@ -142,10 +142,10 @@ export function estadoRango(
   if (v === "" || Number.isNaN(n)) return { estado: "", label: "", bg: "", color: "" };
   const rango = rangoPara(opts.readingType ?? null, opts.hasDiabetes ?? false, opts.isPregnant ?? false);
   const ev = evaluar(n, rango);
-  if (ev.estado === "ok") return { estado: "rango", label: "En rango", bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
-  if (ev.estado === "warn") return { estado: "rango", label: "Revisar", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
-  if (ev.label === "Baja") return { estado: "bajo", label: "Baja", bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
-  return { estado: "alto", label: "Alta", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
+  if (ev.estado === "ok") return { estado: "rango", label: ev.label, bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
+  if (ev.estado === "warn") return { estado: "rango", label: ev.label, bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
+  if (ev.label === "Fuera de meta (alta)") return { estado: "alto", label: ev.label, bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
+  return { estado: "bajo", label: ev.label, bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
 }
 
 /** Posición (0–100 %) del marcador sobre la barra de rango. */
@@ -167,7 +167,7 @@ export function resumenDia(lecturas: GlucosaLectura[], hasDiabetes = false, isPr
   const total = lecturas.length;
   const enRango = lecturas.filter((l) => {
     const r = rangoPara(l.readingType, hasDiabetes, isPregnant);
-    return l.v >= r.inf && l.v <= r.sup;
+    return evaluar(l.v, r).estado !== "bad";
   }).length;
   const promedio =
     total > 0 ? Math.round(lecturas.reduce((a, b) => a + b.v, 0) / total) : "—";

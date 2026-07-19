@@ -80,10 +80,12 @@ export default function GlucoseCurvesPage() {
   // misma fuente de verdad que el wizard/dashboard/historial.
   const rangoAyunoRef = rangoPara(GlucoseReadingType.Fasting, hasDiabetes, isPregnant);
   const rangoPostRef = rangoPara(GlucoseReadingType.PostLunch, hasDiabetes, isPregnant);
+  const techoAlta = (r: ReturnType<typeof rangoPara>) => r.find((b) => b.label === "Fuera de meta (alta)")?.desde ?? Infinity;
+  const pisoMinimo = (r: ReturnType<typeof rangoPara>) => r.find((b) => Number.isFinite(b.desde))?.desde ?? 0;
   const limits = {
-    supAyuno: rangoAyunoRef.sup,
-    supPost: rangoPostRef.sup,
-    infMin: Math.min(rangoAyunoRef.inf, rangoPostRef.inf),
+    supAyuno: techoAlta(rangoAyunoRef),
+    supPost: techoAlta(rangoPostRef),
+    infMin: Math.min(pisoMinimo(rangoAyunoRef), pisoMinimo(rangoPostRef)),
   };
 
   const valores = chartData.map(d => d.valor);

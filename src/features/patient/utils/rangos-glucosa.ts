@@ -5,50 +5,126 @@
  * el wizard de registro (preview del valor y re-pintado de la bitácora). Si
  * aquí cambia un umbral, cambia en los dos lados.
  *
- * Reglas por momento + diabetes: ya no hay distinción Pre-comida vs
- * Post-comida — solo Ayuno vs Postprandial (todo lo que no sea Ayuno).
+ * Reglas por momento + diabetes: solo Ayuno vs Postprandial (todo lo que no
+ * sea Ayuno) — ya no hay distinción Pre-comida vs Post-comida.
  *
- *   - Hipoglucemia (`inf`): piso único de 80 mg/dL en todos los casos —
- *     Ayuno o Postprandial, con o sin diabetes, embarazada o no. Por debajo
- *     de 80 siempre es "Baja" (bad).
- *   - Ayuno (Fasting): bandas clínicas explícitas de 3 categorías (sin
- *     diabetes / con diabetes / embarazada con DM) — ver `enMetaInf`/
- *     `enMetaSup` en `RANGO_CON_DIABETES`/`RANGO_SIN_DIABETES`/
- *     `RANGO_AYUNO_EMBARAZO_DM`.
- *   - Postprandial (cualquier momento que no sea Fasting: post-desayuno,
- *     pre-comida, post-comida, pre-cena, post-cena, colación, madrugada):
- *     bandas clínicas explícitas de 2 categorías — con diabetes no
- *     embarazada (en meta <180, revisar 180–250) y embarazada con DM/DMG
- *     (en meta 100–120, revisar 121–139 y 80–99). Sin diabetes sigue el
- *     rango genérico 80–140 (sin banda "Revisar" explícita).
- *   - Zona "Revisar" (warn) para tipos sin bandas explícitas: dentro del 10%
- *     del borde superior o 10% por encima del borde inferior.
+ * Cada rango se modela como hasta 5 bandas ordenadas por valor de glucosa
+ * (ver `Banda`), en vez de un simple inf/sup:
+ *
+ *   1. Hipoglucemia   — bad.  Piso ADA 2026: siempre < 70 mg/dL.
+ *   2. Fuera de meta (baja) — bad, pero clínicamente distinto de
+ *      hipoglucemia real. Ausente en Ayuno embarazada (pasa directo de
+ *      Hipoglucemia a En meta).
+ *   3. En meta        — ok.
+ *   4. Revisar        — warn.
+ *   5. Fuera de meta (alta) — bad.
+ *
+ * Umbrales por caso (ADA Standards of Care 2026 + guías de embarazo):
+ *
+ *   Ayuno, con diabetes (no embarazada):
+ *     <70 Hipo | 70–79 Fuera-meta-baja | 80–130 En meta | 131–179 Revisar | >179 Fuera-meta-alta
+ *   Ayuno, sin diabetes:
+ *     <70 Hipo | 70–79 Fuera-meta-baja | 80–99 En meta | 100–125 Revisar (prediabetes) | >125 Fuera-meta-alta
+ *   Ayuno, embarazada con DM/DMG:
+ *     <70 Hipo | 70–95 En meta | 96–109 Revisar | >109 Fuera-meta-alta (sin banda "fuera-meta-baja")
+ *   Postprandial, con diabetes (no embarazada):
+ *     <70 Hipo | 70–79 Fuera-meta-baja | 80–179 En meta | 180–250 Revisar | >250 Fuera-meta-alta
+ *   Postprandial, sin diabetes:
+ *     <70 Hipo | 70–79 Fuera-meta-baja | 80–139 En meta | 140–199 Revisar (prediabetes) | ≥200 Fuera-meta-alta
+ *   Postprandial, embarazada con DM/DMG:
+ *     <70 Hipo | 70–99 Fuera-meta-baja | 100–120 En meta | 121–139 Revisar | ≥140 Fuera-meta-alta
  */
 
 import { GlucoseReadingType } from "@/types/daily-record";
 
 export type EstadoClinico = "ok" | "warn" | "bad";
 
-export interface RangoPorLectura {
-  inf: number; // mg/dL — por debajo: "Baja" (bad)
-  sup: number; // mg/dL — por encima: "Alta" (bad)
-  /**
-   * Borde "En meta" explícito (mg/dL), dentro de [inf, sup]. Si se omite,
-   * `evaluar` usa la regla genérica del ±10% sobre inf/sup para decidir
-   * "Revisar". Cuando está presente, todo lo que cae en [inf, sup] pero
-   * fuera de [enMetaInf, enMetaSup] es "Revisar".
-   */
-  enMetaInf?: number;
-  enMetaSup?: number;
+export type EtiquetaBanda = "Hipoglucemia" | "Fuera de meta (baja)" | "En meta" | "Revisar" | "Fuera de meta (alta)";
+
+/** Una banda clínica: válida desde `desde` (inclusive) hasta el inicio de la siguiente banda. */
+export interface Banda {
+  desde: number; // mg/dL, límite inferior inclusive
+  estado: EstadoClinico;
+  label: EtiquetaBanda;
 }
 
-/** Banda postprandial (con diabetes, no embarazada): en meta <180, revisar 180–250. */
-const RANGO_POSTPRANDIAL_CON_DIABETES: RangoPorLectura = { inf: 80, sup: 250, enMetaInf: 80, enMetaSup: 179 };
-/** Banda postprandial (sin diabetes): rango genérico, sin banda "Revisar" explícita. */
-const RANGO_POSTPRANDIAL_SIN_DIABETES: RangoPorLectura = { inf: 80, sup: 140 };
+/**
+ * Rango clínico de un caso (momento + diabetes + embarazo): lista de bandas
+ * ordenadas ascendentemente por `desde`. La última banda no tiene techo (se
+ * extiende a +∞).
+ */
+export type RangoPorLectura = Banda[];
+
+const HIPOGLUCEMIA: Banda = { desde: -Infinity, estado: "bad", label: "Hipoglucemia" };
+
+function fueraMetaBaja(desde: number): Banda {
+  return { desde, estado: "bad", label: "Fuera de meta (baja)" };
+}
+function enMeta(desde: number): Banda {
+  return { desde, estado: "ok", label: "En meta" };
+}
+function revisar(desde: number): Banda {
+  return { desde, estado: "warn", label: "Revisar" };
+}
+function fueraMetaAlta(desde: number): Banda {
+  return { desde, estado: "bad", label: "Fuera de meta (alta)" };
+}
+
+/** Ayuno, con diabetes (no embarazada). */
+const RANGO_AYUNO_CON_DIABETES: RangoPorLectura = [
+  HIPOGLUCEMIA,
+  fueraMetaBaja(70),
+  enMeta(80),
+  revisar(131),
+  fueraMetaAlta(180),
+];
+
+/** Ayuno, sin diabetes. */
+const RANGO_AYUNO_SIN_DIABETES: RangoPorLectura = [
+  HIPOGLUCEMIA,
+  fueraMetaBaja(70),
+  enMeta(80),
+  revisar(100),
+  fueraMetaAlta(126),
+];
+
+/** Ayuno, embarazada con diabetes (gestacional o pregestacional): sin banda "fuera de meta (baja)". */
+const RANGO_AYUNO_EMBARAZO_DM: RangoPorLectura = [
+  HIPOGLUCEMIA,
+  enMeta(70),
+  revisar(96),
+  fueraMetaAlta(110),
+];
+
+/** Postprandial, con diabetes (no embarazada). */
+const RANGO_POSTPRANDIAL_CON_DIABETES: RangoPorLectura = [
+  HIPOGLUCEMIA,
+  fueraMetaBaja(70),
+  enMeta(80),
+  revisar(180),
+  fueraMetaAlta(251),
+];
+
+/** Postprandial, sin diabetes. */
+const RANGO_POSTPRANDIAL_SIN_DIABETES: RangoPorLectura = [
+  HIPOGLUCEMIA,
+  fueraMetaBaja(70),
+  enMeta(80),
+  revisar(140),
+  fueraMetaAlta(200),
+];
+
+/** Postprandial, embarazada con diabetes (gestacional o pregestacional). */
+const RANGO_POSTPRANDIAL_EMBARAZO_DM: RangoPorLectura = [
+  HIPOGLUCEMIA,
+  fueraMetaBaja(70),
+  enMeta(100),
+  revisar(121),
+  fueraMetaAlta(140),
+];
 
 const RANGO_CON_DIABETES: Record<GlucoseReadingType, RangoPorLectura> = {
-  [GlucoseReadingType.Fasting]:       { inf: 80, sup: 179, enMetaInf: 80, enMetaSup: 130 },
+  [GlucoseReadingType.Fasting]:       RANGO_AYUNO_CON_DIABETES,
   [GlucoseReadingType.PreLunch]:      RANGO_POSTPRANDIAL_CON_DIABETES,
   [GlucoseReadingType.PreDinner]:     RANGO_POSTPRANDIAL_CON_DIABETES,
   [GlucoseReadingType.PostBreakfast]: RANGO_POSTPRANDIAL_CON_DIABETES,
@@ -59,7 +135,7 @@ const RANGO_CON_DIABETES: Record<GlucoseReadingType, RangoPorLectura> = {
 };
 
 const RANGO_SIN_DIABETES: Record<GlucoseReadingType, RangoPorLectura> = {
-  [GlucoseReadingType.Fasting]:       { inf: 80, sup: 125, enMetaInf: 80, enMetaSup: 99 },
+  [GlucoseReadingType.Fasting]:       RANGO_AYUNO_SIN_DIABETES,
   [GlucoseReadingType.PreLunch]:      RANGO_POSTPRANDIAL_SIN_DIABETES,
   [GlucoseReadingType.PreDinner]:     RANGO_POSTPRANDIAL_SIN_DIABETES,
   [GlucoseReadingType.PostBreakfast]: RANGO_POSTPRANDIAL_SIN_DIABETES,
@@ -68,18 +144,6 @@ const RANGO_SIN_DIABETES: Record<GlucoseReadingType, RangoPorLectura> = {
   [GlucoseReadingType.Snack]:         RANGO_POSTPRANDIAL_SIN_DIABETES,
   [GlucoseReadingType.Overnight]:     RANGO_POSTPRANDIAL_SIN_DIABETES,
 };
-
-/**
- * Ayuno para paciente embarazada con diabetes (gestacional o pregestacional).
- * Solo se usa para `GlucoseReadingType.Fasting`.
- */
-const RANGO_AYUNO_EMBARAZO_DM: RangoPorLectura = { inf: 80, sup: 109, enMetaInf: 80, enMetaSup: 95 };
-
-/**
- * Postprandial para paciente embarazada con diabetes (gestacional o
- * pregestacional). Aplica a cualquier momento que no sea Ayuno.
- */
-const RANGO_POSTPRANDIAL_EMBARAZO_DM: RangoPorLectura = { inf: 80, sup: 139, enMetaInf: 100, enMetaSup: 120 };
 
 /** Ayuno es el caso por defecto cuando el wizard aún no eligió tipo de comida. */
 export const RANGO_AYUNO_POR_DEFECTO = GlucoseReadingType.Fasting;
@@ -102,7 +166,7 @@ export function rangoPara(
 }
 
 function rangoAyuno(hasDiabetes: boolean): RangoPorLectura {
-  return hasDiabetes ? RANGO_CON_DIABETES[GlucoseReadingType.Fasting] : RANGO_SIN_DIABETES[GlucoseReadingType.Fasting];
+  return hasDiabetes ? RANGO_AYUNO_CON_DIABETES : RANGO_AYUNO_SIN_DIABETES;
 }
 
 export function rangoParaDefault(hasDiabetes: boolean, isPregnant = false): RangoPorLectura {
@@ -110,27 +174,31 @@ export function rangoParaDefault(hasDiabetes: boolean, isPregnant = false): Rang
   return rangoAyuno(hasDiabetes);
 }
 
-export interface Evaluacion {
-  estado: EstadoClinico;
-  label: "Baja" | "Alta" | "Revisar" | "En rango";
+/** Límite inferior/superior "duro" del rango (bordes de la primera/última banda). Útil para % en-rango y escalas visuales. */
+export function limites(r: RangoPorLectura): { inf: number; sup: number } {
+  const primeraNoInf = r.find((b) => Number.isFinite(b.desde));
+  return { inf: primeraNoInf?.desde ?? 0, sup: Infinity };
 }
 
-/**
- * Evalúa un valor contra el rango:
- *   - "bad" / "Baja"  si v < inf
- *   - "bad" / "Alta"  si v > sup
- *   - Si el rango define `enMetaInf`/`enMetaSup` (bandas clínicas explícitas):
- *     "ok" dentro de esa sub-banda, "warn" / "Revisar" en el resto de [inf, sup]
- *   - Si no las define: "warn" / "Revisar" dentro del ±10% de inf/sup (regla genérica)
- *   - "ok"   / "En rango" en caso contrario
- */
+/** Banda "En meta" del rango, si existe. */
+export function bandaEnMeta(r: RangoPorLectura): { desde: number; hasta: number } | null {
+  const idx = r.findIndex((b) => b.label === "En meta");
+  if (idx === -1) return null;
+  const siguiente = r[idx + 1];
+  return { desde: r[idx].desde, hasta: siguiente ? siguiente.desde - 1 : Infinity };
+}
+
+export interface Evaluacion {
+  estado: EstadoClinico;
+  label: EtiquetaBanda;
+}
+
+/** Evalúa un valor contra la lista de bandas: retorna la última banda cuyo `desde` es <= v. */
 export function evaluar(v: number, r: RangoPorLectura): Evaluacion {
-  if (v < r.inf) return { estado: "bad", label: "Baja" };
-  if (v > r.sup) return { estado: "bad", label: "Alta" };
-  if (r.enMetaInf != null && r.enMetaSup != null) {
-    if (v >= r.enMetaInf && v <= r.enMetaSup) return { estado: "ok", label: "En rango" };
-    return { estado: "warn", label: "Revisar" };
+  let actual = r[0];
+  for (const banda of r) {
+    if (v >= banda.desde) actual = banda;
+    else break;
   }
-  if (v > r.sup * 0.9 || v < r.inf * 1.1) return { estado: "warn", label: "Revisar" };
-  return { estado: "ok", label: "En rango" };
+  return { estado: actual.estado, label: actual.label };
 }
