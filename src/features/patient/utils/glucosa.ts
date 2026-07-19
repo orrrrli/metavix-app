@@ -132,11 +132,15 @@ export interface EstadoRango {
  */
 export function estadoRango(
   v: string | number,
-  opts: { hasDiabetes?: boolean; readingType?: import("@/types/daily-record").GlucoseReadingType | null } = {}
+  opts: {
+    hasDiabetes?: boolean;
+    isPregnant?: boolean;
+    readingType?: import("@/types/daily-record").GlucoseReadingType | null;
+  } = {}
 ): EstadoRango {
   const n = typeof v === "number" ? v : parseFloat(v);
   if (v === "" || Number.isNaN(n)) return { estado: "", label: "", bg: "", color: "" };
-  const rango = rangoPara(opts.readingType ?? null, opts.hasDiabetes ?? false);
+  const rango = rangoPara(opts.readingType ?? null, opts.hasDiabetes ?? false, opts.isPregnant ?? false);
   const ev = evaluar(n, rango);
   if (ev.estado === "ok") return { estado: "rango", label: "En rango", bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
   if (ev.estado === "warn") return { estado: "rango", label: "Revisar", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
@@ -159,10 +163,10 @@ export interface ResumenDia {
 }
 
 /** Totales del día para las tarjetas de resumen (usa rangos por lectura). */
-export function resumenDia(lecturas: GlucosaLectura[], hasDiabetes = false): ResumenDia {
+export function resumenDia(lecturas: GlucosaLectura[], hasDiabetes = false, isPregnant = false): ResumenDia {
   const total = lecturas.length;
   const enRango = lecturas.filter((l) => {
-    const r = rangoPara(l.readingType, hasDiabetes);
+    const r = rangoPara(l.readingType, hasDiabetes, isPregnant);
     return l.v >= r.inf && l.v <= r.sup;
   }).length;
   const promedio =

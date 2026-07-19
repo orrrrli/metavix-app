@@ -30,6 +30,8 @@ export interface RegistroGlucosaWebProps {
   guardando?: boolean;
   /** Si el paciente tiene diagnóstico de diabetes (mismo umbral que el dashboard). */
   hasDiabetes?: boolean;
+  /** Si la paciente está embarazada (ajusta metas de ayuno cuando hasDiabetes). */
+  isPregnant?: boolean;
 }
 
 const F = "'Sora', sans-serif";
@@ -115,9 +117,10 @@ export default function RegistroGlucosaWeb({
   onGuardar,
   guardando = false,
   hasDiabetes = false,
+  isPregnant = false,
 }: RegistroGlucosaWebProps) {
   useStyles();
-  const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes });
+  const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes, isPregnant });
   const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, puedeGuardar, guardar } = w;
   const { total, enRango, promedio } = resumen;
 
@@ -276,7 +279,7 @@ export default function RegistroGlucosaWeb({
               <div style={{ textAlign: "center", padding: "34px 16px", color: "var(--faint,#b0a89b)", fontSize: 13, lineHeight: 1.5 }}>Aún no hay lecturas hoy. Completa el registro y aparecerá aquí.</div>
             )}
             {lecturas.map((r) => {
-              const b = estadoRango(r.v, { hasDiabetes, readingType: r.readingType });
+              const b = estadoRango(r.v, { hasDiabetes, isPregnant, readingType: r.readingType });
               return (
                 <div key={r.id} style={{ background: "var(--card,#fff)", border: "1.5px solid var(--card-bd,#efe7db)", borderRadius: 14, padding: "13px 15px" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>

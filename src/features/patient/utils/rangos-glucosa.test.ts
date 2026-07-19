@@ -2,25 +2,44 @@ import { describe, it, expect } from "vitest";
 import { GlucoseReadingType } from "@/types/daily-record";
 import { rangoPara, rangoParaDefault, evaluar, RANGO_AYUNO_POR_DEFECTO } from "./rangos-glucosa";
 
-describe("rangoPara (rango clínico por tipo de comida + diabetes)", () => {
-  it("ayuno con diabetes: 80–130", () => {
+describe("rangoPara (rango clínico por Ayuno vs Postprandial + diabetes + embarazo)", () => {
+  it("ayuno con diabetes: 80–179, en meta 80–130", () => {
     const r = rangoPara(GlucoseReadingType.Fasting, true);
-    expect(r).toEqual({ inf: 80, sup: 130 });
+    expect(r).toEqual({ inf: 80, sup: 179, enMetaInf: 80, enMetaSup: 130 });
   });
 
-  it("ayuno sin diabetes: 70–100", () => {
+  it("ayuno sin diabetes: 80–125, en meta 80–99", () => {
     const r = rangoPara(GlucoseReadingType.Fasting, false);
-    expect(r).toEqual({ inf: 70, sup: 100 });
+    expect(r).toEqual({ inf: 80, sup: 125, enMetaInf: 80, enMetaSup: 99 });
   });
 
-  it("post-comida con diabetes: ≤180", () => {
+  it("postprandial con diabetes: 80–250, en meta 80–179", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, true);
-    expect(r.sup).toBe(180);
+    expect(r).toEqual({ inf: 80, sup: 250, enMetaInf: 80, enMetaSup: 179 });
   });
 
-  it("post-comida sin diabetes: ≤140", () => {
+  it("postprandial sin diabetes: 80–140, sin banda en meta explícita", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, false);
-    expect(r.sup).toBe(140);
+    expect(r).toEqual({ inf: 80, sup: 140 });
+  });
+
+  it("ayuno embarazada con diabetes: 80–109, en meta 80–95", () => {
+    const r = rangoPara(GlucoseReadingType.Fasting, true, true);
+    expect(r).toEqual({ inf: 80, sup: 109, enMetaInf: 80, enMetaSup: 95 });
+  });
+
+  it("postprandial embarazada con diabetes: 80–139, en meta 100–120", () => {
+    const r = rangoPara(GlucoseReadingType.PostLunch, true, true);
+    expect(r).toEqual({ inf: 80, sup: 139, enMetaInf: 100, enMetaSup: 120 });
+  });
+
+  it("todos los rangos comparten el piso de hipoglucemia en 80", () => {
+    expect(rangoPara(GlucoseReadingType.Fasting, true).inf).toBe(80);
+    expect(rangoPara(GlucoseReadingType.Fasting, false).inf).toBe(80);
+    expect(rangoPara(GlucoseReadingType.PostLunch, true).inf).toBe(80);
+    expect(rangoPara(GlucoseReadingType.PostLunch, false).inf).toBe(80);
+    expect(rangoPara(GlucoseReadingType.Fasting, true, true).inf).toBe(80);
+    expect(rangoPara(GlucoseReadingType.PostLunch, true, true).inf).toBe(80);
   });
 
   it("readingType null cae al default (ayuno)", () => {
@@ -34,40 +53,43 @@ describe("rangoPara (rango clínico por tipo de comida + diabetes)", () => {
 });
 
 describe("evaluar (clasificación de valor vs rango)", () => {
-  const rCon = { inf: 80, sup: 130 };
+  const rCon = { inf: 80, sup: 179, enMetaInf: 80, enMetaSup: 130 };
 
-  it("por debajo de inf → bad/Baja", () => {
-    expect(evaluar(60, rCon)).toEqual({ estado: "bad", label: "Baja" });
+  it("por debajo de inf (80) → bad/Baja", () => {
+    expect(evaluar(79, rCon)).toEqual({ estado: "bad", label: "Baja" });
+  });
+
+  it("exactamente en inf (80) → no es Baja", () => {
+    expect(evaluar(80, rCon).label).not.toBe("Baja");
   });
 
   it("por encima de sup → bad/Alta", () => {
     expect(evaluar(200, rCon)).toEqual({ estado: "bad", label: "Alta" });
   });
 
-  it("120 en ayuno diabético (80–130) cae en zona warn/Revisar (regression #4)", () => {
-    // Antes: el wizard pintaba "En rango" (banda fija 70-180), el dashboard
-    // "Revisar" (banda por tipo 80-130, 120 > 90% sup). La unificación
-    // significa que ambos pintan "Revisar".
-    expect(evaluar(120, rCon)).toEqual({ estado: "warn", label: "Revisar" });
+  it("dentro de [inf, sup] pero fuera de [enMetaInf, enMetaSup] → warn/Revisar", () => {
+    expect(evaluar(150, rCon)).toEqual({ estado: "warn", label: "Revisar" });
   });
 
-  it("95 ayuno diabético (80-130) → ok/En rango (en el centro del rango)", () => {
-    expect(evaluar(95, rCon)).toEqual({ estado: "ok", label: "En rango" });
-  });
-
-  it("en el 10% inferior del rango → warn/Revisar", () => {
-    // inf = 80, 110% = 88. 85 está en el 10% inferior.
-    expect(evaluar(85, rCon).estado).toBe("warn");
-  });
-
-  it("fronteras exactas caen en warn (>= 90% sup o <= 110% inf)", () => {
-    // Por diseño: 80 == inf*1.1, 130 == sup*0.9 → warn, no "ok" estricto.
-    expect(evaluar(80, rCon)).toEqual({ estado: "warn", label: "Revisar" });
-    expect(evaluar(130, rCon)).toEqual({ estado: "warn", label: "Revisar" });
-  });
-
-  it("valor central → ok/En rango", () => {
-    // 100 está lejos de las zonas warn: > 88 (inf*1.1) y < 117 (sup*0.9).
+  it("dentro de [enMetaInf, enMetaSup] → ok/En rango", () => {
     expect(evaluar(100, rCon)).toEqual({ estado: "ok", label: "En rango" });
+  });
+
+  describe("sin banda enMeta explícita (regla genérica ±10%)", () => {
+    const rGenerico = { inf: 80, sup: 140 };
+
+    it("valor central → ok/En rango", () => {
+      expect(evaluar(110, rGenerico)).toEqual({ estado: "ok", label: "En rango" });
+    });
+
+    it("dentro del 10% superior → warn/Revisar", () => {
+      // sup*0.9 = 126, 130 > 126
+      expect(evaluar(130, rGenerico).estado).toBe("warn");
+    });
+
+    it("dentro del 10% inferior (sobre inf) → warn/Revisar", () => {
+      // inf*1.1 = 88, 85 < 88
+      expect(evaluar(85, rGenerico).estado).toBe("warn");
+    });
   });
 });

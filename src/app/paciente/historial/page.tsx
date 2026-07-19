@@ -8,10 +8,20 @@ import { TipoDiabetes } from "@/features/historial/utils/semaforo";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 import { useDailyRecords } from "@/features/patient/hooks/use-daily-records";
 import { useLabRecords } from "@/features/patient/hooks/use-lab-records";
+import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
 import { DailyRecordResponse, GlucoseReadingType } from "@/types/daily-record";
 import { LabRecordResponse } from "@/types/lab-record";
 
-const tipoDiabetes: TipoDiabetes = 'dm2';
+/** Deriva TipoDiabetes (semaforo.ts) del perfil real: diabetesType + isPregnant. */
+function tipoDiabetesDePerfil(diabetesType: string | undefined, isPregnant: boolean | undefined): TipoDiabetes {
+  if (isPregnant && diabetesType && diabetesType !== "None") return "embarazo";
+  switch (diabetesType) {
+    case "Type1": return "dm1";
+    case "Type2": return "dm2";
+    case "Prediabetes": return "prediabetes";
+    default: return "sin_diabetes";
+  }
+}
 
 const READING_TYPE_TO_TIPO: Record<GlucoseReadingType, string> = {
   [GlucoseReadingType.Fasting]:       'ayuno',
@@ -182,6 +192,9 @@ export default function HistorialPage() {
     isLoading: loadingLab,
     isError: errorLab,
   } = useLabRecords(patientId ?? '');
+
+  const { data: profile } = usePatientProfile(patientId ?? "");
+  const tipoDiabetes = tipoDiabetesDePerfil(profile?.diabetesType, profile?.isPregnant);
 
   const registros = useMemo<Registro[]>(() => {
     const daily = (dailyRecords ?? []).map(mapDailyToRegistro);

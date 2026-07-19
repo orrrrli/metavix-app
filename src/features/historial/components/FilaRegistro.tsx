@@ -1,13 +1,13 @@
 import React from 'react';
 import { BadgeValor } from './BadgeValor';
-import { 
+import {
   TipoDiabetes,
-  getMetasGlucosaAyuno, 
-  getMetaGlucosaPostprandial, 
-  getMetaPresionSistolica, 
-  getMetaHbA1c, 
+  getMetasGlucosaAyuno,
+  getMetaGlucosaPostprandial,
+  getMetaPresionSistolica,
+  getMetaHbA1c,
   getMetaLDL,
-  estadoValor,
+  estadoValorConBanda,
   estadoValorMaximo,
   estadoHDL
 } from '../utils/semaforo';
@@ -72,7 +72,7 @@ const TIPO_COMIDA_ABBR: Record<string, string> = {
 export function FilaRegistro({ registro, tipoDiabetes }: FilaRegistroProps) {
   // Helpers para calcular el estado
   const metaAyuno = getMetasGlucosaAyuno(tipoDiabetes);
-  const estadoAyuno = estadoValor(registro.glucosa_ayuno, metaAyuno.min, metaAyuno.max);
+  const estadoAyuno = estadoValorConBanda(registro.glucosa_ayuno, metaAyuno.min, metaAyuno.max, metaAyuno.enMetaMin, metaAyuno.enMetaMax);
   
   const metaPost = getMetaGlucosaPostprandial(tipoDiabetes);
   
@@ -109,13 +109,13 @@ export function FilaRegistro({ registro, tipoDiabetes }: FilaRegistroProps) {
         {registro.glucosas_comidas && registro.glucosas_comidas.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {registro.glucosas_comidas.map((g, idx) => {
-              // Glucosas comidas suelen ser postprandiales. Si es "antes_*" podríamos usar metas de ayuno,
-              // pero la instrucción indica una sola meta postprandial genérica o seguir la lógica simplificada.
-              // Asumiremos que si es "antes" usamos la de ayuno, y si es "despues" la postprandial.
-              const isAyuno = g.tipo.includes('antes') || g.tipo === 'ayuno' || g.tipo === 'madrugada';
+              // Ya no hay distinción Pre/Post-comida: solo Ayuno vs Postprandial.
+              // Cualquier momento que no sea "ayuno" (post-desayuno, antes/después
+              // de comida, cena, colación, madrugada) usa la meta postprandial.
+              const isAyuno = g.tipo === 'ayuno' || g.tipo === 'Fasting';
               const estadoComida = isAyuno
-                ? estadoValor(g.valor, metaAyuno.min, metaAyuno.max)
-                : estadoValorMaximo(g.valor, metaPost);
+                ? estadoValorConBanda(g.valor, metaAyuno.min, metaAyuno.max, metaAyuno.enMetaMin, metaAyuno.enMetaMax)
+                : estadoValorConBanda(g.valor, metaPost.min, metaPost.max, metaPost.enMetaMin, metaPost.enMetaMax);
 
               const label = TIPO_COMIDA_ABBR[g.tipo] || g.tipo;
               return (

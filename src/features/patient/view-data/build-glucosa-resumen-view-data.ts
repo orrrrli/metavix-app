@@ -146,7 +146,7 @@ export function buildGlucosaResumenViewData(
     estadoLabel: null,
     contexto: null,
     registradaHace: null,
-    rangoObjetivo: [70, 100], // ayuno sin diabetes, fallback inicial; se recalcula abajo si hay perfil
+    rangoObjetivo: [80, 99], // ayuno sin diabetes, banda "en meta"; fallback inicial, se recalcula abajo si hay perfil
     proximaMedicion: null,
     medicionesHoy: 0,
     metaDiaria: META_DIARIA,
@@ -169,8 +169,8 @@ export function buildGlucosaResumenViewData(
   const hasDiabetes = diabetesRaw !== "None" && diabetesRaw !== "";
 
   const rangoDefecto = rangoParaDefault(hasDiabetes);
-  const inf = rangoDefecto.inf;
-  const supAyuno = rangoDefecto.sup;
+  const inf = rangoDefecto.enMetaInf ?? rangoDefecto.inf;
+  const supAyuno = rangoDefecto.enMetaSup ?? rangoDefecto.sup;
 
   // Series para gráfica: agrupar por día
   const grupos = new Map<string, { values: number[]; date: Date }>();
@@ -273,7 +273,7 @@ export function buildGlucosaResumenViewData(
   if (last) {
     valor = last.g.valueMgDl;
     const r = rangoPara(last.g.readingType, hasDiabetes);
-    rangoUltima = [r.inf, r.sup];
+    rangoUltima = [r.enMetaInf ?? r.inf, r.enMetaSup ?? r.sup];
     const ev = evaluar(valor, r);
     estado = ev.estado;
     estadoLabel = ev.label;

@@ -30,6 +30,8 @@ export interface RegistroGlucosaMovilProps {
   guardando?: boolean;
   /** Si el paciente tiene diagnóstico de diabetes (mismo umbral que el dashboard). */
   hasDiabetes?: boolean;
+  /** Si la paciente está embarazada (ajusta metas de ayuno cuando hasDiabetes). */
+  isPregnant?: boolean;
 }
 
 const F = "'Sora', sans-serif";
@@ -85,8 +87,9 @@ export default function RegistroGlucosaMovil({
   onGuardar,
   guardando = false,
   hasDiabetes = false,
+  isPregnant = false,
 }: RegistroGlucosaMovilProps) {
-  const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes });
+  const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes, isPregnant });
   const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, guardar } = w;
   const { total, enRango, promedio } = resumen;
 
@@ -239,7 +242,7 @@ export default function RegistroGlucosaMovil({
         )}
         <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
           {lecturas.map((r) => {
-            const b = estadoRango(r.v, { hasDiabetes, readingType: r.readingType });
+            const b = estadoRango(r.v, { hasDiabetes, isPregnant, readingType: r.readingType });
             return (
               <div key={r.id} style={{ display: "flex", alignItems: "center", gap: 12, background: "var(--card,#fff)", border: "1.5px solid var(--card-bd,#eee3d4)", borderRadius: 14, padding: "12px 14px" }}>
                 <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--text,#15201b)", minWidth: 42 }}>{r.t}</div>
