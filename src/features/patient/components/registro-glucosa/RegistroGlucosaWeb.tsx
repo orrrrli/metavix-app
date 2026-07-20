@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useGlucosaWizard } from "../../hooks/use-glucosa-wizard";
 import {
-  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
+  MealKey, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
   GlucosaLectura, NuevaLectura,
   markerPct, estadoRango, horaActual, barraRango,
   GLUCOSA_MIN, GLUCOSA_MAX,
@@ -11,9 +11,14 @@ import {
 
 /**
  * RegistroGlucosaWeb — versión escritorio (2A).
- * Wizard controlado de 3 pasos al centro, resumen del día en el encabezado y
+ * Wizard controlado de 2 pasos al centro, resumen del día en el encabezado y
  * bitácora de lecturas de hoy en la barra lateral. El estado de la lista vive en
  * el padre (React Query); este componente emite `onGuardar` con la nueva lectura.
+ *
+ * Paso 1 fusiona valor + momento del día + hora: el momento llega preseleccionado
+ * por `useGlucosaWizard` (según la hora del dispositivo) y "Cambiar" revela una
+ * línea de tiempo del día en vez de la cuadrícula de 8 chips del paso 2 anterior.
+ * Paso 2 es el contexto opcional (alimentos, actividad, síntomas, foto).
  *
  * Colores vía variables de tema del dashboard (`.mvx-dash`), con fallback al
  * tono claro original para renders fuera del dashboard. Fuente esperada: 'Sora'.
@@ -67,6 +72,9 @@ const cardBase: React.CSSProperties = {
   boxShadow: "0 18px 44px rgba(20,40,30,.07)", overflow: "hidden",
 };
 
+/** Orden cronológico del día para la línea de tiempo del selector de momento. */
+const TIMELINE_KEYS: MealKey[] = ["madrugada", "ayuno", "postDesayuno", "preComida", "postComida", "preCena", "postCena"];
+
 function chipStyle(sel: boolean): React.CSSProperties {
   return {
     display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
@@ -78,17 +86,32 @@ function chipStyle(sel: boolean): React.CSSProperties {
     boxShadow: sel ? "0 8px 18px rgba(0,201,167,.28)" : "none",
   };
 }
+function timelineDotStyle(sel: boolean): React.CSSProperties {
+  return {
+    display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer",
+    flex: 1, minWidth: 0, background: "transparent", border: "none", padding: 2,
+    color: sel ? "var(--nav-active,#0a8c77)" : "var(--soft,#9aa39c)", fontWeight: sel ? 700 : 600, fontFamily: F, fontSize: 11.5,
+  };
+}
+function timelineCircleStyle(sel: boolean): React.CSSProperties {
+  return {
+    width: sel ? 13 : 9, height: sel ? 13 : 9, borderRadius: "50%",
+    background: sel ? "currentColor" : "transparent",
+    border: sel ? "none" : "1.5px solid currentColor",
+    boxShadow: sel ? "0 0 0 4px var(--nav-active-bg,#e6faf6)" : "none", transition: "all .16s ease",
+  };
+}
 
-function MealIcon({ k }: { k: MealKey }) {
+function MealIcon({ k, size = 21 }: { k: MealKey; size?: number }) {
   return (
-    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
       dangerouslySetInnerHTML={{ __html: MEAL_ICON[k] }} />
   );
 }
 
 function RangeBar({ v, meal, hasDiabetes, isPregnant }: { v: string; meal: MealKey | null; hasDiabetes: boolean; isPregnant: boolean }) {
-  const { segmentos, bajo, objetivo, alto } = barraRango(meal ? MEAL_TO_TYPE[meal] : null, hasDiabetes, isPregnant);
+  const { segmentos, bajo, objetivo, alto, escala } = barraRango(meal ? MEAL_TO_TYPE[meal] : null, hasDiabetes, isPregnant);
   return (
     <div style={{ marginTop: 10 }}>
       <div style={{ height: 11, borderRadius: 999, overflow: "hidden", display: "flex" }}>
@@ -98,7 +121,7 @@ function RangeBar({ v, meal, hasDiabetes, isPregnant }: { v: string; meal: MealK
       </div>
       <div style={{ position: "relative", height: 0 }}>
         <div style={{
-          position: "absolute", left: `${markerPct(v)}%`, top: -15, transform: "translateX(-50%)",
+          position: "absolute", left: `${markerPct(v, escala)}%`, top: -15, transform: "translateX(-50%)",
           width: 3, height: 19, background: "var(--text,#15201b)", borderRadius: 2, boxShadow: "0 0 0 3px var(--card,#fff)",
         }} />
       </div>
@@ -124,6 +147,11 @@ export default function RegistroGlucosaWeb({
   const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes, isPregnant });
   const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, puedeGuardar, guardar } = w;
   const { total, enRango, promedio } = resumen;
+  const [expanded, setExpanded] = useState(false);
+  const [timeEdit, setTimeEdit] = useState(false);
+  const [mealElegidoManual, setMealElegidoManual] = useState(false);
+
+  const elegirMomento = (k: MealKey) => { setMeal(k); setMealElegidoManual(true); setExpanded(false); };
 
   const recBadge = (
     <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", padding: "2px 9px", borderRadius: 999 }}>Recomendado</span>
@@ -155,19 +183,20 @@ export default function RegistroGlucosaWeb({
           <div style={{ marginBottom: 26 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
               <span style={caption}>Nueva lectura</span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mut,#647069)" }}>Paso {step} de 3</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mut,#647069)" }}>Paso {step} de 2</span>
             </div>
             <div style={{ height: 6, borderRadius: 99, background: "var(--skel,#efe7db)", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${(step / 3) * 100}%`, background: "var(--accent,#00c9a7)", borderRadius: 99, transition: "width .35s cubic-bezier(.2,.85,.25,1)" }} />
+              <div style={{ height: "100%", width: `${(step / 2) * 100}%`, background: "var(--accent,#00c9a7)", borderRadius: 99, transition: "width .35s cubic-bezier(.2,.85,.25,1)" }} />
             </div>
           </div>
 
           <div style={{ flex: 1 }}>
             {step === 1 && (
               <div>
-                <h3 style={{ fontSize: 23, fontWeight: 800, color: "var(--text,#15201b)", letterSpacing: "-.02em", margin: "4px 0" }}>¿Cuánto marcó tu glucómetro?</h3>
-                <p style={{ fontSize: 14, color: "var(--soft,#8a938c)", margin: 0 }}>Escribe el valor que aparece en la pantalla de tu glucómetro.</p>
-                <div style={{ maxWidth: 480, margin: "26px auto 0", textAlign: "center" }}>
+                <h3 style={{ fontSize: 23, fontWeight: 800, color: "var(--text,#15201b)", letterSpacing: "-.02em", margin: "4px 0 4px" }}>Registra tu lectura</h3>
+                <p style={{ fontSize: 14, color: "var(--soft,#8a938c)", margin: 0 }}>Valor, momento y hora en un solo paso.</p>
+
+                <div style={{ maxWidth: 480, margin: "20px auto 0", textAlign: "center" }}>
                   <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "center", gap: 8 }}>
                     <input className="mvxg-num" type="number" inputMode="numeric" placeholder="0" min={GLUCOSA_MIN} max={GLUCOSA_MAX} value={valor} onChange={(e) => setValor(e.target.value)}
                       style={{ width: 200, fontSize: 80, fontWeight: 800, textAlign: "center", border: "none", background: "transparent", color: "var(--text,#15201b)", letterSpacing: "-.045em", caretColor: "var(--accent,#00c9a7)", padding: 0, fontFamily: F }} />
@@ -182,31 +211,60 @@ export default function RegistroGlucosaWeb({
                   )}
                   <RangeBar v={valor} meal={meal} hasDiabetes={hasDiabetes} isPregnant={isPregnant} />
                 </div>
+
+                {/* momento — sugerido, con línea de tiempo al cambiar */}
+                <div style={{ maxWidth: 680, margin: "26px auto 0", background: "var(--nav-active-bg,#f2fbf8)", border: "1.5px solid var(--card-bd,#cdeee5)", borderRadius: 16, padding: "16px 20px" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+                      <div style={{ width: 34, height: 34, borderRadius: 10, background: "var(--accent,#00c9a7)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                        {meal && <MealIcon k={meal} size={17} />}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 11, color: "var(--nav-active,#0a8c77)", fontWeight: 600 }}>{mealElegidoManual ? "Momento" : "Momento sugerido"} · {hora || horaActual()}</div>
+                        <div style={{ fontSize: 16.5, fontWeight: 800, color: "var(--text,#15201b)" }}>{meal ? MEAL_LABEL[meal] : "—"}</div>
+                      </div>
+                    </div>
+                    <button onClick={() => setExpanded((e) => !e)} className="mvxg-soft"
+                      style={{ background: "transparent", border: "1.5px solid var(--card-bd,#a9e0d4)", color: "var(--nav-active,#0a8c77)", fontSize: 12.5, fontWeight: 700, padding: "9px 16px", borderRadius: 10, cursor: "pointer", fontFamily: F }}>
+                      {expanded ? "Cerrar" : "Cambiar"}
+                    </button>
+                  </div>
+                  {expanded && (
+                    <div style={{ marginTop: 18, paddingTop: 18, borderTop: "1.5px dashed var(--card-bd,#cdeee5)" }}>
+                      <div style={{ position: "relative", padding: "0 6px" }}>
+                        <div style={{ position: "absolute", left: 6, right: 6, top: 6, height: 2, background: "var(--card-bd,#bfe6da)" }} />
+                        <div style={{ position: "relative", display: "flex", justifyContent: "space-between" }}>
+                          {TIMELINE_KEYS.map((k) => (
+                            <button key={k} onClick={() => elegirMomento(k)} style={timelineDotStyle(meal === k)}>
+                              <span style={timelineCircleStyle(meal === k)} />
+                              <span>{MEAL_LABEL[k]}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+                        <button onClick={() => elegirMomento("colacion")} className="mvxg-chip" style={chipStyle(meal === "colacion")}>
+                          <MealIcon k="colacion" size={16} /><span>Fue una colación, no ligado a comida</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* hora — "ahora" por defecto, editable */}
+                <div style={{ maxWidth: 640, margin: "14px auto 0", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 12.5, color: "var(--mut,#647069)" }}>Hora: <strong style={{ color: "var(--text,#15201b)" }}>{hora || horaActual()}</strong></span>
+                  <button onClick={() => setTimeEdit((e) => !e)} style={{ background: "transparent", border: "none", color: "var(--nav-active,#0a8c77)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 4, fontFamily: F }}>¿Fue antes? Editar</button>
+                </div>
+                {timeEdit && (
+                  <div style={{ maxWidth: 640, margin: "8px auto 0" }}>
+                    <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} style={{ width: "100%", padding: "12px 14px", border: "1.5px solid var(--card-bd,#e7dfd2)", borderRadius: 12, background: "var(--mvxg-field,#faf7f1)", fontSize: 15, color: "var(--text,#15201b)", fontFamily: F }} />
+                  </div>
+                )}
               </div>
             )}
 
             {step === 2 && (
-              <div>
-                <h3 style={{ fontSize: 23, fontWeight: 800, color: "var(--text,#15201b)", letterSpacing: "-.02em", margin: "4px 0" }}>¿En qué momento mediste?</h3>
-                <p style={{ fontSize: 14, color: "var(--soft,#8a938c)", margin: "0 0 20px" }}>Relaciona la lectura con tu comida.</p>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, maxWidth: 640 }}>
-                  {MEAL_KEYS.map((k) => (
-                    <button key={k} className="mvxg-chip" style={chipStyle(meal === k)} onClick={() => setMeal(k)}>
-                      <MealIcon k={k} /><span>{MEAL_LABEL[k]}</span>
-                    </button>
-                  ))}
-                </div>
-                <div style={{ marginTop: 18, maxWidth: 280 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-                    <label style={{ ...label(), marginBottom: 0 }}>Hora</label>
-                    <button type="button" onClick={() => setHora(horaActual())} style={{ fontSize: 12, fontWeight: 700, color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", border: "none", padding: "4px 10px", borderRadius: 999, cursor: "pointer", fontFamily: F }}>Ahora</button>
-                  </div>
-                  <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} style={{ width: "100%", padding: "13px 15px", border: "1.5px solid var(--card-bd,#e7dfd2)", borderRadius: 12, background: "var(--mvxg-field,#faf7f1)", fontSize: 15, color: "var(--text,#15201b)", fontFamily: F }} />
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
               <div>
                 <h3 style={{ fontSize: 23, fontWeight: 800, color: "var(--text,#15201b)", letterSpacing: "-.02em", margin: "4px 0" }}>Agrega contexto</h3>
                 <p style={{ fontSize: 14, color: "var(--soft,#8a938c)", margin: "0 0 20px" }}>Opcional, pero ayuda mucho a tu médico.</p>
@@ -259,11 +317,11 @@ export default function RegistroGlucosaWeb({
           <div style={{ paddingTop: 22, marginTop: 8, borderTop: "1.5px solid var(--bd,#f0e9dd)", display: "flex", gap: 12 }}>
             <button onClick={() => setStep((s) => Math.max(1, s - 1))} className="mvxg-soft"
               style={{ flex: "0 0 auto", background: "transparent", color: "var(--mut,#647069)", border: "1.5px solid var(--card-bd,#e7dfd2)", borderRadius: 13, padding: "15px 26px", fontSize: 14.5, fontWeight: 600, cursor: "pointer", fontFamily: F, opacity: step === 1 ? 0.45 : 1 }}>Atrás</button>
-            {step < 3 ? (
-              <button onClick={() => setStep((s) => Math.min(3, s + 1))} className="mvxg-cta"
+            {step < 2 ? (
+              <button onClick={() => setStep((s) => Math.min(2, s + 1))} className="mvxg-cta"
                 style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "var(--btn-glow)", fontFamily: F }}>Siguiente</button>
             ) : (
-              <button onClick={guardar} className="mvxg-cta" disabled={!puedeGuardar}
+              <button onClick={() => { guardar(); setMealElegidoManual(false); }} className="mvxg-cta" disabled={!puedeGuardar}
                 style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: puedeGuardar ? "pointer" : "default", boxShadow: "var(--btn-glow)", fontFamily: F, opacity: puedeGuardar ? 1 : 0.55 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
             )}
           </div>

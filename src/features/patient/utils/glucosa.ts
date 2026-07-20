@@ -4,6 +4,7 @@ import {
   evaluar,
   segmentosVisuales,
   leyendaRango,
+  escalaPara,
   type EstadoClinico,
   type RangoPorLectura,
   type SegmentoVisual,
@@ -111,9 +112,6 @@ export const GLUCOSA_SEED: GlucosaLectura[] = [];
 
 // ── Rango clínico y helpers visuales ───────────────────────────────
 
-const ESCALA_MIN = 40; // extremo izquierdo de la barra
-const ESCALA_MAX = 300; // extremo derecho de la barra
-
 /** Rango clínico válido para una lectura de glucosa capilar (mg/dL). */
 export const GLUCOSA_MIN = 20;
 export const GLUCOSA_MAX = 800;
@@ -163,13 +161,17 @@ export interface BarraRango {
   bajo: string;
   objetivo: string;
   alto: string;
+  escala: { min: number; max: number };
 }
 
 /**
  * Segmentos de color + leyenda de la barra de rango del wizard, calculados
  * a partir del caso clínico real (momento + diabetes + embarazo). Si
  * `readingType` es null (paso 1, aún no se elige momento), usa el rango de
- * ayuno por defecto — mismo fallback que `estadoRango`.
+ * ayuno por defecto — mismo fallback que `estadoRango`. La escala visual es
+ * dinámica por caso (`escalaPara`): el marcador (`markerPct`) debe usar esa
+ * misma `escala` para que su posición coincida con los bordes de los
+ * segmentos.
  */
 export function barraRango(
   readingType: GlucoseReadingType | null,
@@ -178,15 +180,16 @@ export function barraRango(
 ): BarraRango {
   const rango = rangoPara(readingType, hasDiabetes, isPregnant);
   const leyenda = leyendaRango(rango);
-  return { segmentos: segmentosVisuales(rango, ESCALA_MIN, ESCALA_MAX), ...leyenda };
+  const escala = escalaPara(rango);
+  return { segmentos: segmentosVisuales(rango, escala.min, escala.max), ...leyenda, escala };
 }
 
-/** Posición (0–100 %) del marcador sobre la barra de rango. */
-export function markerPct(v: string | number): number {
+/** Posición (0–100 %) del marcador sobre la barra de rango, dada la `escala` de `barraRango`. */
+export function markerPct(v: string | number, escala: { min: number; max: number }): number {
   const n = typeof v === "number" ? v : parseFloat(v);
   if (Number.isNaN(n)) return 0;
-  const clamped = Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, n));
-  return ((clamped - ESCALA_MIN) / (ESCALA_MAX - ESCALA_MIN)) * 100;
+  const clamped = Math.min(escala.max, Math.max(escala.min, n));
+  return ((clamped - escala.min) / (escala.max - escala.min)) * 100;
 }
 
 export interface ResumenDia {
@@ -238,6 +241,23 @@ export function horaActual(): string {
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
   return `${hh}:${mm}`;
+}
+
+/**
+ * Sugiere el `MealKey` según la hora local del dispositivo, para preseleccionar
+ * el momento en el paso 1 del wizard (el usuario puede cambiarlo). Franjas
+ * horarias aproximadas — no reemplazan la elección explícita del usuario.
+ */
+export function sugerirMomento(): MealKey {
+  const h = new Date().getHours();
+  if (h < 5) return "madrugada";
+  if (h < 7) return "ayuno";
+  if (h < 10) return "postDesayuno";
+  if (h < 12) return "preComida";
+  if (h < 15) return "postComida";
+  if (h < 19) return "preCena";
+  if (h < 22) return "postCena";
+  return "madrugada";
 }
 
 /**

@@ -90,6 +90,9 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
         "/paciente/doctores": {
           saludo: null,
         },
+        "/paciente/nuevo-registro": {
+          saludo: null,
+        },
       }}
       defaultSaludo={{
         saludo: (name) => `Hola, ${name}`,

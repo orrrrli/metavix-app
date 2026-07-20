@@ -216,6 +216,27 @@ export interface SegmentoVisual {
 }
 
 /**
+ * Escala visual [min, max] para pintar la barra de un rango: los extremos
+ * abiertos (Fuera de meta baja/alta) reciben un margen fijo en vez de
+ * estirarse a una escala global — así una banda angosta (ej. ayuno sin
+ * diabetes: Revisar es solo 100–125) no queda aplastada junto a un tramo
+ * "Alto" desproporcionadamente largo. El margen es proporcional al ancho de
+ * la banda "En meta" (mínimo 20 mg/dL) para que se vea consistente sin
+ * importar qué tan angosto o ancho sea el rango clínico del caso.
+ */
+export function escalaPara(r: RangoPorLectura): { min: number; max: number } {
+  const meta = bandaEnMeta(r);
+  const anchoMeta = meta && Number.isFinite(meta.hasta) ? meta.hasta - meta.desde : 30;
+  const margen = Math.max(20, anchoMeta * 0.6);
+  const primeraNoInf = r.find((b) => Number.isFinite(b.desde));
+  const ultima = r[r.length - 1];
+  return {
+    min: Math.max(0, (primeraNoInf?.desde ?? 0) - margen),
+    max: ultima.desde + margen,
+  };
+}
+
+/**
  * Traduce las bandas del rango a segmentos de color con ancho porcentual,
  * para pintar la barra del wizard. El ancho de cada banda es proporcional a
  * su rango numérico dentro de [escalaMin, escalaMax] — la primera banda

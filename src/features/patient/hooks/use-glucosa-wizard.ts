@@ -6,7 +6,7 @@ import { GlucoseReadingType } from "@/types/daily-record";
 import {
   MealKey, MEAL_TO_TYPE,
   GlucosaLectura, NuevaLectura,
-  estadoRango, resumenDia, horaInputToApi, horaActual,
+  estadoRango, resumenDia, horaInputToApi, horaActual, sugerirMomento,
   GLUCOSA_MIN, GLUCOSA_MAX, esGlucosaValida,
   type EstadoRango,
   type ResumenDia,
@@ -69,7 +69,7 @@ export function useGlucosaWizard({
 }: UseGlucosaWizardOpts): GlucosaWizard {
   const [step, setStepRaw] = useState(1);
   const [valor, setValor] = useState("");
-  const [meal, setMeal] = useState<MealKey | null>(null);
+  const [meal, setMeal] = useState<MealKey | null>(() => sugerirMomento());
   const [hora, setHora] = useState("");
   const [foods, setFoods] = useState("");
 
@@ -106,7 +106,7 @@ export function useGlucosaWizard({
     });
     setStepRaw(1);
     setValor("");
-    setMeal(null);
+    setMeal(sugerirMomento());
     setHora(horaActual());
     setFoods("");
   };
