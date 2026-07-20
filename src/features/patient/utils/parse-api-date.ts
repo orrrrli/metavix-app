@@ -35,10 +35,16 @@ export function parseApiDate(value: string | null | undefined): Date | null {
   if (isValid(iso)) return iso;
 
   // 2) "dd/MM/yyyy" — el formato con el que la API serializa DateOnly.
-  const [day, month, year] = value.split("/");
+  const [day, month, year] = value.split("/").map(Number);
   if (day && month && year) {
-    const d = new Date(Number(year), Number(month) - 1, Number(day));
-    if (isValid(d)) return d;
+    // new Date(y, m, d) desborda silenciosamente componentes fuera de rango
+    // (mes 13 → enero del año siguiente) y sigue siendo un Date válido, así
+    // que isValid() no lo detecta. Se valida explícitamente que el mes/día
+    // pedido coincida con el resultado antes de aceptarlo.
+    const d = new Date(year, month - 1, day);
+    if (isValid(d) && d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day) {
+      return d;
+    }
   }
 
   return null;

@@ -30,4 +30,14 @@ describe("parseApiDate", () => {
     expect(parseApiDate(undefined)).toBeNull();
     expect(parseApiDate("no-es-una-fecha")).toBeNull();
   });
+
+  it("devuelve null para dd/MM/yyyy con mes fuera de rango en vez de desbordar al año siguiente", () => {
+    // new Date(2026, 12, 1) desborda a enero 2027; debe rechazarse, no aceptarse.
+    expect(parseApiDate("01/13/2026")).toBeNull();
+  });
+
+  it("devuelve null para dd/MM/yyyy con día fuera de rango en vez de desbordar al mes siguiente", () => {
+    // new Date(2026, 1, 30) desborda a marzo (febrero no tiene 30 días).
+    expect(parseApiDate("30/02/2026")).toBeNull();
+  });
 });
