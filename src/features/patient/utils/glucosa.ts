@@ -1,7 +1,15 @@
 import { GlucoseReadingType, GlucoseReadingResponse } from "@/types/daily-record";
-import { rangoPara, evaluar, type EstadoClinico, type RangoPorLectura } from "./rangos-glucosa";
+import {
+  rangoPara,
+  evaluar,
+  segmentosVisuales,
+  leyendaRango,
+  type EstadoClinico,
+  type RangoPorLectura,
+  type SegmentoVisual,
+} from "./rangos-glucosa";
 
-export type { EstadoClinico, RangoPorLectura };
+export type { EstadoClinico, RangoPorLectura, SegmentoVisual };
 
 /**
  * Modelo de UI + helpers para el wizard de registro de glucosa
@@ -145,7 +153,32 @@ export function estadoRango(
   if (ev.estado === "ok") return { estado: "rango", label: ev.label, bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
   if (ev.estado === "warn") return { estado: "rango", label: ev.label, bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
   if (ev.label === "Fuera de meta (alta)") return { estado: "alto", label: ev.label, bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
-  return { estado: "bajo", label: ev.label, bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
+  // "Fuera de meta (baja)" usa morado en vez del rojo de "alta" para que el
+  // chip distinga a simple vista bajo vs alto (misma paleta que la barra).
+  return { estado: "bajo", label: ev.label, bg: "var(--low-bg,#f0ecfa)", color: "var(--low,#8873c2)" };
+}
+
+export interface BarraRango {
+  segmentos: SegmentoVisual[];
+  bajo: string;
+  objetivo: string;
+  alto: string;
+}
+
+/**
+ * Segmentos de color + leyenda de la barra de rango del wizard, calculados
+ * a partir del caso clínico real (momento + diabetes + embarazo). Si
+ * `readingType` es null (paso 1, aún no se elige momento), usa el rango de
+ * ayuno por defecto — mismo fallback que `estadoRango`.
+ */
+export function barraRango(
+  readingType: GlucoseReadingType | null,
+  hasDiabetes: boolean,
+  isPregnant: boolean
+): BarraRango {
+  const rango = rangoPara(readingType, hasDiabetes, isPregnant);
+  const leyenda = leyendaRango(rango);
+  return { segmentos: segmentosVisuales(rango, ESCALA_MIN, ESCALA_MAX), ...leyenda };
 }
 
 /** Posición (0–100 %) del marcador sobre la barra de rango. */

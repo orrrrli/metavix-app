@@ -6,7 +6,7 @@ import {
 } from "./semaforo";
 
 describe("getMetasGlucosaAyuno + estadoValorConBanda", () => {
-  it("dm1/dm2: 70-79 fuera_de_meta (baja), 80-130 en_meta, 131-179 revisar, >179 fuera_de_meta", () => {
+  it("dm1/dm2: 70-79 fuera_de_meta (baja), 80-130 en_meta, 131-180 revisar, >180 fuera_de_meta", () => {
     const m = getMetasGlucosaAyuno("dm1");
     expect(estadoValorConBanda(75, m.min, m.max, m.enMetaMin, m.enMetaMax)).toBe("fuera_de_meta");
     expect(estadoValorConBanda(100, m.min, m.max, m.enMetaMin, m.enMetaMax)).toBe("en_meta");
@@ -18,7 +18,7 @@ describe("getMetasGlucosaAyuno + estadoValorConBanda", () => {
     const m = getMetasGlucosaAyuno("embarazo");
     expect(estadoValorConBanda(70, m.min, m.max, m.enMetaMin, m.enMetaMax)).toBe("en_meta");
     expect(estadoValorConBanda(100, m.min, m.max, m.enMetaMin, m.enMetaMax)).toBe("revisar");
-    expect(estadoValorConBanda(120, m.min, m.max, m.enMetaMin, m.enMetaMax)).toBe("fuera_de_meta");
+    expect(estadoValorConBanda(130, m.min, m.max, m.enMetaMin, m.enMetaMax)).toBe("fuera_de_meta");
   });
 });
 

@@ -3,18 +3,19 @@ import { GlucoseReadingType } from "@/types/daily-record";
 import { rangoPara, rangoParaDefault, evaluar, bandaEnMeta, RANGO_AYUNO_POR_DEFECTO } from "./rangos-glucosa";
 
 describe("rangoPara (bandas clínicas por Ayuno vs Postprandial + diabetes + embarazo)", () => {
-  it("ayuno con diabetes: Hipo <70, fuera-meta-baja 70-79, en meta 80-130, revisar 131-179, fuera-meta-alta >179", () => {
+  it("ayuno con diabetes: fuera-meta-baja <80, en meta 80-130, revisar 131-180, fuera-meta-alta >180", () => {
     const r = rangoPara(GlucoseReadingType.Fasting, true);
-    expect(evaluar(69, r).label).toBe("Hipoglucemia");
     expect(evaluar(75, r).label).toBe("Fuera de meta (baja)");
     expect(evaluar(80, r).label).toBe("En meta");
     expect(evaluar(130, r).label).toBe("En meta");
     expect(evaluar(150, r).label).toBe("Revisar");
-    expect(evaluar(180, r).label).toBe("Fuera de meta (alta)");
+    expect(evaluar(180, r).label).toBe("Revisar");
+    expect(evaluar(181, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("ayuno sin diabetes: en meta 80-99, revisar (prediabetes) 100-125, fuera-meta-alta >125", () => {
+  it("ayuno sin diabetes: en meta 70-99, revisar (prediabetes) 100-125, fuera-meta-alta >125", () => {
     const r = rangoPara(GlucoseReadingType.Fasting, false);
+    expect(evaluar(70, r).label).toBe("En meta");
     expect(evaluar(90, r).label).toBe("En meta");
     expect(evaluar(110, r).label).toBe("Revisar");
     expect(evaluar(126, r).label).toBe("Fuera de meta (alta)");
@@ -34,31 +35,22 @@ describe("rangoPara (bandas clínicas por Ayuno vs Postprandial + diabetes + emb
     expect(evaluar(200, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("ayuno embarazada con DM/DMG: sin banda fuera-meta-baja — Hipo <70, en meta 70-95, revisar 96-109, fuera-meta-alta >109", () => {
+  it("ayuno embarazada con DM/DMG: fuera-meta-baja <70, en meta 70-95, revisar 96-125, fuera-meta-alta >125", () => {
     const r = rangoPara(GlucoseReadingType.Fasting, true, true);
-    expect(evaluar(69, r).label).toBe("Hipoglucemia");
+    expect(evaluar(60, r).label).toBe("Fuera de meta (baja)");
     expect(evaluar(70, r).label).toBe("En meta");
     expect(evaluar(95, r).label).toBe("En meta");
     expect(evaluar(100, r).label).toBe("Revisar");
-    expect(evaluar(110, r).label).toBe("Fuera de meta (alta)");
+    expect(evaluar(125, r).label).toBe("Revisar");
+    expect(evaluar(126, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("postprandial embarazada con DM/DMG: fuera-meta-baja 70-99, en meta 100-120, revisar 121-139, fuera-meta-alta >=140", () => {
+  it("postprandial embarazada con DM/DMG: fuera-meta-baja <100, en meta 100-120, revisar 121-139, fuera-meta-alta >=140", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, true, true);
-    expect(evaluar(69, r).label).toBe("Hipoglucemia");
     expect(evaluar(85, r).label).toBe("Fuera de meta (baja)");
     expect(evaluar(110, r).label).toBe("En meta");
     expect(evaluar(130, r).label).toBe("Revisar");
     expect(evaluar(140, r).label).toBe("Fuera de meta (alta)");
-  });
-
-  it("hipoglucemia (<70) es universal en todos los casos", () => {
-    expect(evaluar(69, rangoPara(GlucoseReadingType.Fasting, true)).label).toBe("Hipoglucemia");
-    expect(evaluar(69, rangoPara(GlucoseReadingType.Fasting, false)).label).toBe("Hipoglucemia");
-    expect(evaluar(69, rangoPara(GlucoseReadingType.PostLunch, true)).label).toBe("Hipoglucemia");
-    expect(evaluar(69, rangoPara(GlucoseReadingType.PostLunch, false)).label).toBe("Hipoglucemia");
-    expect(evaluar(69, rangoPara(GlucoseReadingType.Fasting, true, true)).label).toBe("Hipoglucemia");
-    expect(evaluar(69, rangoPara(GlucoseReadingType.PostLunch, true, true)).label).toBe("Hipoglucemia");
   });
 
   it("readingType null cae al default (ayuno)", () => {
@@ -74,7 +66,7 @@ describe("rangoPara (bandas clínicas por Ayuno vs Postprandial + diabetes + emb
 describe("evaluar (clasificación de valor vs bandas)", () => {
   const rAyunoDiabetes = rangoPara(GlucoseReadingType.Fasting, true);
 
-  it("estado bad para Hipoglucemia y Fuera de meta", () => {
+  it("estado bad para Fuera de meta (baja y alta)", () => {
     expect(evaluar(60, rAyunoDiabetes).estado).toBe("bad");
     expect(evaluar(75, rAyunoDiabetes).estado).toBe("bad");
     expect(evaluar(200, rAyunoDiabetes).estado).toBe("bad");

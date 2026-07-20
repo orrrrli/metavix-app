@@ -3,9 +3,9 @@
 import React from "react";
 import { useGlucosaWizard } from "../../hooks/use-glucosa-wizard";
 import {
-  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON,
+  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
   GlucosaLectura, NuevaLectura,
-  markerPct, estadoRango, horaActual,
+  markerPct, estadoRango, horaActual, barraRango,
   GLUCOSA_MIN, GLUCOSA_MAX, esGlucosaValida,
 } from "../../utils/glucosa";
 
@@ -142,17 +142,24 @@ export default function RegistroGlucosaMovil({
                   </span>
                 </div>
               )}
-              <div style={{ marginTop: 6 }}>
-                <div style={{ height: 9, borderRadius: 999, overflow: "hidden", display: "flex" }}>
-                  <div style={{ width: "11.5%", background: "#e8836e" }} /><div style={{ width: "42.3%", background: "var(--ok,#1f9d6b)" }} /><div style={{ width: "46.2%", background: "#e6b53f" }} />
-                </div>
-                <div style={{ position: "relative", height: 0 }}>
-                  <div style={{ position: "absolute", left: `${markerPct(valor)}%`, top: -13, transform: "translateX(-50%)", width: 3, height: 17, background: "var(--text,#15201b)", borderRadius: 2, boxShadow: "0 0 0 3px var(--card,#fff)" }} />
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 10.5, color: "var(--soft,#9aa39c)", fontWeight: 500 }}>
-                  <span>Bajo &lt;70</span><span style={{ color: "var(--ok,#1f9d6b)", fontWeight: 700 }}>Objetivo 70–180</span><span>Alto &gt;180</span>
-                </div>
-              </div>
+              {(() => {
+                const { segmentos, bajo, objetivo, alto } = barraRango(meal ? MEAL_TO_TYPE[meal] : null, hasDiabetes, isPregnant);
+                return (
+                  <div style={{ marginTop: 6 }}>
+                    <div style={{ height: 9, borderRadius: 999, overflow: "hidden", display: "flex" }}>
+                      {segmentos.map((s, i) => (
+                        <div key={i} style={{ width: `${s.pct}%`, background: s.color }} />
+                      ))}
+                    </div>
+                    <div style={{ position: "relative", height: 0 }}>
+                      <div style={{ position: "absolute", left: `${markerPct(valor)}%`, top: -13, transform: "translateX(-50%)", width: 3, height: 17, background: "var(--text,#15201b)", borderRadius: 2, boxShadow: "0 0 0 3px var(--card,#fff)" }} />
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 10.5, color: "var(--soft,#9aa39c)", fontWeight: 500 }}>
+                      <span>{bajo}</span><span style={{ color: "var(--ok,#1f9d6b)", fontWeight: 700 }}>{objetivo}</span><span>{alto}</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

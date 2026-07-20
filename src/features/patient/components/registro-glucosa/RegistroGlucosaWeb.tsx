@@ -3,9 +3,9 @@
 import React, { useEffect } from "react";
 import { useGlucosaWizard } from "../../hooks/use-glucosa-wizard";
 import {
-  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON,
+  MealKey, MEAL_KEYS, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
   GlucosaLectura, NuevaLectura,
-  markerPct, estadoRango, horaActual,
+  markerPct, estadoRango, horaActual, barraRango,
   GLUCOSA_MIN, GLUCOSA_MAX,
 } from "../../utils/glucosa";
 
@@ -87,13 +87,14 @@ function MealIcon({ k }: { k: MealKey }) {
   );
 }
 
-function RangeBar({ v }: { v: string }) {
+function RangeBar({ v, meal, hasDiabetes, isPregnant }: { v: string; meal: MealKey | null; hasDiabetes: boolean; isPregnant: boolean }) {
+  const { segmentos, bajo, objetivo, alto } = barraRango(meal ? MEAL_TO_TYPE[meal] : null, hasDiabetes, isPregnant);
   return (
     <div style={{ marginTop: 10 }}>
       <div style={{ height: 11, borderRadius: 999, overflow: "hidden", display: "flex" }}>
-        <div style={{ width: "11.5%", background: "#e8836e" }} />
-        <div style={{ width: "42.3%", background: "var(--ok,#1f9d6b)" }} />
-        <div style={{ width: "46.2%", background: "#e6b53f" }} />
+        {segmentos.map((s, i) => (
+          <div key={i} style={{ width: `${s.pct}%`, background: s.color }} />
+        ))}
       </div>
       <div style={{ position: "relative", height: 0 }}>
         <div style={{
@@ -102,7 +103,7 @@ function RangeBar({ v }: { v: string }) {
         }} />
       </div>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 14, fontSize: 11.5, color: "var(--soft,#9aa39c)", fontWeight: 500 }}>
-        <span>Bajo &lt;70</span><span style={{ color: "var(--ok,#1f9d6b)", fontWeight: 700 }}>Objetivo 70–180</span><span>Alto &gt;180</span>
+        <span>{bajo}</span><span style={{ color: "var(--ok,#1f9d6b)", fontWeight: 700 }}>{objetivo}</span><span>{alto}</span>
       </div>
     </div>
   );
@@ -179,7 +180,7 @@ export default function RegistroGlucosaWeb({
                       </span>
                     </div>
                   )}
-                  <RangeBar v={valor} />
+                  <RangeBar v={valor} meal={meal} hasDiabetes={hasDiabetes} isPregnant={isPregnant} />
                 </div>
               </div>
             )}
