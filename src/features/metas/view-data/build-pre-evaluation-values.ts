@@ -27,10 +27,10 @@ export interface PreEvaluationResult {
 export function buildPreEvaluationValues(
   input: PreEvaluationInput,
 ): PreEvaluationResult {
-  const sortedDailyRecords = [...input.dailyRecords].sort(
-    (a, b) =>
-      parseDailyDate(b.recordDate).getTime() - parseDailyDate(a.recordDate).getTime(),
-  );
+  const sortedDailyRecords = input.dailyRecords
+    .map((r) => ({ r, date: parseDailyDate(r.recordDate) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ r }) => r);
 
   let fastingGlucose: number | null = null;
   for (const record of sortedDailyRecords) {
@@ -55,10 +55,10 @@ export function buildPreEvaluationValues(
     sortedDailyRecords.find((r) => r.systolicPressure !== null)
       ?.systolicPressure ?? null;
 
-  const sortedLabRecords = [...input.labRecords].sort(
-    (a, b) =>
-      parseDailyDate(b.sampleDate).getTime() - parseDailyDate(a.sampleDate).getTime(),
-  );
+  const sortedLabRecords = input.labRecords
+    .map((r) => ({ r, date: parseDailyDate(r.sampleDate) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ r }) => r);
 
   const creatinineLabs = sortedLabRecords.filter((r) => r.creatinine !== null);
   const previousCreatinine = creatinineLabs[1]?.creatinine ?? null;

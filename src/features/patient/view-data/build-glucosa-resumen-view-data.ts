@@ -251,9 +251,11 @@ export function buildGlucosaResumenViewData(
   for (const r of records) {
     for (const g of r.glucoseReadings) allWithGlucose.push({ rec: r, g });
   }
+  const tsPorLectura = new Map(
+    allWithGlucose.map((item) => [item, tsDeLectura(item.rec.recordDate, item.g.time)]),
+  );
   allWithGlucose.sort(
-    (a, b) =>
-      tsDeLectura(b.rec.recordDate, b.g.time) - tsDeLectura(a.rec.recordDate, a.g.time),
+    (a, b) => (tsPorLectura.get(b) ?? 0) - (tsPorLectura.get(a) ?? 0),
   );
   const last = allWithGlucose[0] ?? null;
 

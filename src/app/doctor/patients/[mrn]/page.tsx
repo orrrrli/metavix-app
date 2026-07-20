@@ -1,7 +1,7 @@
 "use client";
 
 import { use } from "react";
-import { parse, format, differenceInYears } from "date-fns";
+import { format, differenceInYears } from "date-fns";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -39,10 +39,11 @@ function getPostprandialGlucose(readings: GlucoseReadingResponse[]): number | un
 }
 
 function buildChartData(records: DailyRecordResponse[]): object[] {
-  return [...records]
-    .sort((a, b) => parseDailyDate(a.recordDate).getTime() - parseDailyDate(b.recordDate).getTime())
-    .map(r => ({
-      date: format(parseDailyDate(r.recordDate), "MMM dd"),
+  return records
+    .map(r => ({ r, date: parseDailyDate(r.recordDate) }))
+    .sort((a, b) => a.date.getTime() - b.date.getTime())
+    .map(({ r, date }) => ({
+      date: format(date, "MMM dd"),
       fasting: getFastingGlucose(r.glucoseReadings),
       postprandial: getPostprandialGlucose(r.glucoseReadings),
       systolic: r.systolicPressure,
@@ -102,12 +103,14 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
   const dateOfBirth = parseApiDate(profile.dateOfBirth);
   const age = dateOfBirth ? differenceInYears(new Date(), dateOfBirth) : null;
   const chartData = buildChartData(dailyRecords);
-  const sortedDaily = [...dailyRecords].sort(
-    (a, b) => parseDailyDate(b.recordDate).getTime() - parseDailyDate(a.recordDate).getTime()
-  );
-  const sortedLab = [...labRecords].sort(
-    (a, b) => parse(b.sampleDate, "dd/MM/yyyy", new Date()).getTime() - parse(a.sampleDate, "dd/MM/yyyy", new Date()).getTime()
-  );
+  const sortedDaily = dailyRecords
+    .map(r => ({ r, date: parseDailyDate(r.recordDate) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ r }) => r);
+  const sortedLab = labRecords
+    .map(r => ({ r, date: parseDailyDate(r.sampleDate) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ r }) => r);
 
   return (
     <div className="space-y-6">
@@ -309,7 +312,7 @@ export default function PatientDetailView({ params }: Props): React.ReactElement
                     <div key={lab.id} className="p-4 rounded-xl border border-border bg-card shadow-sm">
                       <div className="flex items-center justify-between mb-3">
                         <span className="font-bold text-foreground">
-                          {format(parse(lab.sampleDate, "dd/MM/yyyy", new Date()), "MMM dd, yyyy")}
+                          {format(parseDailyDate(lab.sampleDate), "MMM dd, yyyy")}
                         </span>
                         <Badge variant="outline">Laboratorio</Badge>
                       </div>

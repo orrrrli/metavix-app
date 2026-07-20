@@ -124,12 +124,14 @@ export function buildOtrosIndicadoresViewData(
 
   const inds: IndicadorData[] = [];
 
-  const sortedDaily = [...(daily ?? [])].sort(
-    (a, b) => parseDailyDate(b.recordDate).getTime() - parseDailyDate(a.recordDate).getTime(),
-  );
-  const sortedLab = [...(lab ?? [])].sort(
-    (a, b) => parseDailyDate(b.sampleDate).getTime() - parseDailyDate(a.sampleDate).getTime(),
-  );
+  const sortedDaily = (daily ?? [])
+    .map((r) => ({ r, date: parseDailyDate(r.recordDate) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ r }) => r);
+  const sortedLab = (lab ?? [])
+    .map((r) => ({ r, date: parseDailyDate(r.sampleDate) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ r }) => r);
 
   // 1) Presión arterial
   const lastBP = sortedDaily.find(

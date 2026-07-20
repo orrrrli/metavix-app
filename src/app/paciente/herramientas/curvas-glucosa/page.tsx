@@ -54,7 +54,6 @@ export default function GlucoseCurvesPage() {
 
   const daysWithData = useMemo(() => {
     return aggregateGlucoseCurvesByDate(records)
-      .sort((a, b) => parseDailyDate(b.dateKey).getTime() - parseDailyDate(a.dateKey).getTime())
       .map(({ dateKey, glucoseReadings }) => {
         const date = parseDailyDate(dateKey);
         return {
@@ -62,7 +61,8 @@ export default function GlucoseCurvesPage() {
           label: format(date, "MMM dd", { locale: es }),
           readings: buildChartData(glucoseReadings),
         };
-      });
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [records]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);

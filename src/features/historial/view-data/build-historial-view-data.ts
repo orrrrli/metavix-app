@@ -167,9 +167,10 @@ function mergeByFecha(daily: Registro[], lab: Registro[]): Registro[] {
     }
   }
 
-  return [...byFecha.values()].sort(
-    (a, b) => parseDailyDate(b.fecha).getTime() - parseDailyDate(a.fecha).getTime()
-  );
+  return [...byFecha.values()]
+    .map(r => ({ r, date: parseDailyDate(r.fecha) }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime())
+    .map(({ r }) => r);
 }
 
 /**
