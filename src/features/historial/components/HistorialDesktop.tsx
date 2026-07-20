@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Registro } from '../types';
-import { labelMomento, readingTypeDe } from '../utils/momentos';
+import { labelMomento, readingTypeDe, nombreDia } from '../utils/momentos';
 import { ChipGlucosa } from './ChipGlucosa';
 import { BadgeValor } from './BadgeValor';
 import { GlucoseReadingType } from '@/types/daily-record';
@@ -103,7 +103,8 @@ export function HistorialDesktop({ registros, tipoDiabetes, hasDiabetes, isPregn
         {registros.map((row) => (
           <div key={row.fecha} style={{ display: 'flex', alignItems: 'center', borderTop: '1px solid var(--bd)' }}>
             <div style={{ width: 118, flexShrink: 0, padding: '14px 16px' }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text)' }}>{row.fecha}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.01em' }}>{nombreDia(row.fecha)}</div>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--mut)' }}>{row.fecha}</div>
             </div>
 
             {tab === 'glucosa' && (

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Registro } from '../types';
-import { labelMomento, readingTypeDe } from '../utils/momentos';
+import { labelMomento, readingTypeDe, nombreDia } from '../utils/momentos';
 import { ChipGlucosa } from './ChipGlucosa';
 import { GlucoseReadingType } from '@/types/daily-record';
 import { estadoRango } from '@/features/patient/utils/glucosa';
@@ -75,7 +75,10 @@ export function HistorialMobile({ registros, hasDiabetes, isPregnant }: Historia
           return (
             <div key={row.fecha} style={{ background: 'var(--card)', border: '1px solid var(--card-bd)', borderRadius: 16, padding: '14px 16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--text)' }}>{row.fecha}</div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.01em' }}>{nombreDia(row.fecha)}</div>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--mut)' }}>{row.fecha}</div>
+                </div>
                 {row.glucosa_ayuno != null ? (
                   <span style={{ padding: '6px 12px', borderRadius: 10, fontSize: 15, fontWeight: 800, background: ayuno.bg, color: ayuno.color }}>
                     {row.glucosa_ayuno} <span style={{ fontSize: 9.5, fontWeight: 600, opacity: 0.7 }}>ayuno</span>

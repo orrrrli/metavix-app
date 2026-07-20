@@ -41,6 +41,15 @@ export function labelMomento(tipo: string): string {
   return TIPO_COMIDA_ABBR[tipo] ?? tipo;
 }
 
+/** Nombre del día de la semana (Lunes, Martes…) desde una fecha "dd/MM/yyyy". */
+export function nombreDia(fecha: string): string {
+  const [day, month, year] = fecha.split('/').map(Number);
+  if (!day || !month || !year) return '';
+  const d = new Date(year, month - 1, day);
+  const nombre = d.toLocaleDateString('es-MX', { weekday: 'long' });
+  return nombre.charAt(0).toUpperCase() + nombre.slice(1);
+}
+
 /**
  * Resuelve el `GlucoseReadingType` de una comida: prioriza el campo explícito,
  * luego la clave español y finalmente el enum inglés (`normalizeReadingType`).
