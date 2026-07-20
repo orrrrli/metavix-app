@@ -35,8 +35,8 @@ export function ConversorHbA1c({ modo, onCalcular }: ConversorHbA1cProps) {
         return;
       }
     } else {
-      if (!valorInput || val < 70 || val > 600) {
-        setError("La glucosa debe estar entre 70 y 600 mg/dL");
+      if (!valorInput || val < 20 || val > 800) {
+        setError("La glucosa debe estar entre 20 y 800 mg/dL");
         return;
       }
     }
@@ -61,8 +61,8 @@ export function ConversorHbA1c({ modo, onCalcular }: ConversorHbA1cProps) {
         label: "Glucosa promedio (mg/dL)",
         placeholder: "Ej. 154",
         step: "1",
-        min: 70,
-        max: 600,
+        min: 20,
+        max: 800,
         btn: "Convertir a HbA1c estimada"
       };
 
