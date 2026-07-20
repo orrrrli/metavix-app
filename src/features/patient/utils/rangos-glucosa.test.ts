@@ -21,15 +21,17 @@ describe("rangoPara (bandas clínicas por Ayuno vs Postprandial + diabetes + emb
     expect(evaluar(126, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("postprandial con diabetes: en meta 80-179, revisar 180-250, fuera-meta-alta >250", () => {
+  it("postprandial con diabetes: en meta 70-179, revisar 180-250, fuera-meta-alta >250", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, true);
+    expect(evaluar(70, r).label).toBe("En meta");
     expect(evaluar(150, r).label).toBe("En meta");
     expect(evaluar(200, r).label).toBe("Revisar");
     expect(evaluar(251, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("postprandial sin diabetes: en meta 80-139, revisar (prediabetes) 140-199, fuera-meta-alta >=200", () => {
+  it("postprandial sin diabetes: en meta 70-139, revisar (prediabetes) 140-199, fuera-meta-alta >=200", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, false);
+    expect(evaluar(70, r).label).toBe("En meta");
     expect(evaluar(100, r).label).toBe("En meta");
     expect(evaluar(160, r).label).toBe("Revisar");
     expect(evaluar(200, r).label).toBe("Fuera de meta (alta)");
@@ -45,12 +47,14 @@ describe("rangoPara (bandas clínicas por Ayuno vs Postprandial + diabetes + emb
     expect(evaluar(126, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("postprandial embarazada con DM/DMG: fuera-meta-baja <100, en meta 100-120, revisar 121-139, fuera-meta-alta >=140", () => {
+  it("postprandial embarazada con DM/DMG: fuera-meta-baja <110, en meta 110-140, revisar 141-180, fuera-meta-alta >180", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, true, true);
     expect(evaluar(85, r).label).toBe("Fuera de meta (baja)");
     expect(evaluar(110, r).label).toBe("En meta");
-    expect(evaluar(130, r).label).toBe("Revisar");
-    expect(evaluar(140, r).label).toBe("Fuera de meta (alta)");
+    expect(evaluar(140, r).label).toBe("En meta");
+    expect(evaluar(160, r).label).toBe("Revisar");
+    expect(evaluar(180, r).label).toBe("Revisar");
+    expect(evaluar(181, r).label).toBe("Fuera de meta (alta)");
   });
 
   it("readingType null cae al default (ayuno)", () => {

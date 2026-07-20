@@ -35,13 +35,13 @@ export function getMetasGlucosaAyuno(tipo: TipoDiabetes): RangoConBanda {
 
 export function getMetaGlucosaPostprandial(tipo: TipoDiabetes): RangoConBanda {
   switch (tipo) {
-    case 'sin_diabetes': return { min: 70, max: 199, enMetaMin: 80, enMetaMax: 139 };
-    case 'prediabetes': return { min: 70, max: 199, enMetaMin: 80, enMetaMax: 139 };
+    case 'sin_diabetes': return { min: 70, max: 199, enMetaMin: 70, enMetaMax: 139 };
+    case 'prediabetes': return { min: 70, max: 199, enMetaMin: 70, enMetaMax: 139 };
     case 'dm1':
-    case 'dm2': return { min: 70, max: 250, enMetaMin: 80, enMetaMax: 179 };
+    case 'dm2': return { min: 70, max: 250, enMetaMin: 70, enMetaMax: 179 };
     // Embarazo con diabetes (gestacional o pregestacional).
-    case 'embarazo': return { min: 70, max: 139, enMetaMin: 100, enMetaMax: 120 };
-    default: return { min: 70, max: 199, enMetaMin: 80, enMetaMax: 139 };
+    case 'embarazo': return { min: 70, max: 180, enMetaMin: 110, enMetaMax: 140 };
+    default: return { min: 70, max: 199, enMetaMin: 70, enMetaMax: 139 };
   }
 }
 

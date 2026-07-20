@@ -76,8 +76,8 @@ describe("buildGlucosaResumenViewData", () => {
       rango: "7d",
       now: NOW,
     });
-    // Post-comida con diabetes, banda "en meta" = [80,179]; 160 en rango.
-    expect(vd.rangoObjetivo).toEqual([80, 179]);
+    // Post-comida con diabetes, banda "en meta" = [70,179]; 160 en rango.
+    expect(vd.rangoObjetivo).toEqual([70, 179]);
     expect(vd.estado).toBe("ok");
   });
 
