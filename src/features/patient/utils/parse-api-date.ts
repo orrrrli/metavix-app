@@ -15,10 +15,16 @@ import { parseISO, isValid } from "date-fns";
  * Parsea el formato `"dd/MM/yyyy"` con el que la API serializa `DateOnly` a un
  * `Date` local no-nullable. Para fechas de registros/labs que la API garantiza
  * válidas (a diferencia de `parseApiDate`, que acepta null/ISO y puede devolver
- * null). Fecha inválida → epoch, para que un sort nunca produzca NaN.
+ * null). Fecha inválida → lanza, en vez de enmascarar el dato corrupto como
+ * epoch (1969-12-31), que envenenaba silenciosamente gráficas, indicadores y
+ * comparadores de sort.
  */
 export function parseDailyDate(dateStr: string): Date {
-  return parseApiDate(dateStr) ?? new Date(0);
+  const parsed = parseApiDate(dateStr);
+  if (!parsed) {
+    throw new Error(`parseDailyDate: fecha inválida recibida de la API: "${dateStr}"`);
+  }
+  return parsed;
 }
 
 export function parseApiDate(value: string | null | undefined): Date | null {
