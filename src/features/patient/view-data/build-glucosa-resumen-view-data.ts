@@ -1,6 +1,7 @@
-import { GlucoseReadingType, DailyRecordResponse } from "@/types/daily-record";
+import { GlucoseReadingType, DailyRecordResponse, GlucoseReadingResponse } from "@/types/daily-record";
 import type { PatientProfileResponse } from "@/types/patient-profile";
 import { tsDeLectura } from "../hooks/use-glucosa-resumen.helpers";
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 import {
   rangoPara,
   rangoParaDefault,
@@ -63,11 +64,6 @@ export interface GlucosaResumenData {
   tieneRegistros: boolean;
   /** Issue #9: días consecutivos con al menos una lectura (incluye hoy si hay registro). */
   rachaDias: number;
-}
-
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 function diffDays(a: Date, b: Date): number {
@@ -174,18 +170,59 @@ export function buildGlucosaResumenViewData(
   const inf = bandaDefecto?.desde ?? 0;
   const supAyuno = bandaDefecto?.hasta ?? 0;
 
-  // Series para gráfica: agrupar por día
+  // Issue #6: la serie visible se filtra por ventana calendario, no por número
+  // de puntos. Quien registra cada 3 días pidiendo "7 días" no debe ver 21.
+  const diasVentana = DIAS_POR_RANGO[rango] ?? 7;
+  const desdeSerie = new Date(now);
+  desdeSerie.setDate(desdeSerie.getDate() - diasVentana + 1);
+  desdeSerie.setHours(0, 0, 0, 0);
+
+  // % en rango y promedio: ventana seleccionada (issue #5) + 30d estable.
+  const desdeVentana = new Date(now);
+  desdeVentana.setDate(desdeVentana.getDate() - diasVentana);
+  desdeVentana.setHours(0, 0, 0, 0);
+  const desde30 = new Date(now);
+  desde30.setDate(desde30.getDate() - 30);
+  desde30.setHours(0, 0, 0, 0);
+
+  const today = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+
+  const enRango = (g: { readingType: GlucoseReadingType; valueMgDl: number }) => {
+    const r = rangoPara(g.readingType, hasDiabetes);
+    return evaluar(g.valueMgDl, r).estado !== "bad";
+  };
+
+  // Pasada única: cada record se parsea una sola vez y alimenta todas las
+  // derivaciones (grupos por día, ventanas de tiempo, día de hoy, última
+  // lectura), en vez de recorrer `records` por separado para cada una.
   const grupos = new Map<string, { values: number[]; date: Date }>();
+  const enVentana: GlucoseReadingResponse[] = [];
+  const en30: GlucoseReadingResponse[] = [];
+  const todayReadings: GlucoseReadingResponse[] = [];
+  const allWithGlucose: Array<{ rec: DailyRecordResponse; g: GlucoseReadingResponse; ts: number }> = [];
+
   for (const r of records) {
     const date = parseDailyDate(r.recordDate);
+    const dateTs = date.getTime();
     const key = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    for (const g of r.glucoseReadings) {
+    const esHoy = key === today;
+    const enVentanaTiempo = dateTs >= desdeVentana.getTime();
+    const en30Tiempo = dateTs >= desde30.getTime();
+
+    if (r.glucoseReadings.length > 0) {
       const arr = grupos.get(key)?.values ?? [];
-      arr.push(g.valueMgDl);
-      if (!grupos.has(key)) grupos.set(key, { values: arr, date });
-      else (grupos.get(key) as { values: number[] }).values = arr;
+      for (const g of r.glucoseReadings) arr.push(g.valueMgDl);
+      grupos.set(key, { values: arr, date });
+    }
+
+    for (const g of r.glucoseReadings) {
+      if (enVentanaTiempo) enVentana.push(g);
+      if (en30Tiempo) en30.push(g);
+      if (esHoy) todayReadings.push(g);
+      allWithGlucose.push({ rec: r, g, ts: tsDeLectura(r.recordDate, g.time) });
     }
   }
+
   const serieGrafica: PuntoSerie[] = Array.from(grupos.entries())
     .sort((a, b) => a[1].date.getTime() - b[1].date.getTime())
     .map(([, { values, date }]) => ({
@@ -196,33 +233,8 @@ export function buildGlucosaResumenViewData(
       lecturas: values.length,
       ts: date.getTime(),
     }));
-
-  // Issue #6: la serie visible se filtra por ventana calendario, no por número
-  // de puntos. Quien registra cada 3 días pidiendo "7 días" no debe ver 21.
-  const diasVentana = DIAS_POR_RANGO[rango] ?? 7;
-  const desdeSerie = new Date(now);
-  desdeSerie.setDate(desdeSerie.getDate() - diasVentana + 1);
-  desdeSerie.setHours(0, 0, 0, 0);
   const serieVentana = serieGrafica.filter((p) => p.ts >= desdeSerie.getTime());
 
-  // % en rango y promedio: ventana seleccionada (issue #5) + 30d estable.
-  const desdeVentana = new Date(now);
-  desdeVentana.setDate(desdeVentana.getDate() - diasVentana);
-  desdeVentana.setHours(0, 0, 0, 0);
-  const desde30 = new Date(now);
-  desde30.setDate(desde30.getDate() - 30);
-  desde30.setHours(0, 0, 0, 0);
-
-  const enRango = (g: { readingType: GlucoseReadingType; valueMgDl: number }) => {
-    const r = rangoPara(g.readingType, hasDiabetes);
-    return evaluar(g.valueMgDl, r).estado !== "bad";
-  };
-  const enVentana = records
-    .filter((r) => parseDailyDate(r.recordDate).getTime() >= desdeVentana.getTime())
-    .flatMap((r) => r.glucoseReadings);
-  const en30 = records
-    .filter((r) => parseDailyDate(r.recordDate).getTime() >= desde30.getTime())
-    .flatMap((r) => r.glucoseReadings);
   const totalVentana = enVentana.length;
   const enRangoVentana = enVentana.filter(enRango).length;
   const total30 = en30.length;
@@ -234,13 +246,6 @@ export function buildGlucosaResumenViewData(
   const promedio30d =
     total30 > 0 ? Math.round(en30.reduce((a, b) => a + b.valueMgDl, 0) / total30) : null;
 
-  // Día de hoy
-  const today = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
-  const todayRecords = records.filter((r) => {
-    const d = parseDailyDate(r.recordDate);
-    return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}` === today;
-  });
-  const todayReadings = todayRecords.flatMap((r) => r.glucoseReadings);
   const medicionesHoy = todayReadings.length;
   const enMetaHoy = todayReadings.filter((g) => {
     const r = rangoPara(g.readingType, hasDiabetes);
@@ -248,17 +253,7 @@ export function buildGlucosaResumenViewData(
   }).length;
 
   // Última lectura (no solo de hoy — la más reciente global con glucosa)
-  const allWithGlucose: Array<{
-    rec: DailyRecordResponse;
-    g: (typeof records)[0]["glucoseReadings"][0];
-  }> = [];
-  for (const r of records) {
-    for (const g of r.glucoseReadings) allWithGlucose.push({ rec: r, g });
-  }
-  allWithGlucose.sort(
-    (a, b) =>
-      tsDeLectura(b.rec.recordDate, b.g.time) - tsDeLectura(a.rec.recordDate, a.g.time),
-  );
+  allWithGlucose.sort((a, b) => b.ts - a.ts);
   const last = allWithGlucose[0] ?? null;
 
   let valor: number | null = null;

@@ -6,11 +6,7 @@ import { usePatientProfile } from "./use-patient-profile";
 import { HealthRecordDto, GlucoseReading, DiabetesType } from "../types";
 import { DailyRecordResponse, GlucoseReadingType } from "@/types/daily-record";
 import { LabRecordResponse } from "@/types/lab-record";
-
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(Number(year), Number(month) - 1, Number(day));
-}
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 
 function mapReadingTypeToTipo(type: GlucoseReadingType): string {
   switch (type) {

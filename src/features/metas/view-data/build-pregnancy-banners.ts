@@ -1,5 +1,5 @@
 import type { PatientProfileResponse } from "@/types/patient-profile";
-import { parseApiDate } from "./parse-api-date";
+import { parseApiDate } from "@/features/patient/utils/parse-api-date";
 
 export interface PregnancyBanners {
   /** `profile.isPregnant` — banner "Estás en modo embarazo". */
@@ -20,15 +20,14 @@ export function buildPregnancyBanners(
   now: Date = new Date(),
 ): PregnancyBanners {
   const isPregnant = Boolean(profile?.isPregnant);
+  const dueDate = profile?.pregnancyDueDate
+    ? parseApiDate(profile.pregnancyDueDate)
+    : null;
   return {
     showPregnancyMode: isPregnant,
     pregnancyDeactivated: Boolean(
       !isPregnant && profile?.pregnancyStartDate,
     ),
-    dueDateReached: Boolean(
-      isPregnant &&
-        profile?.pregnancyDueDate &&
-        parseApiDate(profile.pregnancyDueDate) <= now,
-    ),
+    dueDateReached: Boolean(isPregnant && dueDate && dueDate <= now),
   };
 }

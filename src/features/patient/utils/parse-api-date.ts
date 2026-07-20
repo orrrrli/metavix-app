@@ -11,6 +11,22 @@ import { parseISO, isValid } from "date-fns";
  * realmente envía la API y devuelve `null` cuando no puede resolver la fecha,
  * para que los callers puedan guardar contra NaN en vez de renderizar de más.
  */
+/**
+ * Parsea el formato `"dd/MM/yyyy"` con el que la API serializa `DateOnly` a un
+ * `Date` local no-nullable. Para fechas de registros/labs que la API garantiza
+ * válidas (a diferencia de `parseApiDate`, que acepta null/ISO y puede devolver
+ * null). Fecha inválida → lanza, en vez de enmascarar el dato corrupto como
+ * epoch (1969-12-31), que envenenaba silenciosamente gráficas, indicadores y
+ * comparadores de sort.
+ */
+export function parseDailyDate(dateStr: string): Date {
+  const parsed = parseApiDate(dateStr);
+  if (!parsed) {
+    throw new Error(`parseDailyDate: fecha inválida recibida de la API: "${dateStr}"`);
+  }
+  return parsed;
+}
+
 export function parseApiDate(value: string | null | undefined): Date | null {
   if (!value) return null;
 
@@ -19,10 +35,16 @@ export function parseApiDate(value: string | null | undefined): Date | null {
   if (isValid(iso)) return iso;
 
   // 2) "dd/MM/yyyy" — el formato con el que la API serializa DateOnly.
-  const [day, month, year] = value.split("/");
+  const [day, month, year] = value.split("/").map(Number);
   if (day && month && year) {
-    const d = new Date(Number(year), Number(month) - 1, Number(day));
-    if (isValid(d)) return d;
+    // new Date(y, m, d) desborda silenciosamente componentes fuera de rango
+    // (mes 13 → enero del año siguiente) y sigue siendo un Date válido, así
+    // que isValid() no lo detecta. Se valida explícitamente que el mes/día
+    // pedido coincida con el resultado antes de aceptarlo.
+    const d = new Date(year, month - 1, day);
+    if (isValid(d) && d.getFullYear() === year && d.getMonth() === month - 1 && d.getDate() === day) {
+      return d;
+    }
   }
 
   return null;

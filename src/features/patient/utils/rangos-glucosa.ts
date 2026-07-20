@@ -19,11 +19,13 @@
  *   4. Fuera de meta (alta) — bad.
  *
  * Umbrales por caso (ADA Standards of Care 2026 + guías de embarazo). El
- * piso de "Fuera de meta (baja)" es siempre 70 mg/dL (el corte ADA de
- * hipoglucemia) en todos los casos:
+ * piso de "Fuera de meta (baja)" NO es uniforme: coincide con el inicio de la
+ * banda "En meta" de cada caso (todo lo que quede por debajo cae en
+ * fuera-meta-baja). Es <80 en ayuno-con-diabetes, <110 en postprandial-
+ * embarazo, y <70 en el resto (el corte ADA de hipoglucemia):
  *
  *   Ayuno, con diabetes (no embarazada):
- *     <70 Fuera-meta-baja | 80–130 En meta | 131–180 Revisar | >180 Fuera-meta-alta
+ *     <80 Fuera-meta-baja | 80–130 En meta | 131–180 Revisar | >180 Fuera-meta-alta
  *   Ayuno, sin diabetes:
  *     <70 Fuera-meta-baja | 70–99 En meta | 100–125 Revisar (prediabetes) | >125 Fuera-meta-alta
  *   Ayuno, embarazada con DM/DMG:

@@ -16,6 +16,7 @@ import { rangoPara, evaluar } from "@/features/patient/utils/rangos-glucosa";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 
 /** Solo para etiqueta y orden de despliegue — el rango clínico viene de rangos-glucosa.ts (Ayuno vs Postprandial). */
 const MEAL_ORDER: Record<string, { label: string; orden: number }> = {
@@ -43,10 +44,6 @@ function mapReadingType(rt: GlucoseReadingType): string {
   }
 }
 
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(Number(year), Number(month) - 1, Number(day));
-}
 
 export default function GlucoseCurvesPage() {
   const { patientId, fullName } = useAuthStore();
@@ -57,7 +54,6 @@ export default function GlucoseCurvesPage() {
 
   const daysWithData = useMemo(() => {
     return aggregateGlucoseCurvesByDate(records)
-      .sort((a, b) => parseDailyDate(b.dateKey).getTime() - parseDailyDate(a.dateKey).getTime())
       .map(({ dateKey, glucoseReadings }) => {
         const date = parseDailyDate(dateKey);
         return {
@@ -65,7 +61,8 @@ export default function GlucoseCurvesPage() {
           label: format(date, "MMM dd", { locale: es }),
           readings: buildChartData(glucoseReadings),
         };
-      });
+      })
+      .sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [records]);
 
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
