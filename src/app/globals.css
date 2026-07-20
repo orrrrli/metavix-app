@@ -135,6 +135,7 @@
   --text:#15201b; --mut:#6b7670; --soft:#9aa39c; --faint:#b8bfb8;
   --ok:#1f9d6b; --ok-bg:#e7f6ee; --warn:#cf9300; --warn-bg:#fbf1d6;
   --bad:#dd5236; --bad-bg:#fae9e3; --info:#2f6fdb; --info-bg:#e7eefb;
+  --low:#8873c2; --low-bg:#f0ecfa;
   --nav-mut:#6b7670; --nav-active-bg:#e6faf6; --nav-active:#0a8c77;
   --ph:#f4f1ea; --skel:#ece6db;
   --mvxg-field:#faf7f1; --mvxg-panel:#fcfaf6;
@@ -146,6 +147,7 @@
   --text:#f1f5f3; --mut:rgba(255,255,255,.56); --soft:rgba(255,255,255,.4); --faint:rgba(255,255,255,.3);
   --ok:#46c98c; --ok-bg:rgba(31,157,107,.16); --warn:#e7b53a; --warn-bg:rgba(207,147,0,.16);
   --bad:#f0795d; --bad-bg:rgba(221,82,54,.16); --info:#6fa0f0; --info-bg:rgba(47,111,219,.16);
+  --low:#b3a4e0; --low-bg:rgba(136,115,194,.16);
   --nav-mut:rgba(255,255,255,.5); --nav-active-bg:rgba(0,201,167,.14); --nav-active:#2fe0c2;
   --ph:rgba(255,255,255,.04); --skel:rgba(255,255,255,.08);
   --mvxg-field:rgba(255,255,255,.05); --mvxg-panel:rgba(255,255,255,.03);

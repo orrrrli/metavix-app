@@ -1,26 +1,60 @@
 import { describe, it, expect } from "vitest";
 import { GlucoseReadingType } from "@/types/daily-record";
-import { rangoPara, rangoParaDefault, evaluar, RANGO_AYUNO_POR_DEFECTO } from "./rangos-glucosa";
+import { rangoPara, rangoParaDefault, evaluar, bandaEnMeta, RANGO_AYUNO_POR_DEFECTO } from "./rangos-glucosa";
 
-describe("rangoPara (rango clínico por tipo de comida + diabetes)", () => {
-  it("ayuno con diabetes: 80–130", () => {
+describe("rangoPara (bandas clínicas por Ayuno vs Postprandial + diabetes + embarazo)", () => {
+  it("ayuno con diabetes: fuera-meta-baja <80, en meta 80-130, revisar 131-180, fuera-meta-alta >180", () => {
     const r = rangoPara(GlucoseReadingType.Fasting, true);
-    expect(r).toEqual({ inf: 80, sup: 130 });
+    expect(evaluar(75, r).label).toBe("Fuera de meta (baja)");
+    expect(evaluar(80, r).label).toBe("En meta");
+    expect(evaluar(130, r).label).toBe("En meta");
+    expect(evaluar(150, r).label).toBe("Revisar");
+    expect(evaluar(180, r).label).toBe("Revisar");
+    expect(evaluar(181, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("ayuno sin diabetes: 70–100", () => {
+  it("ayuno sin diabetes: en meta 70-99, revisar (prediabetes) 100-125, fuera-meta-alta >125", () => {
     const r = rangoPara(GlucoseReadingType.Fasting, false);
-    expect(r).toEqual({ inf: 70, sup: 100 });
+    expect(evaluar(70, r).label).toBe("En meta");
+    expect(evaluar(90, r).label).toBe("En meta");
+    expect(evaluar(110, r).label).toBe("Revisar");
+    expect(evaluar(126, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("post-comida con diabetes: ≤180", () => {
+  it("postprandial con diabetes: en meta 70-179, revisar 180-250, fuera-meta-alta >250", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, true);
-    expect(r.sup).toBe(180);
+    expect(evaluar(70, r).label).toBe("En meta");
+    expect(evaluar(150, r).label).toBe("En meta");
+    expect(evaluar(200, r).label).toBe("Revisar");
+    expect(evaluar(251, r).label).toBe("Fuera de meta (alta)");
   });
 
-  it("post-comida sin diabetes: ≤140", () => {
+  it("postprandial sin diabetes: en meta 70-139, revisar (prediabetes) 140-199, fuera-meta-alta >=200", () => {
     const r = rangoPara(GlucoseReadingType.PostLunch, false);
-    expect(r.sup).toBe(140);
+    expect(evaluar(70, r).label).toBe("En meta");
+    expect(evaluar(100, r).label).toBe("En meta");
+    expect(evaluar(160, r).label).toBe("Revisar");
+    expect(evaluar(200, r).label).toBe("Fuera de meta (alta)");
+  });
+
+  it("ayuno embarazada con DM/DMG: fuera-meta-baja <70, en meta 70-95, revisar 96-125, fuera-meta-alta >125", () => {
+    const r = rangoPara(GlucoseReadingType.Fasting, true, true);
+    expect(evaluar(60, r).label).toBe("Fuera de meta (baja)");
+    expect(evaluar(70, r).label).toBe("En meta");
+    expect(evaluar(95, r).label).toBe("En meta");
+    expect(evaluar(100, r).label).toBe("Revisar");
+    expect(evaluar(125, r).label).toBe("Revisar");
+    expect(evaluar(126, r).label).toBe("Fuera de meta (alta)");
+  });
+
+  it("postprandial embarazada con DM/DMG: fuera-meta-baja <110, en meta 110-140, revisar 141-180, fuera-meta-alta >180", () => {
+    const r = rangoPara(GlucoseReadingType.PostLunch, true, true);
+    expect(evaluar(85, r).label).toBe("Fuera de meta (baja)");
+    expect(evaluar(110, r).label).toBe("En meta");
+    expect(evaluar(140, r).label).toBe("En meta");
+    expect(evaluar(160, r).label).toBe("Revisar");
+    expect(evaluar(180, r).label).toBe("Revisar");
+    expect(evaluar(181, r).label).toBe("Fuera de meta (alta)");
   });
 
   it("readingType null cae al default (ayuno)", () => {
@@ -33,41 +67,37 @@ describe("rangoPara (rango clínico por tipo de comida + diabetes)", () => {
   });
 });
 
-describe("evaluar (clasificación de valor vs rango)", () => {
-  const rCon = { inf: 80, sup: 130 };
+describe("evaluar (clasificación de valor vs bandas)", () => {
+  const rAyunoDiabetes = rangoPara(GlucoseReadingType.Fasting, true);
 
-  it("por debajo de inf → bad/Baja", () => {
-    expect(evaluar(60, rCon)).toEqual({ estado: "bad", label: "Baja" });
+  it("estado bad para Fuera de meta (baja y alta)", () => {
+    expect(evaluar(60, rAyunoDiabetes).estado).toBe("bad");
+    expect(evaluar(75, rAyunoDiabetes).estado).toBe("bad");
+    expect(evaluar(200, rAyunoDiabetes).estado).toBe("bad");
   });
 
-  it("por encima de sup → bad/Alta", () => {
-    expect(evaluar(200, rCon)).toEqual({ estado: "bad", label: "Alta" });
+  it("estado ok para En meta", () => {
+    expect(evaluar(100, rAyunoDiabetes).estado).toBe("ok");
   });
 
-  it("120 en ayuno diabético (80–130) cae en zona warn/Revisar (regression #4)", () => {
-    // Antes: el wizard pintaba "En rango" (banda fija 70-180), el dashboard
-    // "Revisar" (banda por tipo 80-130, 120 > 90% sup). La unificación
-    // significa que ambos pintan "Revisar".
-    expect(evaluar(120, rCon)).toEqual({ estado: "warn", label: "Revisar" });
+  it("estado warn para Revisar", () => {
+    expect(evaluar(150, rAyunoDiabetes).estado).toBe("warn");
   });
 
-  it("95 ayuno diabético (80-130) → ok/En rango (en el centro del rango)", () => {
-    expect(evaluar(95, rCon)).toEqual({ estado: "ok", label: "En rango" });
+  it("valor exactamente en el borde de una banda cae en esa banda (inclusive)", () => {
+    expect(evaluar(80, rAyunoDiabetes).label).toBe("En meta");
+    expect(evaluar(131, rAyunoDiabetes).label).toBe("Revisar");
+  });
+});
+
+describe("bandaEnMeta", () => {
+  it("retorna [desde, hasta] de la banda 'En meta'", () => {
+    const r = rangoPara(GlucoseReadingType.Fasting, true);
+    expect(bandaEnMeta(r)).toEqual({ desde: 80, hasta: 130 });
   });
 
-  it("en el 10% inferior del rango → warn/Revisar", () => {
-    // inf = 80, 110% = 88. 85 está en el 10% inferior.
-    expect(evaluar(85, rCon).estado).toBe("warn");
-  });
-
-  it("fronteras exactas caen en warn (>= 90% sup o <= 110% inf)", () => {
-    // Por diseño: 80 == inf*1.1, 130 == sup*0.9 → warn, no "ok" estricto.
-    expect(evaluar(80, rCon)).toEqual({ estado: "warn", label: "Revisar" });
-    expect(evaluar(130, rCon)).toEqual({ estado: "warn", label: "Revisar" });
-  });
-
-  it("valor central → ok/En rango", () => {
-    // 100 está lejos de las zonas warn: > 88 (inf*1.1) y < 117 (sup*0.9).
-    expect(evaluar(100, rCon)).toEqual({ estado: "ok", label: "En rango" });
+  it("hasta = Infinity si 'En meta' es la última banda", () => {
+    const r: ReturnType<typeof rangoPara> = [{ desde: 80, estado: "ok", label: "En meta" }];
+    expect(bandaEnMeta(r)).toEqual({ desde: 80, hasta: Infinity });
   });
 });

@@ -1,7 +1,16 @@
 import { GlucoseReadingType, GlucoseReadingResponse } from "@/types/daily-record";
-import { rangoPara, evaluar, type EstadoClinico, type RangoPorLectura } from "./rangos-glucosa";
+import {
+  rangoPara,
+  evaluar,
+  segmentosVisuales,
+  leyendaRango,
+  escalaPara,
+  type EstadoClinico,
+  type RangoPorLectura,
+  type SegmentoVisual,
+} from "./rangos-glucosa";
 
-export type { EstadoClinico, RangoPorLectura };
+export type { EstadoClinico, RangoPorLectura, SegmentoVisual };
 
 /**
  * Modelo de UI + helpers para el wizard de registro de glucosa
@@ -103,9 +112,6 @@ export const GLUCOSA_SEED: GlucosaLectura[] = [];
 
 // ── Rango clínico y helpers visuales ───────────────────────────────
 
-const ESCALA_MIN = 40; // extremo izquierdo de la barra
-const ESCALA_MAX = 300; // extremo derecho de la barra
-
 /** Rango clínico válido para una lectura de glucosa capilar (mg/dL). */
 export const GLUCOSA_MIN = 20;
 export const GLUCOSA_MAX = 800;
@@ -132,24 +138,58 @@ export interface EstadoRango {
  */
 export function estadoRango(
   v: string | number,
-  opts: { hasDiabetes?: boolean; readingType?: import("@/types/daily-record").GlucoseReadingType | null } = {}
+  opts: {
+    hasDiabetes?: boolean;
+    isPregnant?: boolean;
+    readingType?: import("@/types/daily-record").GlucoseReadingType | null;
+  } = {}
 ): EstadoRango {
   const n = typeof v === "number" ? v : parseFloat(v);
   if (v === "" || Number.isNaN(n)) return { estado: "", label: "", bg: "", color: "" };
-  const rango = rangoPara(opts.readingType ?? null, opts.hasDiabetes ?? false);
+  const rango = rangoPara(opts.readingType ?? null, opts.hasDiabetes ?? false, opts.isPregnant ?? false);
   const ev = evaluar(n, rango);
-  if (ev.estado === "ok") return { estado: "rango", label: "En rango", bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
-  if (ev.estado === "warn") return { estado: "rango", label: "Revisar", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
-  if (ev.label === "Baja") return { estado: "bajo", label: "Baja", bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
-  return { estado: "alto", label: "Alta", bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
+  if (ev.estado === "ok") return { estado: "rango", label: ev.label, bg: "var(--ok-bg,#e8f7f0)", color: "var(--ok,#1f9d6b)" };
+  if (ev.estado === "warn") return { estado: "rango", label: ev.label, bg: "var(--warn-bg,#fdf3e0)", color: "var(--warn,#b6791f)" };
+  if (ev.label === "Fuera de meta (alta)") return { estado: "alto", label: ev.label, bg: "var(--bad-bg,#fdecea)", color: "var(--bad,#c14a2c)" };
+  // "Fuera de meta (baja)" usa morado en vez del rojo de "alta" para que el
+  // chip distinga a simple vista bajo vs alto (misma paleta que la barra).
+  return { estado: "bajo", label: ev.label, bg: "var(--low-bg,#f0ecfa)", color: "var(--low,#8873c2)" };
 }
 
-/** Posición (0–100 %) del marcador sobre la barra de rango. */
-export function markerPct(v: string | number): number {
+export interface BarraRango {
+  segmentos: SegmentoVisual[];
+  bajo: string;
+  objetivo: string;
+  alto: string;
+  escala: { min: number; max: number };
+}
+
+/**
+ * Segmentos de color + leyenda de la barra de rango del wizard, calculados
+ * a partir del caso clínico real (momento + diabetes + embarazo). Si
+ * `readingType` es null (paso 1, aún no se elige momento), usa el rango de
+ * ayuno por defecto — mismo fallback que `estadoRango`. La escala visual es
+ * dinámica por caso (`escalaPara`): el marcador (`markerPct`) debe usar esa
+ * misma `escala` para que su posición coincida con los bordes de los
+ * segmentos.
+ */
+export function barraRango(
+  readingType: GlucoseReadingType | null,
+  hasDiabetes: boolean,
+  isPregnant: boolean
+): BarraRango {
+  const rango = rangoPara(readingType, hasDiabetes, isPregnant);
+  const leyenda = leyendaRango(rango);
+  const escala = escalaPara(rango);
+  return { segmentos: segmentosVisuales(rango, escala.min, escala.max), ...leyenda, escala };
+}
+
+/** Posición (0–100 %) del marcador sobre la barra de rango, dada la `escala` de `barraRango`. */
+export function markerPct(v: string | number, escala: { min: number; max: number }): number {
   const n = typeof v === "number" ? v : parseFloat(v);
   if (Number.isNaN(n)) return 0;
-  const clamped = Math.min(ESCALA_MAX, Math.max(ESCALA_MIN, n));
-  return ((clamped - ESCALA_MIN) / (ESCALA_MAX - ESCALA_MIN)) * 100;
+  const clamped = Math.min(escala.max, Math.max(escala.min, n));
+  return ((clamped - escala.min) / (escala.max - escala.min)) * 100;
 }
 
 export interface ResumenDia {
@@ -159,11 +199,11 @@ export interface ResumenDia {
 }
 
 /** Totales del día para las tarjetas de resumen (usa rangos por lectura). */
-export function resumenDia(lecturas: GlucosaLectura[], hasDiabetes = false): ResumenDia {
+export function resumenDia(lecturas: GlucosaLectura[], hasDiabetes = false, isPregnant = false): ResumenDia {
   const total = lecturas.length;
   const enRango = lecturas.filter((l) => {
-    const r = rangoPara(l.readingType, hasDiabetes);
-    return l.v >= r.inf && l.v <= r.sup;
+    const r = rangoPara(l.readingType, hasDiabetes, isPregnant);
+    return evaluar(l.v, r).estado !== "bad";
   }).length;
   const promedio =
     total > 0 ? Math.round(lecturas.reduce((a, b) => a + b.v, 0) / total) : "—";
@@ -201,6 +241,23 @@ export function horaActual(): string {
   const hh = String(now.getHours()).padStart(2, "0");
   const mm = String(now.getMinutes()).padStart(2, "0");
   return `${hh}:${mm}`;
+}
+
+/**
+ * Sugiere el `MealKey` según la hora local del dispositivo, para preseleccionar
+ * el momento en el paso 1 del wizard (el usuario puede cambiarlo). Franjas
+ * horarias aproximadas — no reemplazan la elección explícita del usuario.
+ */
+export function sugerirMomento(): MealKey {
+  const h = new Date().getHours();
+  if (h < 5) return "madrugada";
+  if (h < 7) return "ayuno";
+  if (h < 10) return "postDesayuno";
+  if (h < 12) return "preComida";
+  if (h < 15) return "postComida";
+  if (h < 19) return "preCena";
+  if (h < 22) return "postCena";
+  return "madrugada";
 }
 
 /**

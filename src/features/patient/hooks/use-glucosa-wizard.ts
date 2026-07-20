@@ -6,7 +6,7 @@ import { GlucoseReadingType } from "@/types/daily-record";
 import {
   MealKey, MEAL_TO_TYPE,
   GlucosaLectura, NuevaLectura,
-  estadoRango, resumenDia, horaInputToApi, horaActual,
+  estadoRango, resumenDia, horaInputToApi, horaActual, sugerirMomento,
   GLUCOSA_MIN, GLUCOSA_MAX, esGlucosaValida,
   type EstadoRango,
   type ResumenDia,
@@ -32,6 +32,8 @@ export interface UseGlucosaWizardOpts {
   guardando?: boolean;
   /** Si el paciente tiene diagnóstico de diabetes. */
   hasDiabetes?: boolean;
+  /** Si la paciente está embarazada (ajusta metas de ayuno cuando hasDiabetes). */
+  isPregnant?: boolean;
 }
 
 export interface GlucosaWizard {
@@ -42,6 +44,10 @@ export interface GlucosaWizard {
   setValor: (s: string) => void;
   meal: MealKey | null;
   setMeal: (m: MealKey | null) => void;
+  /** true si el usuario eligió el momento manualmente (vs. autosugerido). */
+  mealManual: boolean;
+  /** Elige el momento y lo marca como selección manual del usuario. */
+  elegirMomento: (m: MealKey) => void;
   hora: string;
   setHora: (s: string) => void;
   foods: string;
@@ -63,11 +69,15 @@ export function useGlucosaWizard({
   onGuardar,
   guardando = false,
   hasDiabetes = false,
+  isPregnant = false,
 }: UseGlucosaWizardOpts): GlucosaWizard {
   const [step, setStepRaw] = useState(1);
   const [valor, setValor] = useState("");
-  const [meal, setMeal] = useState<MealKey | null>(null);
+  const [meal, setMeal] = useState<MealKey | null>(() => sugerirMomento());
+  const [mealManual, setMealManual] = useState(false);
   const [hora, setHora] = useState("");
+
+  const elegirMomento = (m: MealKey) => { setMeal(m); setMealManual(true); };
   const [foods, setFoods] = useState("");
 
   // setHora al montar — un solo lugar, un solo comentario de hidratación.
@@ -75,10 +85,13 @@ export function useGlucosaWizard({
   useEffect(() => setHora(horaActual()), []);
 
   const st = useMemo(
-    () => estadoRango(valor, { hasDiabetes, readingType: meal ? MEAL_TO_TYPE[meal] : null }),
-    [valor, meal, hasDiabetes]
+    () => estadoRango(valor, { hasDiabetes, isPregnant, readingType: meal ? MEAL_TO_TYPE[meal] : null }),
+    [valor, meal, hasDiabetes, isPregnant]
   );
-  const resumen = useMemo(() => resumenDia(lecturas, hasDiabetes), [lecturas, hasDiabetes]);
+  const resumen = useMemo(
+    () => resumenDia(lecturas, hasDiabetes, isPregnant),
+    [lecturas, hasDiabetes, isPregnant]
+  );
 
   const numeroActual = parseFloat(valor);
   const valorValido = esGlucosaValida(numeroActual);
@@ -100,7 +113,8 @@ export function useGlucosaWizard({
     });
     setStepRaw(1);
     setValor("");
-    setMeal(null);
+    setMeal(sugerirMomento());
+    setMealManual(false);
     setHora(horaActual());
     setFoods("");
   };
@@ -109,6 +123,7 @@ export function useGlucosaWizard({
     step, setStep,
     valor, setValor,
     meal, setMeal,
+    mealManual, elegirMomento,
     hora, setHora,
     foods, setFoods,
     st,

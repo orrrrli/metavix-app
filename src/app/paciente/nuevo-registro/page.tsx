@@ -37,10 +37,12 @@ export default function NewRecordPage() {
   const { data: profile } = usePatientProfile(patientId ?? "");
   const { mutateAsync: crearRegistro, isPending: guardando } = useCreateDailyRecord(patientId ?? "");
 
-  // hasDiabetes lo lee el wizard para evaluar el valor contra el rango
-  // correcto desde el paso 1 (mismo umbral que el dashboard).
+  // hasDiabetes/isPregnant los lee el wizard para evaluar el valor contra el
+  // rango correcto desde el paso 1 (mismo umbral que el dashboard). Ayuno en
+  // "Embarazada con DM" usa metas más estrictas que el resto de embarazadas.
   const diabetesType = profile?.diabetesType ?? "";
   const hasDiabetes = diabetesType !== "" && diabetesType !== "None";
+  const isPregnant = profile?.isPregnant ?? false;
 
   // Lecturas de glucosa de hoy → modelo de la bitácora, ordenadas por hora.
   const lecturasHoy = useMemo<GlucosaLectura[]>(() => {
@@ -102,6 +104,7 @@ export default function NewRecordPage() {
           onGuardar={onGuardar}
           guardando={guardando}
           hasDiabetes={hasDiabetes}
+          isPregnant={isPregnant}
         />
       </div>
 
@@ -113,6 +116,7 @@ export default function NewRecordPage() {
           onGuardar={onGuardar}
           guardando={guardando}
           hasDiabetes={hasDiabetes}
+          isPregnant={isPregnant}
         />
       </div>
     </div>

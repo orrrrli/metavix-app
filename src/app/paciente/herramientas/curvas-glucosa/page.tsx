@@ -12,20 +12,21 @@ import { useDailyRecords } from "@/features/patient/hooks/use-daily-records";
 import { usePatientProfile } from "@/features/patient/hooks/use-patient-profile";
 import { GlucoseReadingType } from "@/types/daily-record";
 import { aggregateGlucoseCurvesByDate } from "@/features/patient/utils/glucose-curve-aggregator";
+import { rangoPara, evaluar } from "@/features/patient/utils/rangos-glucosa";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 
-const MEAL_ORDER: Record<string, { label: string; orden: number; tipo: "preprandial" | "postprandial" }> = {
-  ayuno:            { label: "En ayuno",         orden: 0, tipo: "preprandial" },
-  antes_desayuno:   { label: "Antes desayuno",   orden: 1, tipo: "preprandial" },
-  despues_desayuno: { label: "Después desayuno", orden: 2, tipo: "postprandial" },
-  antes_comida:     { label: "Antes comida",     orden: 3, tipo: "preprandial" },
-  despues_comida:   { label: "Después comida",   orden: 4, tipo: "postprandial" },
-  antes_cena:       { label: "Antes cena",       orden: 5, tipo: "preprandial" },
-  despues_cena:     { label: "Después cena",     orden: 6, tipo: "postprandial" },
-  despues_colacion: { label: "Colación",         orden: 7, tipo: "postprandial" },
-  madrugada:        { label: "Madrugada",        orden: 8, tipo: "preprandial" },
+/** Solo para etiqueta y orden de despliegue — el rango clínico viene de rangos-glucosa.ts (Ayuno vs Postprandial). */
+const MEAL_ORDER: Record<string, { label: string; orden: number }> = {
+  ayuno:            { label: "En ayuno",         orden: 0 },
+  despues_desayuno: { label: "Después desayuno", orden: 1 },
+  antes_comida:     { label: "Antes comida",     orden: 2 },
+  despues_comida:   { label: "Después comida",   orden: 3 },
+  antes_cena:       { label: "Antes cena",       orden: 4 },
+  despues_cena:     { label: "Después cena",     orden: 5 },
+  despues_colacion: { label: "Colación",         orden: 6 },
+  madrugada:        { label: "Madrugada",        orden: 7 },
 };
 
 function mapReadingType(rt: GlucoseReadingType): string {
@@ -45,15 +46,6 @@ function mapReadingType(rt: GlucoseReadingType): string {
 function parseDailyDate(dateStr: string): Date {
   const [day, month, year] = dateStr.split("/");
   return new Date(Number(year), Number(month) - 1, Number(day));
-}
-
-function getRefLimits(diabetesType: string) {
-  const hasDiabetes = diabetesType !== "None" && diabetesType !== "none";
-  return {
-    supAyuno: hasDiabetes ? 130 : 100,
-    supPost:  hasDiabetes ? 180 : 140,
-    infMin:   hasDiabetes ? 80  : 70,
-  };
 }
 
 export default function GlucoseCurvesPage() {
@@ -81,7 +73,20 @@ export default function GlucoseCurvesPage() {
   const chartData = selectedDay?.readings ?? [];
 
   const diabetesType = profile?.diabetesType ?? "None";
-  const limits = getRefLimits(diabetesType);
+  const hasDiabetes = diabetesType !== "None" && diabetesType !== "none";
+  const isPregnant = profile?.isPregnant ?? false;
+
+  // Rangos de referencia (Ayuno / Postprandial) para las líneas del chart —
+  // misma fuente de verdad que el wizard/dashboard/historial.
+  const rangoAyunoRef = rangoPara(GlucoseReadingType.Fasting, hasDiabetes, isPregnant);
+  const rangoPostRef = rangoPara(GlucoseReadingType.PostLunch, hasDiabetes, isPregnant);
+  const techoAlta = (r: ReturnType<typeof rangoPara>) => r.find((b) => b.label === "Fuera de meta (alta)")?.desde ?? Infinity;
+  const pisoMinimo = (r: ReturnType<typeof rangoPara>) => r.find((b) => Number.isFinite(b.desde))?.desde ?? 0;
+  const limits = {
+    supAyuno: techoAlta(rangoAyunoRef),
+    supPost: techoAlta(rangoPostRef),
+    infMin: Math.min(pisoMinimo(rangoAyunoRef), pisoMinimo(rangoPostRef)),
+  };
 
   const valores = chartData.map(d => d.valor);
   const totalMediciones = valores.length;
@@ -89,8 +94,8 @@ export default function GlucoseCurvesPage() {
   const maximo = totalMediciones > 0 ? Math.max(...valores) : null;
   const minimo = totalMediciones > 0 ? Math.min(...valores) : null;
   const enMeta = chartData.filter(d => {
-    const lim = d.tipoComida === "postprandial" ? limits.supPost : limits.supAyuno;
-    return d.valor <= lim && d.valor >= limits.infMin;
+    const rango = rangoPara(d.readingType, hasDiabetes, isPregnant);
+    return evaluar(d.valor, rango).estado === "ok";
   }).length;
 
   const tooltipStyle = { borderRadius: "8px", border: "none", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" };
@@ -253,13 +258,13 @@ export default function GlucoseCurvesPage() {
           </CardHeader>
           <CardContent>
             <div className="divide-y">
-              {chartData.map((d, i) => (
+              {chartData.map((d, i) => {
+                const ev = evaluar(d.valor, rangoPara(d.readingType, hasDiabetes, isPregnant));
+                const dotColor = ev.estado === "bad" ? "#EF4444" : ev.estado === "warn" ? "#F59E0B" : "#10B981";
+                return (
                 <div key={i} className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full" style={{
-                      backgroundColor: d.valor > (d.tipoComida === "postprandial" ? limits.supPost : limits.supAyuno)
-                        ? "#EF4444" : d.valor < limits.infMin ? "#3B82F6" : "#10B981"
-                    }} />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: dotColor }} />
                     <div>
                       <p className="font-medium text-sm">{d.label}</p>
                       {d.hora && <p className="text-xs text-muted-foreground">{d.hora} hrs</p>}
@@ -270,7 +275,8 @@ export default function GlucoseCurvesPage() {
                     {d.alimentos && <p className="text-xs text-muted-foreground max-w-[200px] truncate">{d.alimentos}</p>}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -287,9 +293,9 @@ function buildChartData(readings: import("@/types/daily-record").GlucoseReadingR
       return {
         id: `${info?.label ?? tipo}-${i}`,
         tipo,
+        readingType: g.readingType,
         label:     info?.label    ?? tipo,
         orden:     info?.orden    ?? 99,
-        tipoComida: info?.tipo    ?? "preprandial" as const,
         valor:     g.valueMgDl,
         hora:      g.time ?? "",
         alimentos: g.foods ?? "",
