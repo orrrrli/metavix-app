@@ -3,10 +3,7 @@
  * Se mantienen en un módulo aparte para poderlos testear sin montar React Query.
  */
 
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(Number(year), Number(month) - 1, Number(day));
-}
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 
 /**
  * Combina una fecha `dd/MM/yyyy` con una hora `HH:mm` o `HH:mm:ss` y devuelve

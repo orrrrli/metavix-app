@@ -11,6 +11,16 @@ import { parseISO, isValid } from "date-fns";
  * realmente envía la API y devuelve `null` cuando no puede resolver la fecha,
  * para que los callers puedan guardar contra NaN en vez de renderizar de más.
  */
+/**
+ * Parsea el formato `"dd/MM/yyyy"` con el que la API serializa `DateOnly` a un
+ * `Date` local no-nullable. Para fechas de registros/labs que la API garantiza
+ * válidas (a diferencia de `parseApiDate`, que acepta null/ISO y puede devolver
+ * null). Fecha inválida → epoch, para que un sort nunca produzca NaN.
+ */
+export function parseDailyDate(dateStr: string): Date {
+  return parseApiDate(dateStr) ?? new Date(0);
+}
+
 export function parseApiDate(value: string | null | undefined): Date | null {
   if (!value) return null;
 

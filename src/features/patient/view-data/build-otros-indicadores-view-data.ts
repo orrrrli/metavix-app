@@ -2,6 +2,7 @@ import type { DailyRecordResponse } from "@/types/daily-record";
 import type { LabRecordResponse } from "@/types/lab-record";
 import type { PatientProfileResponse } from "@/types/patient-profile";
 import type { EstadoIndicador } from "../components/dashboard";
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 
 /** Icono a renderizar en la Screen. El builder es puro y no produce JSX. */
 export type IndicadorIcon = "presion" | "corazon" | "imc" | "lab";
@@ -35,11 +36,6 @@ export interface IndicadorData {
 
 export interface OtrosIndicadoresData {
   indicadores: IndicadorData[];
-}
-
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 function formatHace(date: Date, now: Date): string {

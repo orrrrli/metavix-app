@@ -10,7 +10,7 @@ import { ArrowLeft, Activity, HeartPulse, Droplet, FlaskConical, FileText } from
 import Link from "next/link";
 
 import { useAuthStore } from "@/features/auth/store";
-import { parseApiDate } from "@/features/patient/utils/parse-api-date";
+import { parseApiDate, parseDailyDate } from "@/features/patient/utils/parse-api-date";
 import {
   useLinkedPatients,
   useLinkedPatientProfile,
@@ -24,10 +24,6 @@ import { Button } from "@/shared/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Badge } from "@/shared/components/ui/badge";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
-
-function parseDailyDate(dateStr: string): Date {
-  return parse(dateStr, "dd/MM/yyyy", new Date());
-}
 
 function getFastingGlucose(readings: GlucoseReadingResponse[]): number | undefined {
   return readings.find(r => r.readingType === GlucoseReadingType.Fasting)?.valueMgDl;

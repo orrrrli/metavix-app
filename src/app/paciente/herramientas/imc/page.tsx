@@ -24,6 +24,7 @@ import { Calendar } from "@/shared/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { cn } from "@/shared/utils";
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 import {
   Popover,
   PopoverContent,
@@ -55,11 +56,6 @@ interface BmiDataPoint {
 interface DateRange {
   from: Date | undefined;
   to?: Date | undefined;
-}
-
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 function toISODate(date: Date): string {

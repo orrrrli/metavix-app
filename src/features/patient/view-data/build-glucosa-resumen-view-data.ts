@@ -1,6 +1,7 @@
 import { GlucoseReadingType, DailyRecordResponse } from "@/types/daily-record";
 import type { PatientProfileResponse } from "@/types/patient-profile";
 import { tsDeLectura } from "../hooks/use-glucosa-resumen.helpers";
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 import {
   rangoPara,
   rangoParaDefault,
@@ -63,11 +64,6 @@ export interface GlucosaResumenData {
   tieneRegistros: boolean;
   /** Issue #9: días consecutivos con al menos una lectura (incluye hoy si hay registro). */
   rachaDias: number;
-}
-
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split("/");
-  return new Date(Number(year), Number(month) - 1, Number(day));
 }
 
 function diffDays(a: Date, b: Date): number {

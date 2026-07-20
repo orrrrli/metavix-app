@@ -2,6 +2,7 @@ import { DailyRecordResponse, GlucoseReadingType } from "@/types/daily-record";
 import { LabRecordResponse } from "@/types/lab-record";
 import { Registro } from "../types";
 import { TipoDiabetes } from "../utils/semaforo";
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 
 export interface HistorialViewData {
   registros: Registro[];
@@ -31,11 +32,6 @@ const READING_TYPE_TO_TIPO: Record<GlucoseReadingType, string> = {
   [GlucoseReadingType.Snack]:         'antes_colacion',
   [GlucoseReadingType.Overnight]:     'madrugada',
 };
-
-function parseDailyDate(dateStr: string): Date {
-  const [day, month, year] = dateStr.split('/');
-  return new Date(Number(year), Number(month) - 1, Number(day));
-}
 
 function mapDailyToRegistro(r: DailyRecordResponse): Registro {
   const fasting = r.glucoseReadings.find(g => g.readingType === GlucoseReadingType.Fasting);
