@@ -145,13 +145,12 @@ export default function RegistroGlucosaWeb({
 }: RegistroGlucosaWebProps) {
   useStyles();
   const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes, isPregnant });
-  const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, puedeGuardar, guardar } = w;
+  const { step, setStep, valor, setValor, meal, mealManual, elegirMomento, hora, setHora, foods, setFoods, st, resumen, puedeGuardar, guardar } = w;
   const { total, enRango, promedio } = resumen;
   const [expanded, setExpanded] = useState(false);
   const [timeEdit, setTimeEdit] = useState(false);
-  const [mealElegidoManual, setMealElegidoManual] = useState(false);
 
-  const elegirMomento = (k: MealKey) => { setMeal(k); setMealElegidoManual(true); setExpanded(false); };
+  const seleccionarMomento = (k: MealKey) => { elegirMomento(k); setExpanded(false); };
 
   const recBadge = (
     <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: ".04em", color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", padding: "2px 9px", borderRadius: 999 }}>Recomendado</span>
@@ -220,7 +219,7 @@ export default function RegistroGlucosaWeb({
                         {meal && <MealIcon k={meal} size={17} />}
                       </div>
                       <div>
-                        <div style={{ fontSize: 11, color: "var(--nav-active,#0a8c77)", fontWeight: 600 }}>{mealElegidoManual ? "Momento" : "Momento sugerido"} · {hora || horaActual()}</div>
+                        <div style={{ fontSize: 11, color: "var(--nav-active,#0a8c77)", fontWeight: 600 }}>{mealManual ? "Momento" : "Momento sugerido"} · {hora || horaActual()}</div>
                         <div style={{ fontSize: 16.5, fontWeight: 800, color: "var(--text,#15201b)" }}>{meal ? MEAL_LABEL[meal] : "—"}</div>
                       </div>
                     </div>
@@ -235,7 +234,7 @@ export default function RegistroGlucosaWeb({
                         <div style={{ position: "absolute", left: 6, right: 6, top: 6, height: 2, background: "var(--card-bd,#bfe6da)" }} />
                         <div style={{ position: "relative", display: "flex", justifyContent: "space-between" }}>
                           {TIMELINE_KEYS.map((k) => (
-                            <button key={k} onClick={() => elegirMomento(k)} style={timelineDotStyle(meal === k)}>
+                            <button key={k} onClick={() => seleccionarMomento(k)} style={timelineDotStyle(meal === k)}>
                               <span style={timelineCircleStyle(meal === k)} />
                               <span>{MEAL_LABEL[k]}</span>
                             </button>
@@ -243,7 +242,7 @@ export default function RegistroGlucosaWeb({
                         </div>
                       </div>
                       <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
-                        <button onClick={() => elegirMomento("colacion")} className="mvxg-chip" style={chipStyle(meal === "colacion")}>
+                        <button onClick={() => seleccionarMomento("colacion")} className="mvxg-chip" style={chipStyle(meal === "colacion")}>
                           <MealIcon k="colacion" size={16} /><span>Fue una colación, no ligado a comida</span>
                         </button>
                       </div>
@@ -321,7 +320,7 @@ export default function RegistroGlucosaWeb({
               <button onClick={() => setStep((s) => Math.min(2, s + 1))} className="mvxg-cta"
                 style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "var(--btn-glow)", fontFamily: F }}>Siguiente</button>
             ) : (
-              <button onClick={() => { guardar(); setMealElegidoManual(false); }} className="mvxg-cta" disabled={!puedeGuardar}
+              <button onClick={() => guardar()} className="mvxg-cta" disabled={!puedeGuardar}
                 style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 13, padding: 15, fontSize: 15, fontWeight: 700, cursor: puedeGuardar ? "pointer" : "default", boxShadow: "var(--btn-glow)", fontFamily: F, opacity: puedeGuardar ? 1 : 0.55 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
             )}
           </div>

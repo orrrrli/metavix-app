@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useGlucosaWizard } from "../../hooks/use-glucosa-wizard";
 import {
   MealKey, MEAL_LABEL, MEAL_ICON, MEAL_TO_TYPE,
@@ -51,12 +51,15 @@ const CSS = `
 `;
 
 let injected = false;
-if (typeof document !== "undefined" && !injected) {
-  const t = document.createElement("style");
-  t.setAttribute("data-mvx-glucosa-movil", "");
-  t.textContent = CSS;
-  document.head.appendChild(t);
-  injected = true;
+function useStyles() {
+  useEffect(() => {
+    if (injected || typeof document === "undefined") return;
+    const t = document.createElement("style");
+    t.setAttribute("data-mvx-glucosa-movil", "");
+    t.textContent = CSS;
+    document.head.appendChild(t);
+    injected = true;
+  }, []);
 }
 
 const caption: React.CSSProperties = {
@@ -106,6 +109,25 @@ function MealIcon({ k, size = 19 }: { k: MealKey; size?: number }) {
   );
 }
 
+function RangeBar({ v, meal, hasDiabetes, isPregnant }: { v: string; meal: MealKey | null; hasDiabetes: boolean; isPregnant: boolean }) {
+  const { segmentos, bajo, objetivo, alto, escala } = barraRango(meal ? MEAL_TO_TYPE[meal] : null, hasDiabetes, isPregnant);
+  return (
+    <div style={{ marginTop: 6 }}>
+      <div style={{ height: 9, borderRadius: 999, overflow: "hidden", display: "flex" }}>
+        {segmentos.map((s, i) => (
+          <div key={i} style={{ width: `${s.pct}%`, background: s.color }} />
+        ))}
+      </div>
+      <div style={{ position: "relative", height: 0 }}>
+        <div style={{ position: "absolute", left: `${markerPct(v, escala)}%`, top: -13, transform: "translateX(-50%)", width: 3, height: 17, background: "var(--text,#15201b)", borderRadius: 2, boxShadow: "0 0 0 3px var(--card,#fff)" }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 10.5, color: "var(--soft,#9aa39c)", fontWeight: 500 }}>
+        <span>{bajo}</span><span style={{ color: "var(--ok,#1f9d6b)", fontWeight: 700 }}>{objetivo}</span><span>{alto}</span>
+      </div>
+    </div>
+  );
+}
+
 const chipsAct = ["Ninguna", "Ligera", "Moderada", "Intensa"];
 const chipsSint = ["Mareo", "Temblor", "Sudoración"];
 
@@ -117,14 +139,14 @@ export default function RegistroGlucosaMovil({
   hasDiabetes = false,
   isPregnant = false,
 }: RegistroGlucosaMovilProps) {
+  useStyles();
   const w = useGlucosaWizard({ lecturas, onGuardar, guardando, hasDiabetes, isPregnant });
-  const { step, setStep, valor, setValor, meal, setMeal, hora, setHora, foods, setFoods, st, resumen, puedeGuardar, guardar } = w;
+  const { step, setStep, valor, setValor, meal, mealManual, elegirMomento, hora, setHora, foods, setFoods, st, resumen, puedeGuardar, guardar } = w;
   const { total, enRango, promedio } = resumen;
   const [expanded, setExpanded] = useState(false);
   const [timeEdit, setTimeEdit] = useState(false);
-  const [mealElegidoManual, setMealElegidoManual] = useState(false);
 
-  const elegirMomento = (k: MealKey) => { setMeal(k); setMealElegidoManual(true); setExpanded(false); };
+  const seleccionarMomento = (k: MealKey) => { elegirMomento(k); setExpanded(false); };
 
   const recBadge = (
     <span style={{ fontSize: 10, fontWeight: 700, color: "var(--nav-active,#0a8c77)", background: "var(--nav-active-bg,#e6faf6)", padding: "2px 8px", borderRadius: 999 }}>Recomendado</span>
@@ -175,24 +197,7 @@ export default function RegistroGlucosaMovil({
                   </span>
                 </div>
               )}
-              {(() => {
-                const { segmentos, bajo, objetivo, alto, escala } = barraRango(meal ? MEAL_TO_TYPE[meal] : null, hasDiabetes, isPregnant);
-                return (
-                  <div style={{ marginTop: 6 }}>
-                    <div style={{ height: 9, borderRadius: 999, overflow: "hidden", display: "flex" }}>
-                      {segmentos.map((s, i) => (
-                        <div key={i} style={{ width: `${s.pct}%`, background: s.color }} />
-                      ))}
-                    </div>
-                    <div style={{ position: "relative", height: 0 }}>
-                      <div style={{ position: "absolute", left: `${markerPct(valor, escala)}%`, top: -13, transform: "translateX(-50%)", width: 3, height: 17, background: "var(--text,#15201b)", borderRadius: 2, boxShadow: "0 0 0 3px var(--card,#fff)" }} />
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, fontSize: 10.5, color: "var(--soft,#9aa39c)", fontWeight: 500 }}>
-                      <span>{bajo}</span><span style={{ color: "var(--ok,#1f9d6b)", fontWeight: 700 }}>{objetivo}</span><span>{alto}</span>
-                    </div>
-                  </div>
-                );
-              })()}
+              <RangeBar v={valor} meal={meal} hasDiabetes={hasDiabetes} isPregnant={isPregnant} />
             </div>
 
             {/* momento — sugerido, con línea de tiempo al cambiar */}
@@ -203,7 +208,7 @@ export default function RegistroGlucosaMovil({
                     {meal && <MealIcon k={meal} size={15} />}
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 10, color: "var(--nav-active,#0a8c77)", fontWeight: 600 }}>{mealElegidoManual ? "Momento" : "Sugerido"} · {hora || horaActual()}</div>
+                    <div style={{ fontSize: 10, color: "var(--nav-active,#0a8c77)", fontWeight: 600 }}>{mealManual ? "Momento" : "Sugerido"} · {hora || horaActual()}</div>
                     <div style={{ fontSize: 14.5, fontWeight: 800, color: "var(--text,#15201b)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{meal ? MEAL_LABEL[meal] : "—"}</div>
                   </div>
                 </div>
@@ -218,7 +223,7 @@ export default function RegistroGlucosaMovil({
                     <div style={{ position: "absolute", left: 2, right: 2, top: 5, height: 2, background: "var(--card-bd,#bfe6da)" }} />
                     <div style={{ position: "relative", display: "flex", justifyContent: "space-between" }}>
                       {TIMELINE_KEYS.map((k) => (
-                        <button key={k} onClick={() => elegirMomento(k)} style={timelineDotStyle(meal === k)}>
+                        <button key={k} onClick={() => seleccionarMomento(k)} style={timelineDotStyle(meal === k)}>
                           <span style={timelineCircleStyle(meal === k)} />
                           <span>{TIMELINE_SHORT[k]}</span>
                         </button>
@@ -226,7 +231,7 @@ export default function RegistroGlucosaMovil({
                     </div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "center", marginTop: 14 }}>
-                    <button onClick={() => elegirMomento("colacion")} style={chipStyle(meal === "colacion")}>
+                    <button onClick={() => seleccionarMomento("colacion")} style={chipStyle(meal === "colacion")}>
                       <MealIcon k="colacion" size={15} /><span>Fue una colación</span>
                     </button>
                   </div>
@@ -294,7 +299,7 @@ export default function RegistroGlucosaMovil({
             <button onClick={() => setStep((s) => Math.min(2, s + 1))}
               style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: "pointer", boxShadow: "var(--btn-glow)", fontFamily: F }}>Siguiente</button>
           ) : (
-            <button onClick={() => { guardar(); setMealElegidoManual(false); }} disabled={!puedeGuardar}
+            <button onClick={() => guardar()} disabled={!puedeGuardar}
               style={{ flex: 1, background: "var(--accent,#00c9a7)", color: "#03251d", border: "none", borderRadius: 12, padding: 14, fontSize: 15, fontWeight: 700, cursor: puedeGuardar ? "pointer" : "default", boxShadow: "var(--btn-glow)", fontFamily: F, opacity: puedeGuardar ? 1 : 0.55 }}>{guardando ? "Guardando…" : "Guardar lectura"}</button>
           )}
         </div>

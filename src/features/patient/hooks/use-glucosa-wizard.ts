@@ -44,6 +44,10 @@ export interface GlucosaWizard {
   setValor: (s: string) => void;
   meal: MealKey | null;
   setMeal: (m: MealKey | null) => void;
+  /** true si el usuario eligió el momento manualmente (vs. autosugerido). */
+  mealManual: boolean;
+  /** Elige el momento y lo marca como selección manual del usuario. */
+  elegirMomento: (m: MealKey) => void;
   hora: string;
   setHora: (s: string) => void;
   foods: string;
@@ -70,7 +74,10 @@ export function useGlucosaWizard({
   const [step, setStepRaw] = useState(1);
   const [valor, setValor] = useState("");
   const [meal, setMeal] = useState<MealKey | null>(() => sugerirMomento());
+  const [mealManual, setMealManual] = useState(false);
   const [hora, setHora] = useState("");
+
+  const elegirMomento = (m: MealKey) => { setMeal(m); setMealManual(true); };
   const [foods, setFoods] = useState("");
 
   // setHora al montar — un solo lugar, un solo comentario de hidratación.
@@ -107,6 +114,7 @@ export function useGlucosaWizard({
     setStepRaw(1);
     setValor("");
     setMeal(sugerirMomento());
+    setMealManual(false);
     setHora(horaActual());
     setFoods("");
   };
@@ -115,6 +123,7 @@ export function useGlucosaWizard({
     step, setStep,
     valor, setValor,
     meal, setMeal,
+    mealManual, elegirMomento,
     hora, setHora,
     foods, setFoods,
     st,
