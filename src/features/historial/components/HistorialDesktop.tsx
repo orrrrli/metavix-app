@@ -67,7 +67,7 @@ export function HistorialDesktop({ registros, tipoDiabetes, hasDiabetes, isPregn
         <TabChip active={tab === 'labs'} onClick={() => setTab('labs')}>Laboratorios</TabChip>
       </div>
 
-      <div style={{ background: 'var(--canvas)', border: '1px solid var(--bd)', borderRadius: 16, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--bd)', borderRadius: 16, overflow: 'hidden' }}>
         {/* encabezado */}
         <div style={{ display: 'flex', background: 'var(--ph)', fontSize: 11, fontWeight: 700, color: 'var(--soft)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
           <div style={{ width: 118, flexShrink: 0, padding: '12px 16px' }}>Fecha</div>
