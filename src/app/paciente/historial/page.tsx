@@ -2,8 +2,9 @@
 
 import { useMemo } from "react";
 import { useAuthStore } from "@/features/auth/store";
-import { TablaHistorial } from "@/features/historial/components/TablaHistorial";
-import { Registro } from "@/features/historial/components/FilaRegistro";
+import { HistorialDesktop } from "@/features/historial/components/HistorialDesktop";
+import { HistorialMobile } from "@/features/historial/components/HistorialMobile";
+import { Registro } from "@/features/historial/types";
 import { TipoDiabetes } from "@/features/historial/utils/semaforo";
 import { GooeyLoader } from "@/shared/components/ui/gooey-loader";
 import { useDailyRecords } from "@/features/patient/hooks/use-daily-records";
@@ -45,6 +46,7 @@ function mapDailyToRegistro(r: DailyRecordResponse): Registro {
     .filter(g => g.readingType !== GlucoseReadingType.Fasting)
     .map(g => ({
       tipo: READING_TYPE_TO_TIPO[g.readingType] ?? String(g.readingType),
+      readingType: g.readingType,
       valor: g.valueMgDl,
       hora: g.time ?? '',
       alimentos: g.foods ?? '',
@@ -195,6 +197,8 @@ export default function HistorialPage() {
 
   const { data: profile } = usePatientProfile(patientId ?? "");
   const tipoDiabetes = tipoDiabetesDePerfil(profile?.diabetesType, profile?.isPregnant);
+  const hasDiabetes = !!profile?.diabetesType && profile.diabetesType !== "None";
+  const isPregnant = profile?.isPregnant ?? false;
 
   const registros = useMemo<Registro[]>(() => {
     const daily = (dailyRecords ?? []).map(mapDailyToRegistro);
@@ -239,7 +243,20 @@ export default function HistorialPage() {
         </p>
       </div>
 
-      <TablaHistorial registros={registros} tipoDiabetes={tipoDiabetes} />
+      {/* Móvil */}
+      <div className="lg:hidden">
+        <HistorialMobile registros={registros} hasDiabetes={hasDiabetes} isPregnant={isPregnant} />
+      </div>
+
+      {/* Escritorio */}
+      <div className="hidden lg:block">
+        <HistorialDesktop
+          registros={registros}
+          tipoDiabetes={tipoDiabetes}
+          hasDiabetes={hasDiabetes}
+          isPregnant={isPregnant}
+        />
+      </div>
     </div>
   );
 }
