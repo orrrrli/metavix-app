@@ -2,7 +2,7 @@ import { GlucoseReadingType } from "@/types/daily-record";
 import type { DailyRecordResponse } from "@/types/daily-record";
 import type { LabRecordResponse } from "@/types/lab-record";
 import type { PatientProfileResponse } from "@/types/patient-profile";
-import { parseApiDate } from "./parse-api-date";
+import { parseDailyDate } from "@/features/patient/utils/parse-api-date";
 
 export interface PreEvaluationInput {
   labRecords: LabRecordResponse[];
@@ -29,7 +29,7 @@ export function buildPreEvaluationValues(
 ): PreEvaluationResult {
   const sortedDailyRecords = [...input.dailyRecords].sort(
     (a, b) =>
-      parseApiDate(b.recordDate).getTime() - parseApiDate(a.recordDate).getTime(),
+      parseDailyDate(b.recordDate).getTime() - parseDailyDate(a.recordDate).getTime(),
   );
 
   let fastingGlucose: number | null = null;
@@ -57,7 +57,7 @@ export function buildPreEvaluationValues(
 
   const sortedLabRecords = [...input.labRecords].sort(
     (a, b) =>
-      parseApiDate(b.sampleDate).getTime() - parseApiDate(a.sampleDate).getTime(),
+      parseDailyDate(b.sampleDate).getTime() - parseDailyDate(a.sampleDate).getTime(),
   );
 
   const creatinineLabs = sortedLabRecords.filter((r) => r.creatinine !== null);
