@@ -34,6 +34,9 @@ export function useCreateDailyRecord(patientId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daily-records', patientId] });
       queryClient.invalidateQueries({ queryKey: ['patient-resumen', patientId] });
+      // TODO(body-stats): when useBodyStats/getBodyStats is reintroduced, also
+      // invalidateQueries({ queryKey: ['body-stats', patientId] }) here — weightKg/waistCm
+      // are set by this mutation and would otherwise serve stale body-stats data.
     },
   });
 }

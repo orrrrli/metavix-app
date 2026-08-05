@@ -13,37 +13,38 @@ import { GoalEvaluationResponse } from '@/types/goal-evaluation';
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? '';
 const API  = `${BASE}/api/v1`;
 
-// === Doctor Discovery ===
-
-export async function getAllDoctors(): Promise<DoctorOption[]> {
-  const res = await fetch(`${API}/patient/get-all-doctors`, {
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`[getAllDoctors] ${res.status}`);
+// GET helper for the `body.data` envelope shared by every read endpoint below.
+// `emptyOn404` controls what a 404 resolves to: a list endpoint wants `[]`,
+// a single-resource endpoint wants `null` — both are "no data", not an error.
+async function apiGet<T>(
+  url: string,
+  fnName: string,
+  emptyOn404: 'array' | 'null' | 'throw' = 'throw',
+): Promise<T> {
+  const res = await fetch(url, { credentials: 'include' });
+  if (res.status === 404) {
+    if (emptyOn404 === 'array') return [] as T;
+    if (emptyOn404 === 'null') return null as T;
+  }
+  if (!res.ok) throw new Error(`[${fnName}] ${res.status}`);
   const body = await res.json();
   return body.data;
 }
 
+// === Doctor Discovery ===
+
+export async function getAllDoctors(): Promise<DoctorOption[]> {
+  return apiGet(`${API}/patient/get-all-doctors`, 'getAllDoctors');
+}
+
 export async function getLinkedDoctors(patientId: string): Promise<LinkedDoctorResponse[]> {
-  const res = await fetch(`${API}/patient/${patientId}/get-linked-doctors`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`[getLinkedDoctors] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/get-linked-doctors`, 'getLinkedDoctors', 'array');
 }
 
 // === Link Requests ===
 
 export async function getPendingSentRequests(patientId: string): Promise<SentPendingRequestResponse[]> {
-  const res = await fetch(`${API}/patient/${patientId}/get-pending-requests`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`[getPendingSentRequests] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/get-pending-requests`, 'getPendingSentRequests', 'array');
 }
 
 export async function sendLinkRequest(data: SendLinkRequestBody): Promise<LinkRequestResponse> {
@@ -71,25 +72,17 @@ export async function revokeLinkRequest(requestId: string): Promise<LinkRequestR
 // === Patient Resumen ===
 
 export async function getPatientResumen(patientId: string): Promise<PatientResumenResponse | null> {
-  const res = await fetch(`${API}/patient/${patientId}/summary`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`[getPatientResumen] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/summary`, 'getPatientResumen', 'null');
 }
 
 // === Daily Records ===
 
 export async function getDailyRecords(patientId: string): Promise<DailyRecordResponse[]> {
-  const res = await fetch(`${API}/patient/${patientId}/get-all/records/daily`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`[getDailyRecords] ${res.status}`);
-  const body = await res.json();
-  const data: DailyRecordResponse[] = body.data ?? [];
+  const data = await apiGet<DailyRecordResponse[]>(
+    `${API}/patient/${patientId}/get-all/records/daily`,
+    'getDailyRecords',
+    'array',
+  );
   return data.map(normalizeDailyRecord);
 }
 
@@ -99,26 +92,24 @@ export async function getDailyRecordsInRange(
   to: string,
 ): Promise<DailyRecordResponse[]> {
   const params = new URLSearchParams({ from, to });
-  const res = await fetch(`${API}/patient/${patientId}/get-all/records/daily?${params}`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`[getDailyRecordsInRange] ${res.status}`);
-  const body = await res.json();
-  const data: DailyRecordResponse[] = body.data ?? [];
+  const data = await apiGet<DailyRecordResponse[]>(
+    `${API}/patient/${patientId}/get-all/records/daily?${params}`,
+    'getDailyRecordsInRange',
+    'array',
+  );
   return data.map(normalizeDailyRecord);
 }
 
 export async function getDailyRecordById(
   patientId: string,
   recordId: string
-): Promise<DailyRecordResponse> {
-  const res = await fetch(`${API}/patient/${patientId}/record/daily/${recordId}`, {
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`[getDailyRecordById] ${res.status}`);
-  const body = await res.json();
-  return normalizeDailyRecord(body.data);
+): Promise<DailyRecordResponse | null> {
+  const data = await apiGet<DailyRecordResponse | null>(
+    `${API}/patient/${patientId}/record/daily/${recordId}`,
+    'getDailyRecordById',
+    'null',
+  );
+  return data ? normalizeDailyRecord(data) : null;
 }
 
 export async function createDailyRecord(
@@ -139,25 +130,14 @@ export async function createDailyRecord(
 // === Lab Records ===
 
 export async function getLabRecords(patientId: string): Promise<LabRecordResponse[]> {
-  const res = await fetch(`${API}/patient/${patientId}/get-all/records/lab`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`[getLabRecords] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/get-all/records/lab`, 'getLabRecords', 'array');
 }
 
 export async function getLabRecordById(
   patientId: string,
   recordId: string
 ): Promise<LabRecordResponse> {
-  const res = await fetch(`${API}/patient/${patientId}/records/lab/${recordId}`, {
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`[getLabRecordById] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/records/lab/${recordId}`, 'getLabRecordById');
 }
 
 export async function createLabRecord(
@@ -178,13 +158,7 @@ export async function createLabRecord(
 // === Insulin DM1 ===
 
 export async function getInsulinProfile(patientId: string): Promise<InsulinProfileResponse | null> {
-  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/profile`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`[getInsulinProfile] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/insulin-dm1/profile`, 'getInsulinProfile', 'null');
 }
 
 export async function upsertInsulinProfile(
@@ -203,25 +177,14 @@ export async function upsertInsulinProfile(
 }
 
 export async function getInsulinRecords(patientId: string): Promise<InsulinRecordResponse[]> {
-  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/records`, {
-    credentials: 'include',
-  });
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`[getInsulinRecords] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/insulin-dm1/records`, 'getInsulinRecords', 'array');
 }
 
 export async function getInsulinRecordById(
   patientId: string,
   recordId: string
 ): Promise<InsulinRecordResponse> {
-  const res = await fetch(`${API}/patient/${patientId}/insulin-dm1/records/${recordId}`, {
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`[getInsulinRecordById] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+  return apiGet(`${API}/patient/${patientId}/insulin-dm1/records/${recordId}`, 'getInsulinRecordById');
 }
 
 export async function createInsulinRecord(
@@ -264,13 +227,8 @@ export async function evaluateGoals(patientId: string): Promise<GoalEvaluationRe
 
 // === Patient Profile ===
 
-export async function getPatientProfile(patientId: string): Promise<PatientProfileResponse> {
-  const res = await fetch(`${API}/patient/${patientId}/profile`, {
-    credentials: 'include',
-  });
-  if (!res.ok) throw new Error(`[getPatientProfile] ${res.status}`);
-  const body = await res.json();
-  return body.data;
+export async function getPatientProfile(patientId: string): Promise<PatientProfileResponse | null> {
+  return apiGet(`${API}/patient/${patientId}/profile`, 'getPatientProfile', 'null');
 }
 
 export async function updatePatientProfile(
