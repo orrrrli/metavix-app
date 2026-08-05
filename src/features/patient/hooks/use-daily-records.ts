@@ -15,7 +15,7 @@ export function useDailyRecordsInRange(patientId: string, from: string, to: stri
   return useQuery({
     queryKey: ['daily-records', patientId, from, to],
     queryFn: () => getDailyRecordsInRange(patientId, from, to),
-    enabled: !!patientId,
+    enabled: !!patientId && !!from && !!to,
   });
 }
 
