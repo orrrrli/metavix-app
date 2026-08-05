@@ -7,12 +7,16 @@ on:
       - 'src/**'
       - 'e2e/**'
 
+concurrency:
+  group: opencode-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   review:
+    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      id-token: write
       contents: read
       pull-requests: write
       issues: write
@@ -28,7 +32,7 @@ jobs:
             cat .github/opencode-review-prompt.md
             echo EOF
           } >> "$GITHUB_OUTPUT"
-      - uses: anomalyco/opencode/github@latest
+      - uses: anomalyco/opencode/github@66fdd51f0d6db8e47e876721c855ea155043b74c
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
