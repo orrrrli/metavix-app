@@ -1,7 +1,7 @@
 import {
   CreateDailyRecordRequest,
   DailyRecordResponse,
-  DailyRecordSnapshotResponse,
+  BodyStatsResponse,
   normalizeDailyRecord,
 } from '@/types/daily-record';
 import { CreateLabRecordRequest, LabRecordResponse } from '@/types/lab-record';
@@ -137,15 +137,15 @@ export async function createDailyRecord(
   return normalizeDailyRecord(body.data);
 }
 
-export async function getDailyRecordSnapshot(
+export async function getBodyStats(
   patientId: string,
   date: string,
-): Promise<DailyRecordSnapshotResponse> {
+): Promise<BodyStatsResponse> {
   const res = await fetch(
-    `${API}/patient/${patientId}/records/daily/snapshot?date=${date}`,
+    `${API}/patient/${patientId}/records/daily/body-stats?date=${date}`,
     { credentials: 'include' },
   );
-  if (!res.ok) throw new Error(`[getDailyRecordSnapshot] ${res.status}`);
+  if (!res.ok) throw new Error(`[getBodyStats] ${res.status}`);
   const body = await res.json();
   return body.data;
 }

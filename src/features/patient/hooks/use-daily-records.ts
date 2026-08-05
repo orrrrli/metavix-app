@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getDailyRecords, getDailyRecordById, getDailyRecordsInRange, getDailyRecordSnapshot, createDailyRecord } from '@/lib/api/patient';
+import { getDailyRecords, getDailyRecordById, getDailyRecordsInRange, getBodyStats, createDailyRecord } from '@/lib/api/patient';
 import { CreateDailyRecordRequest } from '@/types/daily-record';
 
 // patientId must match the authenticated user's userId — never pass URL params directly
@@ -11,10 +11,10 @@ export function useDailyRecords(patientId: string) {
   });
 }
 
-export function useDailyRecordSnapshot(patientId: string, date: string) {
+export function useBodyStats(patientId: string, date: string) {
   return useQuery({
-    queryKey: ['daily-record-snapshot', patientId, date],
-    queryFn: () => getDailyRecordSnapshot(patientId, date),
+    queryKey: ['body-stats', patientId, date],
+    queryFn: () => getBodyStats(patientId, date),
     enabled: !!patientId,
     retry: false,
   });

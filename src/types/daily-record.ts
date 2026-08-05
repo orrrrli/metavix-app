@@ -70,7 +70,7 @@ export interface CreateDailyRecordRequest {
   glucoseReadings: GlucoseReadingRequest[] | null;
 }
 
-export interface DailyRecordSnapshotResponse {
+export interface BodyStatsResponse {
   weightKg: number | null;
   waistCm: number | null;
 }
