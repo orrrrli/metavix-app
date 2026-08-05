@@ -70,11 +70,6 @@ export interface CreateDailyRecordRequest {
   glucoseReadings: GlucoseReadingRequest[] | null;
 }
 
-export interface DailyRecordSnapshotResponse {
-  weightKg: number | null;
-  waistCm: number | null;
-}
-
 export interface DailyRecordResponse {
   id: string;
   patientId: string;

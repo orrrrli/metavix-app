@@ -1,7 +1,6 @@
 import {
   CreateDailyRecordRequest,
   DailyRecordResponse,
-  DailyRecordSnapshotResponse,
   normalizeDailyRecord,
 } from '@/types/daily-record';
 import { CreateLabRecordRequest, LabRecordResponse } from '@/types/lab-record';
@@ -135,19 +134,6 @@ export async function createDailyRecord(
   if (!res.ok) throw new Error(`[createDailyRecord] ${res.status}`);
   const body = await res.json();
   return normalizeDailyRecord(body.data);
-}
-
-export async function getDailyRecordSnapshot(
-  patientId: string,
-  date: string,
-): Promise<DailyRecordSnapshotResponse> {
-  const res = await fetch(
-    `${API}/patient/${patientId}/records/daily/snapshot?date=${date}`,
-    { credentials: 'include' },
-  );
-  if (!res.ok) throw new Error(`[getDailyRecordSnapshot] ${res.status}`);
-  const body = await res.json();
-  return body.data;
 }
 
 // === Lab Records ===
